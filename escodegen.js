@@ -268,10 +268,6 @@ function getDefaultOptions() {
             semicolons: true,
             safeConcatenation: false
         },
-        moz: {
-            comprehensionExpressionStartsWithAssignment: false,
-            starlessGenerator: false
-        },
         directive: false,
         raw: true,
         verbatim: null
@@ -1669,7 +1665,7 @@ function generateUpdateExpression(g, expr, opt) {
 
 Gen[Syntax.FunctionExpression] =
 function generateFunctionExpression(g, expr) {
-    var isGenerator = expr.generator && !extra.moz.starlessGenerator,
+    var isGenerator = !!expr.generator,
         js = isGenerator ? 'function*' : 'function';
 
     if (expr.id) {
@@ -1888,14 +1884,9 @@ Gen[Syntax.GeneratorExpression] =
 Gen[Syntax.ComprehensionExpression] =
 function generateGeneratorOrComprehensionExpression(g, expr) {
     // GeneratorExpression should be parenthesized with (...), ComprehensionExpression with [...]
-    // Due to https://bugzilla.mozilla.org/show_bug.cgi?id=883468 position of expr.body can differ in Spidermonkey and ES6
-    var startsWithAssignment = extra.moz.comprehensionExpressionStartsWithAssignment,
-        isGenerator = expr.type === Syntax.GeneratorExpression,
+    var isGenerator = expr.type === Syntax.GeneratorExpression,
         js = isGenerator ? '(' : '[',
         body = g.generate(generateExpression, expr.body, GenOpts.genExprBody);
-
-    if (startsWithAssignment)
-        js += body;
 
     if (expr.blocks) {
         var prevIndent = shiftIndent(),
@@ -1904,7 +1895,7 @@ function generateGeneratorOrComprehensionExpression(g, expr) {
         for (var i = 0; i < blockCount; ++i) {
             var block = g.generate(generateExpression, expr.blocks[i], GenOpts.genExprBlock);
 
-            js = i > 0 || startsWithAssignment ? sourceJoin(js, block) : (js + block);
+            js = i > 0 ? sourceJoin(js, block) : (js + block);
         }
 
         indent = prevIndent;
@@ -1916,9 +1907,7 @@ function generateGeneratorOrComprehensionExpression(g, expr) {
         js = sourceJoin(js, '(' + filter + ')');
     }
 
-    if (!startsWithAssignment)
-        js = sourceJoin(js, body);
-
+    js = sourceJoin(js, body);
     js += isGenerator ? ')' : ']';
 
     g.emit(js);
@@ -2566,7 +2555,7 @@ function generateProgram(g, stmt) {
 
 Gen[Syntax.FunctionDeclaration] =
 function generateFunctionDeclaration(g, stmt) {
-    var isGenerator = stmt.generator && !extra.moz.starlessGenerator;
+    var isGenerator = !!stmt.generator;
 
     return [
         (isGenerator ? 'function*' : 'function'),
