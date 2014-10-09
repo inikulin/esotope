@@ -1513,10 +1513,11 @@ var FLOATING_OR_OCTAL_REGEXP = /[.eExX]|^0[0-9]+|/,
 
 Gen[Syntax.MemberExpression] =
 function generateMemberExpression(g, expr, opt) {
-    var parenthesize = Precedence.Member < opt.precedence;
+    var _ = g,
+        parenthesize = Precedence.Member < opt.precedence;
 
     if (parenthesize)
-        g.emit('(');
+        _.js += '(';
 
     if (!expr.computed && expr.object.type === Syntax.Literal && typeof expr.object.value === 'number') {
         var num = g.generate(generateExpression, expr.object, GenOpts.memberExprObj(opt.allowCall));
@@ -1529,16 +1530,16 @@ function generateMemberExpression(g, expr, opt) {
         // we should add a floating point.
         var withPoint = LAST_DECIMAL_DIGIT_REGEXP.test(num) && !FLOATING_OR_OCTAL_REGEXP.test(num);
 
-        g.emit(withPoint ? (num + '.') : num);
+        _.js += withPoint ? (num + '.') : num;
     }
 
     else
         g.expand(generateExpression, expr.object, GenOpts.memberExprObj(opt.allowCall));
 
     if (expr.computed) {
-        g.emit('[');
+        _.js += '[';
         g.expand(generateExpression, expr.property, GenOpts.memberExprProp(opt.allowCall));
-        g.emit(']');
+        _.js += ']';
     }
 
     else
@@ -2382,14 +2383,15 @@ function generateSwitchCase(g, stmt, opt) {
 
 Gen[Syntax.IfStatement] =
 function generateIfStatement(g, stmt, opt) {
-    var prevIndent = shiftIndent(),
+    var _ = g,
+        prevIndent = shiftIndent(),
         semicolonOptional = opt.semicolon === '';
 
-    g.emit('if' + optSpace + '(');
+    _.js += 'if' + optSpace + '(';
     g.expand(generateExpression, stmt.test, GenOpts.ifStmtTest);
-    g.emit(')');
+    _.js += ')';
     indent = prevIndent;
-    g.emit(adoptionPrefix(stmt.consequent));
+    _.js += adoptionPrefix(stmt.consequent);
 
     if (stmt.alternate) {
         var conseq = g.generate(generateStatement, stmt.consequent, GenOpts.ifStmtConseqWithAlt) +
@@ -2402,7 +2404,7 @@ function generateIfStatement(g, stmt, opt) {
         else
             alt = sourceJoin('else', adoptionPrefix(stmt.alternate) + alt);
 
-        g.emit(sourceJoin(conseq, alt));
+        _.js += sourceJoin(conseq, alt);
     }
 
     else
