@@ -1609,7 +1609,7 @@ Gen[Syntax.UnaryExpression] =
 function generateUnaryExpression(g, expr, opt) {
     var parenthesize = Precedence.Unary < opt.precedence,
         op = expr.operator,
-        arg = generateExpression(g, expr.argument, GenOpts.unaryExprArg);
+        arg = g.generate(generateExpression, expr.argument, GenOpts.unaryExprArg);
 
     if (parenthesize)
         g.emit('(');
@@ -2195,7 +2195,7 @@ function generateExportDeclaration(g, stmt, opt) {
             js += optSpace + '{' + optSpace + '}';
 
         else if (stmt.specifiers[0].type === Syntax.ExportBatchSpecifier) {
-            var spec = generateExpression(g, stmt.specifiers[0], GenOpts.exportDeclSpec);
+            var spec = g.generate(generateExpression, stmt.specifiers[0], GenOpts.exportDeclSpec);
 
             js = sourceJoin(js, spec);
         }
