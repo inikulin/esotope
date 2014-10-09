@@ -708,7 +708,7 @@ function generateVerbatim(g, expr, opt) {
 }
 
 //TODO change this then we will move to real generator
-function generateForIteratorVarId(g, node, options) {
+function adoptVarId(g, node, options) {
     var result;
 
     if (node.type === Syntax.Identifier) {
@@ -755,7 +755,7 @@ function generateFunctionParams(g, node) {
                     allowCall: true
                 }));
             } else {
-                result.push(generateForIteratorVarId(g, node.params[i], {
+                result.push(adoptVarId(g, node.params[i], {
                     precedence: Precedence.Assignment,
                     allowIn: true,
                     allowCall: true
@@ -2334,7 +2334,7 @@ function generateVariableDeclarator(g, stmt, opt) {
     }
 
     else
-        g.expand(generateForIteratorVarId, stmt.id, GenOpts.varDeclaratorId(opt.allowIn));
+        g.expand(adoptVarId, stmt.id, GenOpts.varDeclaratorId(opt.allowIn));
 };
 
 
