@@ -870,21 +870,6 @@ function generateLiteral(g, expr) {
 }
 
 //TODO g
-function generatePropertyKey(g, expr, computed, option) {
-    var result = [];
-
-    if (computed) {
-        result.push('[');
-    }
-    result.push(generateExpression(g, expr, option));
-    if (computed) {
-        result.push(']');
-    }
-
-    return toSource(result);
-}
-
-//TODO g
 function generateAssignment(g, left, right, operator, option) {
     var allowIn, precedence;
 
@@ -1761,8 +1746,12 @@ function generateClassExpression(g, expr) {
 Gen[Syntax.MethodDefinition] =
 function generateMethodDefinition(g, expr) {
     var js = expr['static'] ? 'static' + optSpace : '',
-        propKey = generatePropertyKey(g, expr.key, expr.computed, GenOpts.propKey),
-        body = generateFunctionBody(g, expr.value),
+        propKey = g.generate(generateExpression, expr.key, expr.computed, GenOpts.propKey);
+
+    if (expr.computed)
+        propKey = '[' + propKey + ']';
+
+    var body = generateFunctionBody(g, expr.value),
         propKeyWithBody = propKey + body;
 
     if (expr.kind === 'get' || expr.kind === 'set') {
@@ -1783,7 +1772,10 @@ function generateMethodDefinition(g, expr) {
 
 Gen[Syntax.Property] =
 function generateProperty(g, expr) {
-    var propKey = generatePropertyKey(g, expr.key, expr.computed, GenOpts.propKey);
+    var propKey = g.generate(generateExpression, expr.key, GenOpts.propKey);
+
+    if(expr.computed)
+        propKey = '[' + propKey + ']';
 
     if (expr.kind === 'get' || expr.kind === 'set')
         g.emit(expr.kind + space + propKey + generateFunctionBody(g, expr.value));
