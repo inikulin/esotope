@@ -741,8 +741,15 @@ function generateFunctionParams(g, node) {
         }
         for (i = 0, iz = node.params.length; i < iz; ++i) {
             if (hasDefault && node.defaults[i]) {
+                var fakeAssignExpr = {
+                    type: Syntax.AssignmentExpression,
+                    left: node.params[i],
+                    right: node.defaults[i],
+                    operator: '='
+                };
+
                 // Handle default values.
-                result.push(generateAssignment(g, node.params[i], node.defaults[i], '=', {
+                result.push(generateExpression(g, fakeAssignExpr, {
                     precedence: Precedence.Assignment,
                     allowIn: true,
                     allowCall: true
@@ -868,33 +875,6 @@ function generateLiteral(g, expr) {
 
     return generateRegExp(expr.value);
 }
-
-//TODO g
-function generateAssignment(g, left, right, operator, option) {
-    var allowIn, precedence;
-
-    precedence = option.precedence;
-    allowIn = option.allowIn || (Precedence.Assignment < precedence);
-
-    return parenthesize(
-        [
-            generateExpression(g, left, {
-                precedence: Precedence.Call,
-                allowIn: allowIn,
-                allowCall: true
-            }),
-            optSpace + operator + optSpace,
-            generateExpression(g, right, {
-                precedence: Precedence.Assignment,
-                allowIn: allowIn,
-                allowCall: true
-            })
-        ],
-        Precedence.Assignment,
-        precedence
-    );
-}
-
 
 /**
  * Generator unit options for various syntactic entities
@@ -1390,6 +1370,22 @@ var GenOpts = {
             functionBody: false,
             semicolonOptional: semicolonOptional
         };
+    },
+
+    assignExprLeftOperand: function (allowIn) {
+        return  {
+            precedence: Precedence.Call,
+            allowIn: allowIn,
+            allowCall: true
+        }
+    },
+
+    assignExprRightOperand: function (allowIn) {
+        return  {
+            precedence: Precedence.Assignment,
+            allowIn: allowIn,
+            allowCall: true
+        }
     }
 };
 
@@ -1419,7 +1415,18 @@ function generateSequenceExpression(g, expr, opt) {
 
 Gen[Syntax.AssignmentExpression] =
 function generateAssignmentExpression(g, expr, opt) {
-    return generateAssignment(g, expr.left, expr.right, expr.operator, opt);
+    var parenthesize = Precedence.Assignment < opt.precedence,
+        allowIn = opt.allowIn || parenthesize;
+
+    if (parenthesize)
+        g.emit('(');
+
+    g.expand(generateExpression, expr.left, GenOpts.assignExprLeftOperand(allowIn));
+    g.emit(optSpace + expr.operator + optSpace);
+    g.expand(generateExpression, expr.right, GenOpts.assignExprRightOperand(allowIn));
+
+    if (parenthesize)
+        g.emit(')');
 };
 
 Gen[Syntax.ArrowFunctionExpression] =
@@ -1774,7 +1781,7 @@ Gen[Syntax.Property] =
 function generateProperty(g, expr) {
     var propKey = g.generate(generateExpression, expr.key, GenOpts.propKey);
 
-    if(expr.computed)
+    if (expr.computed)
         propKey = '[' + propKey + ']';
 
     if (expr.kind === 'get' || expr.kind === 'set')
