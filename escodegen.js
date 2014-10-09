@@ -707,8 +707,8 @@ function generateVerbatim(g, expr, opt) {
         g.emit(')');
 }
 
-//TODO g
-function generatePattern(g, node, options) {
+//TODO change this then we will move to real generator
+function generateForIteratorVarId(g, node, options) {
     var result;
 
     if (node.type === Syntax.Identifier) {
@@ -755,7 +755,7 @@ function generateFunctionParams(g, node) {
                     allowCall: true
                 }));
             } else {
-                result.push(generatePattern(g, node.params[i], {
+                result.push(generateForIteratorVarId(g, node.params[i], {
                     precedence: Precedence.Assignment,
                     allowIn: true,
                     allowCall: true
@@ -777,36 +777,29 @@ function generateFunctionParams(g, node) {
         result.push(')');
     }
 
-    return result;
+    return toSource(result);
 }
 
-//TODO g
 function generateFunctionBody(g, node) {
-    var result, expr;
+    g.emit(generateFunctionParams(g, node));
 
-    result = generateFunctionParams(g, node);
-
-    if (node.type === Syntax.ArrowFunctionExpression) {
-        result.push(optSpace);
-        result.push('=>');
-    }
+    if (node.type === Syntax.ArrowFunctionExpression)
+        g.emit(optSpace + '=>');
 
     if (node.expression) {
-        result.push(optSpace);
-        expr = generateExpression(g, node.body, {
-            precedence: Precedence.Assignment,
-            allowIn: true,
-            allowCall: true
-        });
-        if (expr.toString().charAt(0) === '{') {
-            expr = ['(', expr, ')'];
-        }
-        result.push(expr);
-    } else {
-        result.push(maybeBlock(g, node.body, false, true));
-    }
+        g.emit(optSpace);
 
-    return toSource(result);
+        var expr = g.generate(generateExpression, node.body, GenOpts.funcBodyExpr);
+
+        if (expr.charAt(0) === '{')
+            expr = '(' + expr + ')';
+
+        g.emit(expr);
+    }
+    else {
+        g.emit(adoptionPrefix(node.body));
+        g.expand(generateStatement, node.body, GenOpts.funcBodyStmt);
+    }
 }
 
 function generateForStatementIterator(g, operator, stmt, opt) {
@@ -1386,6 +1379,17 @@ var GenOpts = {
             allowIn: allowIn,
             allowCall: true
         }
+    },
+
+    funcBodyExpr: {
+        precedence: Precedence.Assignment,
+        allowIn: true,
+        allowCall: true
+    },
+
+    funcBodyStmt: {
+        functionBody: true,
+        semicolonOptional: false
     }
 };
 
@@ -1436,7 +1440,7 @@ function generateArrowFunctionExpression(g, expr, opt) {
     if (parenthesize)
         g.emit('(');
 
-    g.emit(generateFunctionBody(g, expr));
+    generateFunctionBody(g, expr);
 
     if (parenthesize)
         g.emit(')');
@@ -1685,7 +1689,8 @@ function generateFunctionExpression(g, expr) {
     else
         js += optSpace;
 
-    g.emit(js + toSource(generateFunctionBody(g, expr)));
+    g.emit(js);
+    generateFunctionBody(g, expr);
 };
 
 Gen[Syntax.ExportBatchSpecifier] =
@@ -1758,7 +1763,7 @@ function generateMethodDefinition(g, expr) {
     if (expr.computed)
         propKey = '[' + propKey + ']';
 
-    var body = generateFunctionBody(g, expr.value),
+    var body = g.generate(generateFunctionBody, expr.value),
         propKeyWithBody = propKey + body;
 
     if (expr.kind === 'get' || expr.kind === 'set') {
@@ -1784,17 +1789,18 @@ function generateProperty(g, expr) {
     if (expr.computed)
         propKey = '[' + propKey + ']';
 
-    if (expr.kind === 'get' || expr.kind === 'set')
-        g.emit(expr.kind + space + propKey + generateFunctionBody(g, expr.value));
+    if (expr.kind === 'get' || expr.kind === 'set') {
+        g.emit(expr.kind + space + propKey);
+        generateFunctionBody(g, expr.value);
+    }
 
     else {
         if (expr.shorthand)
             g.emit(propKey);
 
         else if (expr.method) {
-            var js = propKey + generateFunctionBody(g, expr.value);
-
-            g.emit(expr.value.generator ? ('*' + js) : js);
+            g.emit(expr.value.generator ? ('*' + propKey) : propKey);
+            generateFunctionBody(g, expr.value)
         }
 
         else {
@@ -2328,7 +2334,7 @@ function generateVariableDeclarator(g, stmt, opt) {
     }
 
     else
-        g.expand(generatePattern, stmt.id, GenOpts.varDeclaratorId(opt.allowIn));
+        g.expand(generateForIteratorVarId, stmt.id, GenOpts.varDeclaratorId(opt.allowIn));
 };
 
 
@@ -2573,12 +2579,9 @@ Gen[Syntax.FunctionDeclaration] =
 function generateFunctionDeclaration(g, stmt) {
     var isGenerator = !!stmt.generator;
 
-    return [
-        (isGenerator ? 'function*' : 'function'),
-        (isGenerator ? optSpace : space),
-        stmt.id.name,
-        generateFunctionBody(g, stmt)
-    ];
+    g.emit(isGenerator ? ('function*' + optSpace) : ('function' + space ));
+    g.emit(stmt.id.name);
+    generateFunctionBody(g, stmt);
 };
 
 Gen[Syntax.ReturnStatement] =
