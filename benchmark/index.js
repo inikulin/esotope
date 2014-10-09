@@ -1,6 +1,6 @@
 var Benchmark = require('benchmark'),
-    upstream = require('escodegen'),
-    workingCopy = require('../escodegen'),
+    escodegen = require('escodegen'),
+    esotope = require('../escodegen'),
     asts = require('./asts');
 
 
@@ -10,12 +10,12 @@ function cycle(codegen) {
 }
 
 new Benchmark.Suite()
-    .add('On steroids', function () {
-        cycle(workingCopy);
+    .add('esotope', function () {
+        cycle(esotope);
     })
     
-    .add('Upstream', function () {
-        cycle(upstream);
+    .add('escodegen', function () {
+        cycle(escodegen);
     })
 
     .on('start', function () {
@@ -29,7 +29,7 @@ new Benchmark.Suite()
     .on('complete', function () {
         console.log('Fastest is ' + this.filter('fastest').pluck('name'));
 
-        console.log('On steroids is x' + (this[0].hz / this[1].hz).toFixed(2) + ' times faster vs upstream.');
+        console.log('esotope is x' + (this[0].hz / this[1].hz).toFixed(2) + ' times faster vs escodegen.');
     })
 
     .run();

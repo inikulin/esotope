@@ -1453,27 +1453,28 @@ function generateLogicalOrBinaryExpression(g, expr, opt) {
 
 Gen[Syntax.CallExpression] =
 function generateCallExpression(g, expr, opt) {
-    var argCount = expr['arguments'].length,
+    var _ = g,
+        argCount = expr['arguments'].length,
         lastArgIdx = argCount - 1,
         parenthesize = !opt.allowCall || Precedence.Call < opt.precedence;
 
     if (parenthesize)
-        g.emit('(');
+        _.js += '(';
 
     g.expand(generateExpression, expr.callee, GenOpts.callExprCallee);
-    g.emit('(');
+    _.js += '(';
 
     for (var i = 0; i < argCount; ++i) {
         g.expand(generateExpression, expr['arguments'][i], GenOpts.callExprArgs);
 
         if (i !== lastArgIdx)
-            g.emit(',' + optSpace);
+            _.js += ',' + optSpace;
     }
 
-    g.emit(')');
+    _.js += ')';
 
     if (parenthesize)
-        g.emit(')');
+        _.js += ')';
 };
 
 Gen[Syntax.NewExpression] =
@@ -1832,7 +1833,8 @@ function generateThisExpression(g) {
 };
 
 Gen[Syntax.Identifier] = function generateIdentifier(g, node) {
-    g.emit(node.name);
+    var _ = g;
+    _.js += node.name;
 };
 
 Gen[Syntax.ImportSpecifier] =
@@ -2161,7 +2163,8 @@ var EXPRESSION_STATEMENT_UNALLOWED_EXPR_REGEX = /^{|^class(?:\s|{)|^function(?:\
 
 Gen[Syntax.ExpressionStatement] =
 function generateExpressionStatement(g, stmt, opt) {
-    var exprSource = g.generate(generateExpression, stmt.expression, GenOpts.exprStmtExpr),
+    var _ = g,
+        exprSource = g.generate(generateExpression, stmt.expression, GenOpts.exprStmtExpr),
         parenthesize = EXPRESSION_STATEMENT_UNALLOWED_EXPR_REGEX.test(exprSource) ||
                        (directive &&
                         opt.directiveContext &&
@@ -2171,10 +2174,10 @@ function generateExpressionStatement(g, stmt, opt) {
     // '{', 'function', 'class' are not allowed in expression statement.
     // Therefore, they should be parenthesized.
     if (parenthesize)
-        g.emit('(' + exprSource + ')' + opt.semicolon);
+        _.js += '(' + exprSource + ')' + opt.semicolon;
 
     else
-        g.emit(exprSource + opt.semicolon);
+        _.js += exprSource + opt.semicolon;
 };
 
 
@@ -2685,33 +2688,34 @@ FORMAT_MINIFY = {
 FORMAT_DEFAULTS = getDefaultOptions().format;
 
 //TODO
-/*var stats = {};
+var stats = {},
+    _ = Gen;
 
- Object.keys(_).forEach(function (key) {
- var fn = _[key];
+Object.keys(_).forEach(function (key) {
+    var fn = _[key];
 
- _[key] = function () {
- if (!stats[key])
- stats[key] = 0;
+    _[key] = function () {
+        if (!stats[key])
+            stats[key] = 0;
 
- stats[key]++;
- return fn.apply(null, arguments);
- };
+        stats[key]++;
+        return fn.apply(null, arguments);
+    };
 
- });
+});
 
- exports.printStats = function () {
- Object.keys(stats)
- .map(function (key) {
- return [key, stats[key]]
- })
- .sort(function (a, b) {
- return a[1] - b[1];
- })
- .forEach(function (item) {
- console.log(item[0] + ' - ' + item[1]);
- });
- };*/
+exports.printStats = function () {
+    Object.keys(stats)
+        .map(function (key) {
+            return [key, stats[key]]
+        })
+        .sort(function (a, b) {
+            return a[1] - b[1];
+        })
+        .forEach(function (item) {
+            console.log(item[0] + ' - ' + item[1]);
+        });
+};
 
 exports.version = require('./package.json').version;
 exports.generate = generate;
