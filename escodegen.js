@@ -724,64 +724,56 @@ function adoptVarId(g, node, options) {
     return result;
 }
 
-//TODO g
 function generateFunctionParams(g, node) {
-    var i, iz, result, hasDefault;
+    var params = node.params,
+        paramCount = node.params.length,
+        lastParamIdx = paramCount - 1,
+        defaults = node.defaults,
+        hasDefaults = !!defaults;
 
-    hasDefault = false;
 
-    if (node.type === Syntax.ArrowFunctionExpression && !node.rest && (!node.defaults || node.defaults.length === 0) &&
-        node.params.length === 1 && node.params[0].type === Syntax.Identifier) {
-        // arg => { } case
-        result = [node.params[0].name];
-    } else {
-        result = ['('];
-        if (node.defaults) {
-            hasDefault = true;
-        }
-        for (i = 0, iz = node.params.length; i < iz; ++i) {
-            if (hasDefault && node.defaults[i]) {
+    // arg => { } case
+    if (node.type === Syntax.ArrowFunctionExpression &&
+        !node.rest && (!hasDefaults || defaults.length === 0) &&
+        paramCount === 1 && params[0].type === Syntax.Identifier) {
+        g.emit(params[0].name);
+    }
+
+    else {
+        g.emit('(');
+
+        for (var i = 0; i < paramCount; ++i) {
+            if (hasDefaults && defaults[i]) {
                 var fakeAssignExpr = {
                     type: Syntax.AssignmentExpression,
-                    left: node.params[i],
+                    left: params[i],
                     right: node.defaults[i],
                     operator: '='
                 };
 
-                // Handle default values.
-                result.push(generateExpression(g, fakeAssignExpr, {
-                    precedence: Precedence.Assignment,
-                    allowIn: true,
-                    allowCall: true
-                }));
-            } else {
-                result.push(adoptVarId(g, node.params[i], {
-                    precedence: Precedence.Assignment,
-                    allowIn: true,
-                    allowCall: true
-                }));
+                g.expand(generateExpression, fakeAssignExpr, GenOpts.funcArg);
             }
-            if (i + 1 < iz) {
-                result.push(',' + optSpace);
-            }
+
+            else
+                g.emit(adoptVarId(g, node.params[i], GenOpts.funcArg));
+
+            if (i !== lastParamIdx)
+                g.emit(',' + optSpace);
         }
 
         if (node.rest) {
-            if (node.params.length) {
-                result.push(',' + optSpace);
-            }
-            result.push('...');
-            result.push(node.rest.name);
+            if (paramCount)
+                g.emit(',' + optSpace);
+
+            g.emit('...' + node.rest.name);
         }
 
-        result.push(')');
+        g.emit(')');
     }
-
-    return toSource(result);
 }
 
 function generateFunctionBody(g, node) {
-    g.emit(generateFunctionParams(g, node));
+    generateFunctionParams(g, node);
 
     if (node.type === Syntax.ArrowFunctionExpression)
         g.emit(optSpace + '=>');
@@ -1390,6 +1382,12 @@ var GenOpts = {
     funcBodyStmt: {
         functionBody: true,
         semicolonOptional: false
+    },
+
+    funcArg: {
+        precedence: Precedence.Assignment,
+        allowIn: true,
+        allowCall: true
     }
 };
 
