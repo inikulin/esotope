@@ -683,15 +683,9 @@ function adoptionSuffix(stmt) {
     return newline + indent;
 }
 
-function generateVerbatimString(g, string) {
-    var i, iz, result;
-    result = string.split(/\r\n|\n/);
-    for (i = 1, iz = result.length; i < iz; i++) {
-        result[i] = newline + indent + result[i];
-    }
-    return result;
-}
-
+/**
+ * Subentities generators
+ */
 function generateVerbatim(g, expr, opt) {
     var verbatim = expr[extra.verbatim],
         strVerbatim = typeof verbatim === 'string',
@@ -713,6 +707,7 @@ function generateVerbatim(g, expr, opt) {
         g.emit(')');
 }
 
+//TODO g
 function generatePattern(g, node, options) {
     var result;
 
@@ -729,6 +724,7 @@ function generatePattern(g, node, options) {
     return result;
 }
 
+//TODO g
 function generateFunctionParams(g, node) {
     var i, iz, result, hasDefault;
 
@@ -777,6 +773,7 @@ function generateFunctionParams(g, node) {
     return result;
 }
 
+//TODO g
 function generateFunctionBody(g, node) {
     var result, expr;
 
@@ -805,36 +802,30 @@ function generateFunctionBody(g, node) {
     return toSource(result);
 }
 
-function generateIterationForStatement(g, operator, stmt, semicolonIsNotNeeded) {
-    var result = ['for' + optSpace + '('];
-    withIndent(function () {
-        if (stmt.left.type === Syntax.VariableDeclaration) {
-            withIndent(function () {
-                result.push(stmt.left.kind + space);
-                result.push(generateStatement(g, stmt.left.declarations[0], {
-                    allowIn: false
-                }));
-            });
-        } else {
-            result.push(generateExpression(g, stmt.left, {
-                precedence: Precedence.Call,
-                allowIn: true,
-                allowCall: true
-            }));
-        }
+function generateForStatementIterator(g, operator, stmt, opt) {
+    var prevIndent1 = shiftIndent(),
+        js = 'for' + optSpace + '(';
 
-        result = join(result, operator);
-        result = [join(
-            result,
-            generateExpression(g, stmt.right, {
-                precedence: Precedence.Sequence,
-                allowIn: true,
-                allowCall: true
-            })
-        ), ')'];
-    });
-    result.push(maybeBlock(g, stmt.body, semicolonIsNotNeeded));
-    return result;
+    if (stmt.left.type === Syntax.VariableDeclaration) {
+        var prevIndent2 = shiftIndent();
+        js += stmt.left.kind + space;
+        js += g.generate(generateStatement, stmt.left.declarations[0], GenOpts.forIterVarDecl);
+        indent = prevIndent2;
+    }
+
+    else
+        js += g.generate(generateExpression, stmt.left, GenOpts.forStmtIterLeft);
+
+    js = sourceJoin(js, operator);
+
+    var right = g.generate(generateExpression, stmt.right, GenOpts.forStmtIterRight);
+
+    js = sourceJoin(js, right) + ')';
+
+    indent = prevIndent1;
+
+    g.emit(js + adoptionPrefix(stmt.body));
+    g.expand(generateStatement, stmt.body, GenOpts.forStmtIterBody(opt.semicolon === ''));
 }
 
 
@@ -878,6 +869,7 @@ function generateLiteral(g, expr) {
     return generateRegExp(expr.value);
 }
 
+//TODO g
 function generatePropertyKey(g, expr, computed, option) {
     var result = [];
 
@@ -892,6 +884,7 @@ function generatePropertyKey(g, expr, computed, option) {
     return toSource(result);
 }
 
+//TODO g
 function generateAssignment(g, left, right, operator, option) {
     var allowIn, precedence;
 
@@ -1388,6 +1381,29 @@ var GenOpts = {
             precedence: precedence,
             allowIn: allowIn,
             allowCall: true
+        };
+    },
+
+    forIterVarDecl: {
+        allowIn: false
+    },
+
+    forStmtIterLeft: {
+        precedence: Precedence.Call,
+        allowIn: true,
+        allowCall: true
+    },
+
+    forStmtIterRight: {
+        precedence: Precedence.Sequence,
+        allowIn: true,
+        allowCall: true
+    },
+
+    forStmtIterBody: function (semicolonOptional) {
+        return {
+            functionBody: false,
+            semicolonOptional: semicolonOptional
         };
     }
 };
@@ -2509,12 +2525,12 @@ function generateForStatement(g, stmt, opt) {
 
 Gen[Syntax.ForInStatement] =
 function generateForInStatement(g, stmt, opt) {
-    return generateIterationForStatement(g, 'in', stmt, opt.semicolon === '');
+    generateForStatementIterator(g, 'in', stmt, opt);
 };
 
 Gen[Syntax.ForOfStatement] =
 function generateForOfStatement(g, stmt, opt) {
-    return generateIterationForStatement(g, 'of', stmt, opt.semicolon === '');
+    generateForStatementIterator(g, 'of', stmt, opt);
 };
 
 
