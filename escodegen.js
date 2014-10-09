@@ -1950,58 +1950,27 @@ function generateTemplateLiteral(g, expr) {
 };
 
 function generateExpression(g, expr, option) {
-    var result,
-        precedence,
-        type,
-        allowIn,
-        allowCall;
-
-    precedence = option.precedence;
-    allowIn = option.allowIn;
-    allowCall = option.allowCall;
-    type = expr.type || option.type;
+    var precedence = option.precedence,
+        allowIn = option.allowIn,
+        allowCall = option.allowCall,
+        type = expr.type || option.type;
 
 
     var gen = Gen[type];
 
-    //TODO fake gen for now
-    var fakeGen = {
-        emit: function (generated) {
-            result = result || '';
-            result += generated;
-        },
-        expand: function (proc, node, opt) {
-            var rr = proc(g, node, opt);
 
-            if (rr !== void 0) {
-                result = result || '';
-                result += rr;
-            }
-        },
-        generate: CodeGen.generate
-    };
+    if (extra.verbatim && expr.hasOwnProperty(extra.verbatim))
+        g.expand(generateVerbatim, expr, option);
 
-    if (extra.verbatim && expr.hasOwnProperty(extra.verbatim)) {
-        return fakeGen.generate(generateVerbatim, expr, option);
-    }
-
-    else if (gen) {
-        var rr = gen(fakeGen, expr, {
+    else {
+        gen(g, expr, {
             precedence: precedence,
             allowIn: allowIn,
             allowCall: allowCall,
             type: type,
             allowUnparenthesizedNew: option.allowUnparenthesizedNew
         });
-        if (rr !== void 0)
-            result = rr;
     }
-
-    else {
-        fatalError('Unknown expression type: ' + expr.type);
-    }
-
-    return toSource(result);
 }
 
 //Statements
@@ -2576,16 +2545,10 @@ function generateWithStatement(g, stmt, opt) {
 };
 
 function generateStatement(g, stmt, option) {
-    var result,
-        allowIn,
-        functionBody,
-        directiveContext,
-        semicolon;
-
-    allowIn = true;
-    semicolon = ';';
-    functionBody = false;
-    directiveContext = false;
+    var allowIn = true,
+        semicolon = ';',
+        functionBody = false,
+        directiveContext = false;
 
     if (option) {
         allowIn = option.allowIn === void 0 || option.allowIn;
@@ -2598,47 +2561,20 @@ function generateStatement(g, stmt, option) {
 
     var gen = Gen[stmt.type];
 
-    //TODO fake gen for now
-    var fakeGen = {
-        emit: function (generated) {
-            result = result || '';
-            result += generated;
-        },
-        expand: function (proc, node, opt) {
-            var rr = proc(g, node, opt);
-
-            if (rr !== void 0) {
-                result = result || '';
-                result += rr;
-            }
-        },
-        generate: CodeGen.generate
-    };
-
-    if (gen) {
-        var rr = gen(fakeGen, stmt, {
-            allowIn: allowIn,
-            semicolon: semicolon,
-            functionBody: functionBody,
-            directiveContext: directiveContext
-        });
-
-        if (rr !== void 0)
-            result = rr;
-    }
-    else {
-        fatalError('Unknown statement type: ' + stmt.type);
-    }
-
-    return toSource(result);
+    gen(g, stmt, {
+        allowIn: allowIn,
+        semicolon: semicolon,
+        functionBody: functionBody,
+        directiveContext: directiveContext
+    });
 }
 
-function generateInternal(g, node, opt) {
+function generateInternal(g, node) {
     if (isStatement(node))
-        return generateStatement(g, node, opt);
+        generateStatement(g, node);
 
     else if (isExpression(node))
-        return generateExpression(g, node, {
+        generateExpression(g, node, {
             precedence: Precedence.Sequence,
             allowIn: true,
             allowCall: true
@@ -2651,55 +2587,34 @@ function generateInternal(g, node, opt) {
 //CodeGen
 //-----------------------------------------------------------------------------------
 var CodeGen = function () {
-    this.nextPass = [];
-    this.pass = null;
-    this.out = [];
-    this.idx = -1;
-    this.offset = 0;
+    this.js = '';
 };
 
-CodeGen.generate = CodeGen.prototype.generate = function (proc, node, opt, indent) {
-    var g = new CodeGen();
+CodeGen.prototype.generate = function (proc, node, opt) {
+    var savedJs = this.js;
+    this.js = '';
 
-    g.expand(proc, node, opt, indent);
+    proc(this, node, opt);
 
-    return g.traverse();
+    var result = this.js;
+    this.js = savedJs;
+
+    return result;
 };
 
 CodeGen.prototype.emit = function (generated) {
-    this.idx++;
-    this.offset++;
-    this.out.splice(this.idx, 0, generated);
+    this.js += generated;
 };
 
 CodeGen.prototype.expand = function (proc, node, opt) {
-    this.nextPass.push({
-        proc: proc,
-        node: node,
-        opt: opt,
-        insertionIdx: this.idx
-    });
+    proc(this, node, opt);
 };
 
-CodeGen.prototype.traverse = function () {
-    while (this.nextPass.length) {
-        this.pass = this.nextPass;
-        this.nextPass = [];
-        this.offset = 0;
+CodeGen.run = function (node) {
+    var cg = new CodeGen();
+    generateInternal(cg, node);
 
-        for (var i = 0; i < this.pass.length; i++) {
-            var task = this.pass[i];
-
-            this.idx = task.insertionIdx + this.offset;
-            var r = task.proc(this, task.node, task.opt);
-
-            //TODO
-            if (r !== void 0)
-                this.emit(r);
-        }
-    }
-
-    return toSource(this.out);
+    return cg.js;
 };
 
 function generate(node, options) {
@@ -2748,7 +2663,7 @@ function generate(node, options) {
     extra = options;
     space = optSpace ? optSpace : ' ';
 
-    return CodeGen.generate(generateInternal, node);
+    return CodeGen.run(node);
 }
 
 FORMAT_MINIFY = {
