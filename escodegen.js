@@ -1610,39 +1610,41 @@ function generateYieldExpression(g, expr, opt) {
 
 Gen[Syntax.UpdateExpression] =
 function generateUpdateExpression(g, expr, opt) {
-    var precedence = expr.prefix ? Precedence.Unary : Precedence.Postfix,
+    var _ = g,
+        precedence = expr.prefix ? Precedence.Unary : Precedence.Postfix,
         parenthesize = precedence < opt.precedence;
 
     if (parenthesize)
-        g.emit('(');
+        _.js += '(';
 
     if (expr.prefix) {
-        g.emit(expr.operator);
+        _.js += expr.operator;
         g.expand(generateExpression, expr.argument, GenOpts.prefixUpdateExprArg);
     }
 
     else {
         g.expand(generateExpression, expr.argument, GenOpts.postfixUpdateExprArg);
-        g.emit(expr.operator);
+        _.js += expr.operator;
     }
 
     if (parenthesize)
-        g.emit(')');
+        _.js += ')';
 };
 
 Gen[Syntax.FunctionExpression] =
 function generateFunctionExpression(g, expr) {
-    var isGenerator = !!expr.generator,
-        js = isGenerator ? 'function*' : 'function';
+    var _ = g,
+        isGenerator = !!expr.generator;
+
+    _.js += isGenerator ? 'function*' : 'function';
 
     if (expr.id) {
-        js += isGenerator ? optSpace : space;
-        js += expr.id.name;
+        _.js += isGenerator ? optSpace : space;
+        _.js += expr.id.name;
     }
     else
-        js += optSpace;
+        _.js += optSpace;
 
-    g.emit(js);
     generateFunctionBody(g, expr);
 };
 
@@ -1738,27 +1740,28 @@ function generateMethodDefinition(g, expr) {
 
 Gen[Syntax.Property] =
 function generateProperty(g, expr) {
-    var propKey = g.generate(generateExpression, expr.key, GenOpts.propKey);
+    var _ = g,
+        propKey = g.generate(generateExpression, expr.key, GenOpts.propKey);
 
     if (expr.computed)
         propKey = '[' + propKey + ']';
 
     if (expr.kind === 'get' || expr.kind === 'set') {
-        g.emit(expr.kind + space + propKey);
+        _.js += expr.kind + space + propKey;
         generateFunctionBody(g, expr.value);
     }
 
     else {
         if (expr.shorthand)
-            g.emit(propKey);
+            _.js += propKey;
 
         else if (expr.method) {
-            g.emit(expr.value.generator ? ('*' + propKey) : propKey);
+            _.js += expr.value.generator ? ('*' + propKey) : propKey;
             generateFunctionBody(g, expr.value)
         }
 
         else {
-            g.emit(propKey + ':' + optSpace);
+            _.js += propKey + ':' + optSpace;
             g.expand(generateExpression, expr.value, GenOpts.propVal);
         }
     }
@@ -1766,33 +1769,35 @@ function generateProperty(g, expr) {
 
 Gen[Syntax.ObjectExpression] =
 function generateObjectExpression(g, expr) {
-    var propCount = expr.properties.length;
+    var _ = g,
+        propCount = expr.properties.length;
 
     if (propCount) {
         var lastPropIdx = propCount - 1,
             prevIndent = shiftIndent();
 
-        g.emit('{');
+        _.js += '{';
 
         for (var i = 0; i < propCount; i++) {
-            g.emit(newline + indent);
+            _.js += newline + indent;
             g.expand(generateExpression, expr.properties[i], GenOpts.objExprProperty);
 
             if (i !== lastPropIdx)
-                g.emit(',');
+                _.js += ',';
         }
 
         indent = prevIndent;
-        g.emit(newline + indent + '}');
+        _.js += newline + indent + '}';
     }
 
     else
-        g.emit('{}');
+        _.js += '{}';
 };
 
 Gen[Syntax.ObjectPattern] =
 function generateObjectPattern(g, expr) {
-    var propCount = expr.properties.length;
+    var _ = g,
+        propCount = expr.properties.length;
 
     if (propCount) {
         var lastPropIdx = propCount - 1,
@@ -1810,31 +1815,32 @@ function generateObjectPattern(g, expr) {
             }
         }
 
-        g.emit(multiline ? ('{' + newline) : '{');
+        _.js += multiline ? ('{' + newline) : '{';
 
         var prevIndent = shiftIndent(),
             propSuffix = ',' + (multiline ? newline : optSpace);
 
         for (var i = 0; i < propCount; i++) {
             if (multiline)
-                g.emit(indent);
+                _.js += indent;
 
             g.expand(generateExpression, expr.properties[i], GenOpts.objPatternProp);
 
             if (i !== lastPropIdx)
-                g.emit(propSuffix);
+                _.js += propSuffix;
         }
 
         indent = prevIndent;
-        g.emit(multiline ? (newline + indent + '}') : '}');
+        _.js += multiline ? (newline + indent + '}') : '}';
     }
     else
-        g.emit('{}');
+        _.js += '{}';
 };
 
 Gen[Syntax.ThisExpression] =
 function generateThisExpression(g) {
-    g.emit('this');
+    var _ = g;
+    _.js += 'this';
 };
 
 Gen[Syntax.Identifier] = function generateIdentifier(g, node) {
@@ -2006,20 +2012,24 @@ function generateBlockStatement(g, stmt, opt) {
 
 Gen[Syntax.BreakStatement] =
 function generateBreakStatement(g, stmt, opt) {
+    var _ = g;
+
     if (stmt.label)
-        g.emit('break ' + stmt.label.name + opt.semicolon);
+        _.js += 'break ' + stmt.label.name + opt.semicolon;
 
     else
-        g.emit('break' + opt.semicolon);
+        _.js += 'break' + opt.semicolon;
 };
 
 Gen[Syntax.ContinueStatement] =
 function generateContinueStatement(g, stmt, opt) {
+    var _ = g;
+
     if (stmt.label)
-        g.emit('continue ' + stmt.label.name + opt.semicolon);
+        _.js += 'continue ' + stmt.label.name + opt.semicolon;
 
     else
-        g.emit('continue' + opt.semicolon);
+        _.js += 'continue' + opt.semicolon;
 };
 
 Gen[Syntax.ClassBody] =
@@ -2273,19 +2283,19 @@ function generateVariableDeclarator(g, stmt, opt) {
 
 Gen[Syntax.VariableDeclaration] =
 function generateVariableDeclaration(g, stmt, opt) {
-    var i = 0,
+    var _ = g,
         len = stmt.declarations.length,
         prevIndent = len > 1 ? shiftIndent() : indent,
         expandOpt = GenOpts.varDeclaration(opt.allowIn);
 
-    g.emit(stmt.kind);
+    _.js += stmt.kind;
 
-    for (; i < len; i++) {
-        g.emit(i === 0 ? space : (',' + optSpace));
+    for (var i = 0; i < len; i++) {
+        _.js += i === 0 ? space : (',' + optSpace);
         g.expand(generateStatement, stmt.declarations[i], expandOpt);
     }
 
-    g.emit(opt.semicolon);
+    _.js += opt.semicolon;
     indent = prevIndent;
 };
 
@@ -2339,11 +2349,12 @@ function generateTryStatement(g, stmt) {
 
 Gen[Syntax.SwitchStatement] =
 function generateSwitchStatement(g, stmt) {
-    var prevIndent = shiftIndent();
+    var _ = g,
+        prevIndent = shiftIndent();
 
-    g.emit('switch' + optSpace + '(');
+    _.js += 'switch' + optSpace + '(';
     g.expand(generateExpression, stmt.discriminant, GenOpts.switchStmtDiscriminant);
-    g.emit(')' + optSpace + '{' + newline);
+    _.js += ')' + optSpace + '{' + newline;
     indent = prevIndent;
 
     if (stmt.cases) {
@@ -2351,40 +2362,41 @@ function generateSwitchStatement(g, stmt) {
             lastIdx = len - 1;
 
         for (var i = 0; i < len; i++) {
-            g.emit(indent);
+            _.js += indent;
             g.expand(generateStatement, stmt.cases[i], GenOpts.switchStmtCase(i === lastIdx));
-            g.emit(newline);
+            _.js += newline;
         }
     }
 
-    g.emit(indent + '}');
+    _.js += indent + '}';
 };
 
 
 Gen[Syntax.SwitchCase] =
 function generateSwitchCase(g, stmt, opt) {
-    var i = 0,
+    var _ = g,
+        i = 0,
         prevIndent = shiftIndent(),
         conseqCount = stmt.consequent.length,
         lastConseqIdx = conseqCount - 1;
 
     if (stmt.test) {
         var test = g.generate(generateExpression, stmt.test, GenOpts.switchCaseTest);
-        g.emit(sourceJoin('case', test) + ':');
+        _.js += sourceJoin('case', test) + ':';
     }
 
     else
-        g.emit('default:');
+        _.js += 'default:';
 
 
     if (conseqCount && stmt.consequent[0].type === Syntax.BlockStatement) {
         i++;
-        g.emit(adoptionPrefix(stmt.consequent[0]));
+        _.js += adoptionPrefix(stmt.consequent[0]);
         g.expand(generateStatement, stmt.consequent[0], GenOpts.switchCaseConseqBlock);
     }
 
     for (; i < conseqCount; i++) {
-        g.emit(newline + indent);
+        _.js += newline + indent;
         g.expand(generateStatement, stmt.consequent[i], GenOpts.switchCaseConseq(i === lastConseqIdx &&
                                                                                  opt.semicolon === ''));
     }
@@ -2511,10 +2523,11 @@ function generateProgram(g, stmt) {
 
 Gen[Syntax.FunctionDeclaration] =
 function generateFunctionDeclaration(g, stmt) {
-    var isGenerator = !!stmt.generator;
+    var _ = g,
+        isGenerator = !!stmt.generator;
 
-    g.emit(isGenerator ? ('function*' + optSpace) : ('function' + space ));
-    g.emit(stmt.id.name);
+    _.js += isGenerator ? ('function*' + optSpace) : ('function' + space );
+    _.js += stmt.id.name;
     generateFunctionBody(g, stmt);
 };
 
@@ -2534,14 +2547,15 @@ function generateReturnStatement(g, stmt, opt) {
 
 Gen[Syntax.WhileStatement] =
 function generateWhileStatement(g, stmt, opt) {
-    var prevIndent = shiftIndent();
+    var _ = g,
+        prevIndent = shiftIndent();
 
-    g.emit('while' + optSpace + '(');
+    _.js += 'while' + optSpace + '(';
     g.expand(generateExpression, stmt.test, GenOpts.whileStmtTest);
-    g.emit(')');
+    _.js += ')';
     indent = prevIndent;
 
-    g.emit(adoptionPrefix(stmt.body));
+    _.js += adoptionPrefix(stmt.body);
     g.expand(generateStatement, stmt.body, GenOpts.whileStmtBody(opt.semicolon === ''));
 };
 
