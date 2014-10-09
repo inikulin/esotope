@@ -900,7 +900,7 @@ function generateAssignment(g, left, right, operator, option) {
                 allowIn: allowIn,
                 allowCall: true
             }),
-                optSpace + operator + optSpace,
+            optSpace + operator + optSpace,
             generateExpression(g, right, {
                 precedence: Precedence.Assignment,
                 allowIn: allowIn,
@@ -1376,8 +1376,15 @@ var GenOpts = {
         precedence: Precedence.Unary,
         allowIn: true,
         allowCall: true
-    }
+    },
 
+    binExprOperand: function (precedence, allowIn) {
+        return {
+            precedence: precedence,
+            allowIn: allowIn,
+            allowCall: true
+        };
+    }
 };
 
 //Expressions
@@ -1442,52 +1449,42 @@ function generateConditionalExpression(g, expr, opt) {
         g.emit(')');
 };
 
-//TODO
 Gen[Syntax.LogicalExpression] =
 Gen[Syntax.BinaryExpression] =
 function generateLogicalOrBinaryExpression(g, expr, opt) {
-    var result = null,
-        currentPrecedence = BinaryPrecedence[expr.operator];
+    var op = expr.operator,
+        precedence = BinaryPrecedence[expr.operator],
+        parenthesize = precedence < opt.precedence,
+        allowIn = opt.allowIn || parenthesize,
+        operandGenOpt = GenOpts.binExprOperand(precedence, allowIn),
+        js = g.generate(generateExpression, expr.left, operandGenOpt);
 
-    opt.allowIn |= (currentPrecedence < opt.precedence);
+    parenthesize |= op === 'in' && !allowIn;
 
-    var fragment = generateExpression(g, expr.left, {
-        precedence: currentPrecedence,
-        allowIn: opt.allowIn,
-        allowCall: true
-    });
+    if (parenthesize)
+        g.emit('(');
 
-    var leftSource = fragment.toString();
+    if (js.charCodeAt(js.length - 1) === 0x2F /* / */ && esutils.code.isIdentifierPart(op.charCodeAt(0)))
+        js = js + space + op;
 
-    if (leftSource.charCodeAt(leftSource.length - 1) === 0x2F /* / */
-        && esutils.code.isIdentifierPart(expr.operator.charCodeAt(0))) {
-        result = [fragment, space, expr.operator];
-    } else {
-        result = join(fragment, expr.operator);
-    }
+    else
+        js = sourceJoin(js, op);
 
-    fragment = generateExpression(g, expr.right, {
-        precedence: currentPrecedence + 1,
-        allowIn: opt.allowIn,
-        allowCall: true
-    });
+    operandGenOpt.precedence++;
 
-    if (expr.operator === '/' && fragment.toString().charAt(0) === '/' ||
-        expr.operator.slice(-1) === '<' && fragment.toString().slice(0, 3) === '!--') {
-        // If '/' concats with '/' or `<` concats with `!--`, it is interpreted as comment start
-        result.push(space);
-        result.push(fragment);
-    } else {
-        result = join(result, fragment);
-    }
+    var right = g.generate(generateExpression, expr.right, operandGenOpt);
 
-    if (expr.operator === 'in' && !opt.allowIn) {
-        result = ['(', result, ')'];
-    } else {
-        result = parenthesize(result, currentPrecedence, opt.precedence);
-    }
+    // If '/' concats with '/' or `<` concats with `!--`, it is interpreted as comment start
+    if (op === '/' && right.charAt(0) === '/' || op.slice(-1) === '<' && right.slice(0, 3) === '!--')
+        js += space + right;
 
-    return result;
+    else
+        js = sourceJoin(js, right);
+
+    g.emit(js);
+
+    if (parenthesize)
+        g.emit(')');
 };
 
 Gen[Syntax.CallExpression] =
