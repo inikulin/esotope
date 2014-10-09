@@ -620,45 +620,6 @@ function sourceJoin(left, right) {
     return toSource(join(left, right));
 }
 
-function addIndent(stmt) {
-    return [indent, stmt];
-}
-
-function withIndent(fn) {
-    var previousBase, result;
-    previousBase = indent;
-    indent += indentUnit;
-    //TODO THIS IS BAADDDDDDD!
-    result = fn.call(this, indent);
-    indent = previousBase;
-    return result;
-}
-
-function parenthesize(text, current, should) {
-    if (current < should) {
-        return ['(', text, ')'];
-    }
-    return text;
-}
-
-function maybeBlock(g, stmt, semicolonOptional, functionBody) {
-    var result;
-
-    if (stmt.type === Syntax.BlockStatement) {
-        return [optSpace, generateStatement(g, stmt, { functionBody: functionBody })];
-    }
-
-    if (stmt.type === Syntax.EmptyStatement) {
-        return ';';
-    }
-
-    withIndent(function () {
-        result = [newline, addIndent(generateStatement(g, stmt, { semicolonOptional: semicolonOptional, functionBody: functionBody }))];
-    });
-
-    return result;
-}
-
 function shiftIndent() {
     var prevIndent = indent;
 
@@ -707,23 +668,6 @@ function generateVerbatim(g, expr, opt) {
         g.emit(')');
 }
 
-//TODO change this then we will move to real generator
-function adoptVarId(g, node, options) {
-    var result;
-
-    if (node.type === Syntax.Identifier) {
-        result = node.name;
-    } else {
-        result = generateExpression(g, node, {
-            precedence: options.precedence,
-            allowIn: options.allowIn,
-            allowCall: true
-        });
-    }
-
-    return result;
-}
-
 function generateFunctionParams(g, node) {
     var params = node.params,
         paramCount = node.params.length,
@@ -733,8 +677,7 @@ function generateFunctionParams(g, node) {
 
 
     // arg => { } case
-    if (node.type === Syntax.ArrowFunctionExpression &&
-        !node.rest && (!hasDefaults || defaults.length === 0) &&
+    if (node.type === Syntax.ArrowFunctionExpression && !node.rest && (!hasDefaults || defaults.length === 0) &&
         paramCount === 1 && params[0].type === Syntax.Identifier) {
         g.emit(params[0].name);
     }
@@ -754,8 +697,13 @@ function generateFunctionParams(g, node) {
                 g.expand(generateExpression, fakeAssignExpr, GenOpts.funcArg);
             }
 
-            else
-                g.emit(adoptVarId(g, node.params[i], GenOpts.funcArg));
+            else {
+                if (params[i].type === Syntax.Identifier)
+                    g.emit(params[i].name);
+
+                else
+                    g.expand(generateExpression, params[i], GenOpts.funcArg);
+            }
 
             if (i !== lastParamIdx)
                 g.emit(',' + optSpace);
@@ -788,6 +736,7 @@ function generateFunctionBody(g, node) {
 
         g.emit(expr);
     }
+
     else {
         g.emit(adoptionPrefix(node.body));
         g.expand(generateStatement, node.body, GenOpts.funcBodyStmt);
@@ -2323,16 +2272,21 @@ function generateImportDeclaration(g, stmt, opt) {
 
 Gen[Syntax.VariableDeclarator] =
 function generateVariableDeclarator(g, stmt, opt) {
-    if (stmt.init) {
-        var expandOpt = GenOpts.varDeclaratorInit(opt.allowIn);
+    var genOpt = GenOpts.varDeclaratorInit(opt.allowIn);
 
-        g.expand(generateExpression, stmt.id, expandOpt);
+    if (stmt.init) {
+        g.expand(generateExpression, stmt.id, genOpt);
         g.emit(optSpace + '=' + optSpace);
-        g.expand(generateExpression, stmt.init, expandOpt);
+        g.expand(generateExpression, stmt.init, genOpt);
     }
 
-    else
-        g.expand(adoptVarId, stmt.id, GenOpts.varDeclaratorId(opt.allowIn));
+    else {
+        if (stmt.id.type === Syntax.Identifier)
+            g.emit(stmt.id.name);
+
+        else
+            g.expand(generateExpression, stmt.id, genOpt);
+    }
 };
 
 
