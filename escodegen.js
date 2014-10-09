@@ -683,7 +683,7 @@ function adoptionSuffix(stmt) {
     return newline + indent;
 }
 
-function generateVerbatimString(string) {
+function generateVerbatimString(g, string) {
     var i, iz, result;
     result = string.split(/\r\n|\n/);
     for (i = 1, iz = result.length; i < iz; i++) {
@@ -692,20 +692,25 @@ function generateVerbatimString(string) {
     return result;
 }
 
-function generateVerbatim(expr, option) {
-    var verbatim, result, prec;
-    verbatim = expr[extra.verbatim];
+function generateVerbatim(g, expr, opt) {
+    var verbatim = expr[extra.verbatim],
+        strVerbatim = typeof verbatim === 'string',
+        precedence = !strVerbatim && verbatim.precedence !== void 0 ? verbatim.precedence : Precedence.Sequence,
+        parenthesize = precedence < opt.precedence,
+        content = strVerbatim ? verbatim : verbatim.content,
+        chunks = content.split(/\r\n|\n/),
+        chunkCount = chunks.length;
 
-    if (typeof verbatim === 'string') {
-        result = parenthesize(generateVerbatimString(verbatim), Precedence.Sequence, option.precedence);
-    } else {
-        // verbatim is object
-        result = generateVerbatimString(verbatim.content);
-        prec = (verbatim.precedence != null) ? verbatim.precedence : Precedence.Sequence;
-        result = parenthesize(result, prec, option.precedence);
-    }
+    if (parenthesize)
+        g.emit('(');
 
-    return toSource(result);
+    g.emit(chunks[0]);
+
+    for (var i = 1; i < chunkCount; i++)
+        g.emit(newline + indent + chunks[i]);
+
+    if (parenthesize)
+        g.emit(')');
 }
 
 function generatePattern(g, node, options) {
@@ -1989,10 +1994,6 @@ function generateExpression(g, expr, option) {
     type = expr.type || option.type;
 
 
-    if (extra.verbatim && expr.hasOwnProperty(extra.verbatim)) {
-        return generateVerbatim(expr, option);
-    }
-
     var gen = Gen[type];
 
     //TODO fake gen for now
@@ -2012,8 +2013,11 @@ function generateExpression(g, expr, option) {
         generate: CodeGen.generate
     };
 
+    if (extra.verbatim && expr.hasOwnProperty(extra.verbatim)) {
+        return fakeGen.generate(generateVerbatim, expr, option);
+    }
 
-    if (gen) {
+    else if (gen) {
         var rr = gen(fakeGen, expr, {
             precedence: precedence,
             allowIn: allowIn,
