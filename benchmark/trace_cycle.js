@@ -6,4 +6,4 @@ for (var j = 0; j < 50; j++) {
         workingCopy.generate(asts[i]);
 }
 
-workingCopy.printStats();
+//workingCopy.printStats();

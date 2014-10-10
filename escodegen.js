@@ -2734,7 +2734,7 @@ FORMAT_MINIFY = {
 FORMAT_DEFAULTS = getDefaultOptions().format;
 
 //TODO
-var stats = {},
+/*var stats = {},
     _ = Gen;
 
 Object.keys(_).forEach(function (key) {
@@ -2761,7 +2761,7 @@ exports.printStats = function () {
         .forEach(function (item) {
             console.log(item[0] + ' - ' + item[1]);
         });
-};
+};*/
 
 exports.version = require('./package.json').version;
 exports.generate = generate;
