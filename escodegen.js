@@ -2735,14 +2735,13 @@ FORMAT_DEFAULTS = getDefaultOptions().format;
 
 //JUST WTF 0_0 somehow this increases performance twice.
 //Am I missing something?
-Object.keys(Gen).forEach(function (key) {
-    var fn = Gen[key];
-
-    Gen[key] = function (g, node, opt) {
-        return fn.call(null, g, node, opt);
-    };
-
-});
+for (var key in Gen) {
+    if (Gen.hasOwnProperty(key)) {
+        var fn = Gen[key];
+        Gen[key] = function () {};
+        Gen[key] = fn;
+    }
+}
 
 
 exports.version = require('./package.json').version;
