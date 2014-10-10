@@ -1389,15 +1389,16 @@ function generateAssignmentExpression(g, expr, opt) {
 
 Gen[Syntax.ArrowFunctionExpression] =
 function generateArrowFunctionExpression(g, expr, opt) {
-    var parenthesize = Precedence.ArrowFunction < opt.precedence;
+    var _ = g,
+        parenthesize = Precedence.ArrowFunction < opt.precedence;
 
     if (parenthesize)
-        g.emit('(');
+        _.js += '(';
 
     generateFunctionBody(g, expr);
 
     if (parenthesize)
-        g.emit(')');
+        _.js += ')';
 };
 
 Gen[Syntax.ConditionalExpression] =
@@ -1597,11 +1598,12 @@ function generateUnaryExpression(g, expr, opt) {
 
 Gen[Syntax.YieldExpression] =
 function generateYieldExpression(g, expr, opt) {
-    var js = expr.delegate ? 'yield*' : 'yield',
+    var _ = g,
+        js = expr.delegate ? 'yield*' : 'yield',
         parenthesize = Precedence.Yield < opt.precedence;
 
     if (parenthesize)
-        g.emit('(');
+        _.js += '(';
 
     if (expr.argument) {
         var arg = g.generate(generateExpression, expr.argument, GenOpts.yieldExprArg);
@@ -1609,10 +1611,10 @@ function generateYieldExpression(g, expr, opt) {
         js = sourceJoin(js, arg);
     }
 
-    g.emit(js);
+    _.js += js;
 
     if (parenthesize)
-        g.emit(')');
+        _.js += ')';
 };
 
 Gen[Syntax.UpdateExpression] =
@@ -1699,7 +1701,8 @@ function generateArrayPatternOrExpression(g, expr) {
 
 Gen[Syntax.ClassExpression] =
 function generateClassExpression(g, expr) {
-    var js = 'class';
+    var _ = g,
+        js = 'class';
 
     if (expr.id) {
         var id = g.generate(generateExpression, expr.id, GenOpts.classExprId);
@@ -1714,7 +1717,7 @@ function generateClassExpression(g, expr) {
         js = sourceJoin(js, superClass);
     }
 
-    g.emit(js + optSpace);
+    _.js += js + optSpace;
     g.expand(generateStatement, expr.body, GenOpts.classExprBody);
 };
 
@@ -1847,13 +1850,11 @@ function generateObjectPattern(g, expr) {
 
 Gen[Syntax.ThisExpression] =
 function generateThisExpression(g) {
-    var _ = g;
-    _.js += 'this';
+    g.js += 'this';
 };
 
 Gen[Syntax.Identifier] = function generateIdentifier(g, node) {
-    var _ = g;
-    _.js += node.name;
+    g.js += node.name;
 };
 
 Gen[Syntax.ImportSpecifier] =
@@ -1876,7 +1877,8 @@ Gen[Syntax.GeneratorExpression] =
 Gen[Syntax.ComprehensionExpression] =
 function generateGeneratorOrComprehensionExpression(g, expr) {
     // GeneratorExpression should be parenthesized with (...), ComprehensionExpression with [...]
-    var isGenerator = expr.type === Syntax.GeneratorExpression,
+    var _ = g,
+        isGenerator = expr.type === Syntax.GeneratorExpression,
         js = isGenerator ? '(' : '[',
         body = g.generate(generateExpression, expr.body, GenOpts.genExprBody);
 
@@ -1902,12 +1904,13 @@ function generateGeneratorOrComprehensionExpression(g, expr) {
     js = sourceJoin(js, body);
     js += isGenerator ? ')' : ']';
 
-    g.emit(js);
+    _.js += js;
 };
 
 Gen[Syntax.ComprehensionBlock] =
 function generateComprehensionBlock(g, expr) {
-    var left = void 0,
+    var _ = g,
+        left = void 0,
         right = g.generate(generateExpression, expr.right, GenOpts.comprBlockRightExpr);
 
     if (expr.left.type === Syntax.VariableDeclaration) {
@@ -1921,54 +1924,56 @@ function generateComprehensionBlock(g, expr) {
 
     left = sourceJoin(left, expr.of ? 'of' : 'in');
 
-    g.emit('for' + optSpace + '(' + sourceJoin(left, right) + ')');
+    _.js += 'for' + optSpace + '(' + sourceJoin(left, right) + ')';
 };
 
 Gen[Syntax.SpreadElement] =
 function generateSpreadElement(g, expr) {
-    g.emit('...');
+    g.js += '...';
     g.expand(generateExpression, expr.argument, GenOpts.spreadElementArg);
 };
 
 Gen[Syntax.TaggedTemplateExpression] =
 function generateTaggedTemplateExpression(g, expr, opt) {
-    var parenthesize = Precedence.TaggedTemplate < opt.precedence;
+    var _ = g,
+        parenthesize = Precedence.TaggedTemplate < opt.precedence;
 
     if (parenthesize)
-        g.emit('(');
+        _.js += '(';
 
     g.expand(generateExpression, expr.tag, GenOpts.taggedTemplateExprTag(opt.allowCall));
     g.expand(generateExpression, expr.quasi, GenOpts.taggedTemplateExprQuasi);
 
     if (parenthesize)
-        g.emit(')');
+        _.js += ')';
 };
 
 Gen[Syntax.TemplateElement] =
 function generateTemplateElement(g, expr) {
     // Don't use "cooked". Since tagged template can use raw template
     // representation. So if we do so, it breaks the script semantics.
-    g.emit(expr.value.raw);
+    g.js += expr.value.raw;
 };
 
 Gen[Syntax.TemplateLiteral] =
 function generateTemplateLiteral(g, expr) {
-    var quasiCount = expr.quasis.length,
+    var _ = g,
+        quasiCount = expr.quasis.length,
         lastQuasiIdx = quasiCount - 1;
 
-    g.emit('`');
+    _.js += '`';
 
     for (var i = 0; i < quasiCount; ++i) {
         g.expand(generateExpression, expr.quasis[i], GenOpts.templateLiteralQuasi);
 
         if (i !== lastQuasiIdx) {
-            g.emit('${' + optSpace);
+            _.js += '${' + optSpace;
             g.expand(generateExpression, expr.expressions[i], GenOpts.templateLiteralExpr);
-            g.emit(optSpace + '}');
+            _.js += optSpace + '}';
         }
     }
 
-    g.emit('`');
+    _.js += '`';
 };
 
 function generateExpression(g, expr, option) {
@@ -2041,27 +2046,29 @@ function generateContinueStatement(g, stmt, opt) {
 
 Gen[Syntax.ClassBody] =
 function generateClassBody(g, classBody) {
-    var len = classBody.body.length,
+    var _ = g,
+        len = classBody.body.length,
         lastIdx = len - 1,
         prevIndent = shiftIndent();
 
-    g.emit('{' + newline);
+    _.js += '{' + newline;
 
     for (var i = 0; i < len; i++) {
-        g.emit(indent);
+        _.js += indent;
         g.expand(generateExpression, classBody.body[i], GenOpts.classBodyItem);
 
         if (i !== lastIdx)
-            g.emit(newline);
+            _.js += newline;
     }
 
     indent = prevIndent;
-    g.emit(newline + indent + '}');
+    _.js += newline + indent + '}';
 };
 
 Gen[Syntax.ClassDeclaration] =
 function generateClassDeclaration(g, stmt) {
-    var js = 'class ' + stmt.id.name;
+    var _ = g,
+        js = 'class ' + stmt.id.name;
 
     if (stmt.superClass) {
         var fragment = g.generate(generateExpression, stmt.superClass, GenOpts.classDeclarationSuperClass);
@@ -2069,17 +2076,19 @@ function generateClassDeclaration(g, stmt) {
         js += space + sourceJoin('extends', fragment);
     }
 
-    g.emit(js + optSpace);
+    _.js += js + optSpace;
     g.expand(generateStatement, stmt.body, GenOpts.classDeclarationBody);
 };
 
 Gen[Syntax.DirectiveStatement] =
 function generateDirectiveStatement(g, stmt, opt) {
+    var _ = g;
+
     if (extra.raw && stmt.raw)
-        g.emit(stmt.raw + opt.semicolon);
+        _.js += stmt.raw + opt.semicolon;
 
     else
-        g.emit(escapeDirective(stmt.directive) + opt.semicolon);
+        _.js += escapeDirective(stmt.directive) + opt.semicolon;
 };
 
 Gen[Syntax.DoWhileStatement] =
@@ -2128,11 +2137,13 @@ function generateEmptyStatement(g) {
 
 Gen[Syntax.ExportDeclaration] =
 function generateExportDeclaration(g, stmt, opt) {
+    var _ = g;
+
     // export default AssignmentExpression[In] ;
     if (stmt['default']) {
         var decl = g.generate(generateExpression, stmt.declaration, GenOpts.exportDeclDefaultDecl);
 
-        g.emit(sourceJoin('export default', decl) + opt.semicolon);
+        _.js += sourceJoin('export default', decl) + opt.semicolon;
     }
 
     // export * FromClause ;
@@ -2172,7 +2183,7 @@ function generateExportDeclaration(g, stmt, opt) {
         if (stmt.source)
             js = sourceJoin(js, 'from' + optSpace + generateLiteral(g, stmt.source));
 
-        g.emit(js + opt.semicolon);
+        _.js += js + opt.semicolon;
 
     }
 
@@ -2181,7 +2192,7 @@ function generateExportDeclaration(g, stmt, opt) {
     else if (stmt.declaration) {
         var decl = g.generate(generateStatement, stmt.declaration, GenOpts.exportDeclDecl(opt.semicolon === ''));
 
-        g.emit(sourceJoin('export', decl));
+        _.js += sourceJoin('export', decl);
     }
 };
 
@@ -2209,7 +2220,8 @@ function generateExpressionStatement(g, stmt, opt) {
 
 Gen[Syntax.ImportDeclaration] =
 function generateImportDeclaration(g, stmt, opt) {
-    var js = 'import',
+    var _ = g,
+        js = 'import',
         specCount = stmt.specifiers.length;
 
     // If no ImportClause is present,
@@ -2266,7 +2278,7 @@ function generateImportDeclaration(g, stmt, opt) {
 
     js += optSpace + generateLiteral(g, stmt.source) + opt.semicolon;
 
-    g.emit(js);
+    _.js += js;
 };
 
 Gen[Syntax.VariableDeclarator] =
@@ -2333,7 +2345,8 @@ function generateTryStatementHandlers(g, js, finalizer, handlers) {
 
 Gen[Syntax.TryStatement] =
 function generateTryStatement(g, stmt) {
-    var js = 'try' +
+    var _ = g,
+        js = 'try' +
              adoptionPrefix(stmt.block) +
              g.generate(generateStatement, stmt.block, GenOpts.tryStmtBlock) +
              adoptionSuffix(stmt.block);
@@ -2353,7 +2366,7 @@ function generateTryStatement(g, stmt) {
         js += g.generate(generateStatement, stmt.finalizer, GenOpts.tryStmtFinalizer);
     }
 
-    g.emit(js);
+    _.js += js;
 };
 
 Gen[Syntax.SwitchStatement] =
@@ -2511,8 +2524,8 @@ function generateLabeledStatement(g, stmt, opt) {
 
 Gen[Syntax.ModuleDeclaration] =
 function generateModuleDeclaration(g, stmt, opt) {
-    g.emit('module' + space + stmt.id.name + space +
-           'from' + optSpace + generateLiteral(g, stmt.source) + opt.semicolon);
+    g.js += 'module' + space + stmt.id.name + space +
+            'from' + optSpace + generateLiteral(g, stmt.source) + opt.semicolon;
 };
 
 Gen[Syntax.Program] =
@@ -2642,10 +2655,6 @@ CodeGen.prototype.generate = function (proc, node, opt) {
     this.js = savedJs;
 
     return result;
-};
-
-CodeGen.prototype.emit = function (generated) {
-    this.js += generated;
 };
 
 CodeGen.prototype.expand = function (proc, node, opt) {
