@@ -2733,35 +2733,17 @@ FORMAT_MINIFY = {
 
 FORMAT_DEFAULTS = getDefaultOptions().format;
 
-//TODO
-/*var stats = {},
-    _ = Gen;
+//JUST WTF 0_0 somehow this increases performance twice.
+//Am I missing something?
+Object.keys(Gen).forEach(function (key) {
+    var fn = Gen[key];
 
-Object.keys(_).forEach(function (key) {
-    var fn = _[key];
-
-    _[key] = function () {
-        if (!stats[key])
-            stats[key] = 0;
-
-        stats[key]++;
-        return fn.apply(null, arguments);
+    Gen[key] = function (g, node, opt) {
+        return fn.call(null, g, node, opt);
     };
 
 });
 
-exports.printStats = function () {
-    Object.keys(stats)
-        .map(function (key) {
-            return [key, stats[key]]
-        })
-        .sort(function (a, b) {
-            return a[1] - b[1];
-        })
-        .forEach(function (item) {
-            console.log(item[0] + ' - ' + item[1]);
-        });
-};*/
 
 exports.version = require('./package.json').version;
 exports.generate = generate;
