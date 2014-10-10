@@ -2437,9 +2437,10 @@ function generateIfStatement(g, stmt, opt) {
 
 Gen[Syntax.ForStatement] =
 function generateForStatement(g, stmt, opt) {
-    var prevIndent = shiftIndent();
+    var _ = g,
+        prevIndent = shiftIndent();
 
-    g.emit('for' + optSpace + '(');
+    _.js += 'for' + optSpace + '(';
 
     if (stmt.init) {
         if (stmt.init.type === Syntax.VariableDeclaration)
@@ -2447,30 +2448,30 @@ function generateForStatement(g, stmt, opt) {
 
         else {
             g.expand(generateExpression, stmt.init, GenOpts.forStmtInit);
-            g.emit(';');
+            _.js += ';';
         }
     }
 
     else
-        g.emit(';');
+        _.js += ';';
 
     if (stmt.test) {
-        g.emit(optSpace);
+        _.js += optSpace;
         g.expand(generateExpression, stmt.test, GenOpts.forStmtTest);
     }
 
-    g.emit(';');
+    _.js += ';';
 
     if (stmt.update) {
-        g.emit(optSpace);
+        _.js += optSpace;
         g.expand(generateExpression, stmt.update, GenOpts.forStmtUpdate);
     }
 
-    g.emit(')');
+    _.js += ')';
 
     indent = prevIndent;
 
-    g.emit(adoptionPrefix(stmt.body));
+    _.js += adoptionPrefix(stmt.body);
     g.expand(generateStatement, stmt.body, GenOpts.forStmtBody(opt.semicolon === ''));
 };
 
