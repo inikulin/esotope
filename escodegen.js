@@ -586,38 +586,28 @@ function toSource(generated) {
     return generated;
 }
 
-function join(left, right) {
-    var leftSource,
-        rightSource,
-        leftCharCode,
-        rightCharCode;
 
-    leftSource = toSource(left);
-    if (leftSource.length === 0) {
-        return [right];
+function joinWithSpacing(left, right) {
+    if (!left.length)
+        return right;
+
+    if (!right.length)
+        return left;
+
+    var leftCp = left.charCodeAt(left.length - 1),
+        rightCp = right.charCodeAt(0);
+
+    if ((leftCp === 0x2B  /* + */ || leftCp === 0x2D  /* - */) && leftCp === rightCp ||
+        esutils.code.isIdentifierPart(leftCp) && esutils.code.isIdentifierPart(rightCp) ||
+        leftCp === 0x2F  /* / */ && rightCp === 0x69  /* i */) { // infix word operators all start with `i`
+        return left + space + right;
     }
 
-    rightSource = toSource(right);
-    if (rightSource.length === 0) {
-        return [left];
+    else if (esutils.code.isWhiteSpace(leftCp) || esutils.code.isLineTerminator(leftCp) ||
+             esutils.code.isWhiteSpace(rightCp) || esutils.code.isLineTerminator(rightCp)) {
+        return left + right;
     }
-
-    leftCharCode = leftSource.charCodeAt(leftSource.length - 1);
-    rightCharCode = rightSource.charCodeAt(0);
-
-    if ((leftCharCode === 0x2B  /* + */ || leftCharCode === 0x2D  /* - */) && leftCharCode === rightCharCode ||
-        esutils.code.isIdentifierPart(leftCharCode) && esutils.code.isIdentifierPart(rightCharCode) ||
-        leftCharCode === 0x2F  /* / */ && rightCharCode === 0x69  /* i */) { // infix word operators all start with `i`
-        return [left, space, right];
-    } else if (esutils.code.isWhiteSpace(leftCharCode) || esutils.code.isLineTerminator(leftCharCode) ||
-               esutils.code.isWhiteSpace(rightCharCode) || esutils.code.isLineTerminator(rightCharCode)) {
-        return [left, right];
-    }
-    return [left, optSpace, right];
-}
-
-function sourceJoin(left, right) {
-    return toSource(join(left, right));
+    return left + optSpace + right;
 }
 
 function shiftIndent() {
@@ -1353,7 +1343,7 @@ function generateLogicalOrBinaryExpression(g, expr, opt) {
         js = js + space + op;
 
     else
-        js = sourceJoin(js, op);
+        js = joinWithSpacing(js, op);
 
     operandGenOpt.precedence++;
 
@@ -1364,7 +1354,7 @@ function generateLogicalOrBinaryExpression(g, expr, opt) {
         js += space + right;
 
     else
-        js = sourceJoin(js, right);
+        js = joinWithSpacing(js, right);
 
     _.js += js;
 
@@ -1430,7 +1420,7 @@ function generateGeneratorOrComprehensionExpression(g, expr) {
         for (var i = 0; i < blockCount; ++i) {
             var block = g.generate(generateExpression, expr.blocks[i], GenOpts.genExprBlock);
 
-            js = i > 0 ? sourceJoin(js, block) : (js + block);
+            js = i > 0 ? joinWithSpacing(js, block) : (js + block);
         }
 
         indent = prevIndent;
@@ -1438,11 +1428,11 @@ function generateGeneratorOrComprehensionExpression(g, expr) {
 
     if (expr.filter) {
         var filter = g.generate(generateExpression, expr.filter, GenOpts.genExprFilter);
-        js = sourceJoin(js, 'if' + optSpace);
-        js = sourceJoin(js, '(' + filter + ')');
+        js = joinWithSpacing(js, 'if' + optSpace);
+        js = joinWithSpacing(js, '(' + filter + ')');
     }
 
-    js = sourceJoin(js, body);
+    js = joinWithSpacing(js, body);
     js += isGenerator ? ')' : ']';
 
     _.js += js;
@@ -1563,7 +1553,7 @@ var ExprGen = {
         if (parenthesize)
             _.js += '(';
 
-        _.js += sourceJoin('new', callee);
+        _.js += joinWithSpacing('new', callee);
 
         if (withCall) {
             _.js += '(';
@@ -1631,7 +1621,7 @@ var ExprGen = {
         // delete, void, typeof
         // get `typeof []`, not `typeof[]`
         if (optSpace === '' || op.length > 2)
-            _.js += sourceJoin(op, arg);
+            _.js += joinWithSpacing(op, arg);
 
         else {
             _.js += op;
@@ -1664,7 +1654,7 @@ var ExprGen = {
         if (expr.argument) {
             var arg = g.generate(generateExpression, expr.argument, GenOpts.yieldExprArg);
 
-            js = sourceJoin(js, arg);
+            js = joinWithSpacing(js, arg);
         }
 
         _.js += js;
@@ -1725,14 +1715,14 @@ var ExprGen = {
         if (expr.id) {
             var id = g.generate(generateExpression, expr.id, GenOpts.classExprId);
 
-            js = sourceJoin(js, id);
+            js = joinWithSpacing(js, id);
         }
 
         if (expr.superClass) {
             var superClass = g.generate(generateExpression, expr.superClass, GenOpts.classDeclarationSuperClass);
 
-            superClass = sourceJoin('extends', superClass);
-            js = sourceJoin(js, superClass);
+            superClass = joinWithSpacing('extends', superClass);
+            js = joinWithSpacing(js, superClass);
         }
 
         _.js += js + optSpace;
@@ -1751,8 +1741,8 @@ var ExprGen = {
             propKeyWithBody = propKey + body;
 
         if (expr.kind === 'get' || expr.kind === 'set') {
-            propKeyWithBody = sourceJoin(expr.kind, propKeyWithBody);
-            js = sourceJoin(js, propKeyWithBody);
+            propKeyWithBody = joinWithSpacing(expr.kind, propKeyWithBody);
+            js = joinWithSpacing(js, propKeyWithBody);
         }
 
         else {
@@ -1760,7 +1750,7 @@ var ExprGen = {
                 js += '*' + propKeyWithBody;
 
             else
-                js = sourceJoin(js, propKeyWithBody);
+                js = joinWithSpacing(js, propKeyWithBody);
         }
 
         _.js += js;
@@ -1894,9 +1884,9 @@ var ExprGen = {
         else
             left = g.generate(generateExpression, expr.left, GenOpts.comprBlockLeftExpr);
 
-        left = sourceJoin(left, expr.of ? 'of' : 'in');
+        left = joinWithSpacing(left, expr.of ? 'of' : 'in');
 
-        _.js += 'for' + optSpace + '(' + sourceJoin(left, right) + ')';
+        _.js += 'for' + optSpace + '(' + joinWithSpacing(left, right) + ')';
     },
 
     SpreadElement: function generateSpreadElement(g, expr) {
@@ -1988,7 +1978,7 @@ function generateTryStatementHandlers(g, js, finalizer, handlers) {
     for (var i = 0; i < handlerCount; ++i) {
         var handler = g.generate(generateStatement, handlers[i], GenOpts.tryStmtHandler);
 
-        js = sourceJoin(js, handler);
+        js = joinWithSpacing(js, handler);
 
         if (finalizer || i !== lastHandlerIdx)
             js += adoptionSuffix(handlers[i].body);
@@ -2012,11 +2002,11 @@ function generateForStatementIterator(g, operator, stmt, opt) {
     else
         js += g.generate(generateExpression, stmt.left, GenOpts.forStmtIterLeft);
 
-    js = sourceJoin(js, operator);
+    js = joinWithSpacing(js, operator);
 
     var right = g.generate(generateExpression, stmt.right, GenOpts.forStmtIterRight);
 
-    js = sourceJoin(js, right) + ')';
+    js = joinWithSpacing(js, right) + ')';
 
     indent = prevIndent1;
 
@@ -2093,7 +2083,7 @@ var StmtGen = {
         if (stmt.superClass) {
             var fragment = g.generate(generateExpression, stmt.superClass, GenOpts.classDeclarationSuperClass);
 
-            js += space + sourceJoin('extends', fragment);
+            js += space + joinWithSpacing('extends', fragment);
         }
 
         _.js += js + optSpace;
@@ -2117,8 +2107,8 @@ var StmtGen = {
                    adoptionSuffix(stmt.body);
 
         //NOTE: Because `do 42 while (cond)` is Syntax Error. We need semicolon.
-        var js = sourceJoin('do', body);
-        js = sourceJoin(js, 'while' + optSpace + '(');
+        var js = joinWithSpacing('do', body);
+        js = joinWithSpacing(js, 'while' + optSpace + '(');
 
         _.js += js;
         g.expand(generateExpression, stmt.test, GenOpts.doWhileStmtTest);
@@ -2157,7 +2147,7 @@ var StmtGen = {
         if (stmt['default']) {
             var decl = g.generate(generateExpression, stmt.declaration, GenOpts.exportDeclDefaultDecl);
 
-            _.js += sourceJoin('export default', decl) + opt.semicolon;
+            _.js += joinWithSpacing('export default', decl) + opt.semicolon;
         }
 
         // export * FromClause ;
@@ -2172,7 +2162,7 @@ var StmtGen = {
             else if (stmt.specifiers[0].type === Syntax.ExportBatchSpecifier) {
                 var spec = g.generate(generateExpression, stmt.specifiers[0], GenOpts.exportDeclSpec);
 
-                js = sourceJoin(js, spec);
+                js = joinWithSpacing(js, spec);
             }
 
             else {
@@ -2195,7 +2185,7 @@ var StmtGen = {
             }
 
             if (stmt.source)
-                js = sourceJoin(js, 'from' + optSpace + generateLiteral(g, stmt.source));
+                js = joinWithSpacing(js, 'from' + optSpace + generateLiteral(g, stmt.source));
 
             _.js += js + opt.semicolon;
 
@@ -2206,7 +2196,7 @@ var StmtGen = {
         else if (stmt.declaration) {
             var decl = g.generate(generateStatement, stmt.declaration, GenOpts.exportDeclDecl(opt.semicolon === ''));
 
-            _.js += sourceJoin('export', decl);
+            _.js += joinWithSpacing('export', decl);
         }
     },
 
@@ -2243,7 +2233,7 @@ var StmtGen = {
 
             // ImportedBinding
             if (hasBinding)
-                js = sourceJoin(js, stmt.specifiers[0].id.name);
+                js = joinWithSpacing(js, stmt.specifiers[0].id.name);
 
             // NamedImports
             if (firstNamedIdx < specCount) {
@@ -2282,7 +2272,7 @@ var StmtGen = {
                 js += '}' + optSpace;
             }
 
-            js = sourceJoin(js, 'from')
+            js = joinWithSpacing(js, 'from')
         }
 
         js += optSpace + generateLiteral(g, stmt.source) + opt.semicolon;
@@ -2329,7 +2319,7 @@ var StmtGen = {
     ThrowStatement: function generateThrowStatement(g, stmt, opt) {
         var arg = g.generate(generateExpression, stmt.argument, GenOpts.throwStmtArg);
 
-        g.js += sourceJoin('throw', arg) + opt.semicolon;
+        g.js += joinWithSpacing('throw', arg) + opt.semicolon;
     },
 
     TryStatement: function generateTryStatement(g, stmt) {
@@ -2350,7 +2340,7 @@ var StmtGen = {
         }
 
         if (stmt.finalizer) {
-            js = sourceJoin(js, 'finally' + adoptionPrefix(stmt.finalizer));
+            js = joinWithSpacing(js, 'finally' + adoptionPrefix(stmt.finalizer));
             js += g.generate(generateStatement, stmt.finalizer, GenOpts.tryStmtFinalizer);
         }
 
@@ -2389,7 +2379,7 @@ var StmtGen = {
 
         if (stmt.test) {
             var test = g.generate(generateExpression, stmt.test, GenOpts.switchCaseTest);
-            _.js += sourceJoin('case', test) + ':';
+            _.js += joinWithSpacing('case', test) + ':';
         }
 
         else
@@ -2431,9 +2421,9 @@ var StmtGen = {
                 alt = 'else ' + alt;
 
             else
-                alt = sourceJoin('else', adoptionPrefix(stmt.alternate) + alt);
+                alt = joinWithSpacing('else', adoptionPrefix(stmt.alternate) + alt);
 
-            _.js += sourceJoin(conseq, alt);
+            _.js += joinWithSpacing(conseq, alt);
         }
 
         else
@@ -2537,7 +2527,7 @@ var StmtGen = {
         if (stmt.argument) {
             var arg = g.generate(generateExpression, stmt.argument, GenOpts.returnStmtArg);
 
-            _.js += sourceJoin('return', arg) + opt.semicolon;
+            _.js += joinWithSpacing('return', arg) + opt.semicolon;
         }
 
         else
