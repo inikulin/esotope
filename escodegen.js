@@ -563,29 +563,6 @@ function escapeString(str) {
     return result + quote;
 }
 
-/**
- * flatten an array to a string, where the array can contain
- * either strings or nested arrays
- */
-function flattenToString(arr) {
-    var i, iz, elem, result = '';
-    for (i = 0, iz = arr.length; i < iz; ++i) {
-        elem = arr[i];
-        result += isArray(elem) ? flattenToString(elem) : elem;
-    }
-    return result;
-}
-
-/**
- * convert generated to a SourceNode when source maps are enabled.
- */
-function toSource(generated) {
-    if (isArray(generated)) {
-        return flattenToString(generated);
-    }
-    return generated;
-}
-
 
 function joinWithSpacing(left, right) {
     if (!left.length)
