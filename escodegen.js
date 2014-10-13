@@ -43,7 +43,6 @@ var isArray,
     hexadecimal,
     quotes,
     escapeless,
-    newline,
     optSpace,
     parentheses,
     semicolons,
@@ -601,14 +600,14 @@ function adoptionPrefix(stmt) {
     if (stmt.type === Syntax.EmptyStatement)
         return '';
 
-    return newline + indent + indentUnit;
+    return _.newline + indent + indentUnit;
 }
 
 function adoptionSuffix(stmt) {
     if (stmt.type === Syntax.BlockStatement)
         return optSpace;
 
-    return newline + indent;
+    return _.newline + indent;
 }
 
 /**
@@ -629,7 +628,7 @@ function generateVerbatim(g, expr, opt) {
     _.js += chunks[0];
 
     for (var i = 1; i < chunkCount; i++)
-        _.js += newline + indent + chunks[i];
+        _.js += _.newline + indent + chunks[i];
 
     if (parenthesize)
         _.js += ')';
@@ -1341,7 +1340,7 @@ function generateArrayPatternOrExpression(g, expr) {
         var lastElemIdx = elemCount - 1,
             multiline = elemCount > 1,
             prevIndent = shiftIndent(),
-            itemPrefix = newline + indent;
+            itemPrefix = _.newline + indent;
 
         _.js += '[';
 
@@ -1359,7 +1358,7 @@ function generateArrayPatternOrExpression(g, expr) {
         indent = prevIndent;
 
         if (multiline)
-            _.js += newline + indent;
+            _.js += _.newline + indent;
 
         _.js += ']';
     }
@@ -1748,7 +1747,7 @@ var ExprGen = {
             _.js += '{';
 
             for (var i = 0; i < propCount; i++) {
-                _.js += newline + indent;
+                _.js += _.newline + indent;
                 g.expand(generateExpression, expr.properties[i], GenOpts.objExprProperty);
 
                 if (i !== lastPropIdx)
@@ -1756,7 +1755,7 @@ var ExprGen = {
             }
 
             indent = prevIndent;
-            _.js += newline + indent + '}';
+            _.js += _.newline + indent + '}';
         }
 
         else
@@ -1782,10 +1781,10 @@ var ExprGen = {
                 }
             }
 
-            _.js += multiline ? ('{' + newline) : '{';
+            _.js += multiline ? ('{' + _.newline) : '{';
 
             var prevIndent = shiftIndent(),
-                propSuffix = ',' + (multiline ? newline : optSpace);
+                propSuffix = ',' + (multiline ? _.newline : optSpace);
 
             for (var i = 0; i < propCount; i++) {
                 if (multiline)
@@ -1798,7 +1797,7 @@ var ExprGen = {
             }
 
             indent = prevIndent;
-            _.js += multiline ? (newline + indent + '}') : '}';
+            _.js += multiline ? (_.newline + indent + '}') : '}';
         }
         else
             _.js += '{}';
@@ -1971,12 +1970,12 @@ var StmtGen = {
             lastIdx = len - 1,
             prevIndent = shiftIndent();
 
-        _.js += '{' + newline;
+        _.js += '{' + _.newline;
 
         for (var i = 0; i < len; i++) {
             _.js += indent;
             g.expand(generateStatement, stmt.body[i], GenOpts.blockStmtBodyItem(opt.functionBody, i === lastIdx));
-            _.js += newline;
+            _.js += _.newline;
         }
 
         indent = prevIndent;
@@ -2004,18 +2003,18 @@ var StmtGen = {
             lastIdx = len - 1,
             prevIndent = shiftIndent();
 
-        _.js += '{' + newline;
+        _.js += '{' + _.newline;
 
         for (var i = 0; i < len; i++) {
             _.js += indent;
             g.expand(generateExpression, classBody.body[i], GenOpts.classBodyItem);
 
             if (i !== lastIdx)
-                _.js += newline;
+                _.js += _.newline;
         }
 
         indent = prevIndent;
-        _.js += newline + indent + '}';
+        _.js += _.newline + indent + '}';
     },
 
     ClassDeclaration: function generateClassDeclaration(g, stmt) {
@@ -2108,7 +2107,7 @@ var StmtGen = {
                 js += optSpace + '{';
 
                 for (var i = 0; i < specCount; ++i) {
-                    js += newline + indent;
+                    js += _.newline + indent;
                     js += g.generate(generateExpression, stmt.specifiers[i], GenOpts.exportDeclSpec);
 
                     if (i !== lastSpecIdx)
@@ -2116,7 +2115,7 @@ var StmtGen = {
                 }
 
                 indent = prevIndent;
-                js += newline + indent + '}';
+                js += _.newline + indent + '}';
             }
 
             if (stmt.source)
@@ -2190,7 +2189,7 @@ var StmtGen = {
                     //    ...,
                     // } from "...";
                     for (var i = firstNamedIdx; i < specCount; i++) {
-                        js += newline +
+                        js += _.newline +
                               indent +
                               g.generate(generateExpression, stmt.specifiers[i], GenOpts.importDeclSpec);
 
@@ -2199,7 +2198,7 @@ var StmtGen = {
                     }
 
                     indent = prevIndent;
-                    js += newline + indent;
+                    js += _.newline + indent;
                 }
 
                 js += '}' + optSpace;
@@ -2282,7 +2281,7 @@ var StmtGen = {
 
         _.js += 'switch' + optSpace + '(';
         g.expand(generateExpression, stmt.discriminant, GenOpts.switchStmtDiscriminant);
-        _.js += ')' + optSpace + '{' + newline;
+        _.js += ')' + optSpace + '{' + _.newline;
         indent = prevIndent;
 
         if (stmt.cases) {
@@ -2292,7 +2291,7 @@ var StmtGen = {
             for (var i = 0; i < len; i++) {
                 _.js += indent;
                 g.expand(generateStatement, stmt.cases[i], GenOpts.switchStmtCase(i === lastIdx));
-                _.js += newline;
+                _.js += _.newline;
             }
         }
 
@@ -2321,7 +2320,7 @@ var StmtGen = {
         }
 
         for (; i < conseqCount; i++) {
-            _.js += newline + indent;
+            _.js += _.newline + indent;
             g.expand(generateStatement, stmt.consequent[i], GenOpts.switchCaseConseq(i === lastConseqIdx &&
                                                                                      opt.semicolon === ''));
         }
@@ -2432,7 +2431,7 @@ var StmtGen = {
             g.expand(generateStatement, stmt.body[i], GenOpts.programBodyItem(!safeConcatenation && i === lastIdx));
 
             if (i !== lastIdx)
-                _.js += newline;
+                _.js += _.newline;
         }
     },
 
@@ -2553,7 +2552,8 @@ CodeGen.run = function (node) {
  */
 
 var _ = {
-    js: ''
+    js: '',
+    newline: '\n'
 };
 
 function generate(node, options) {
@@ -2589,11 +2589,13 @@ function generate(node, options) {
     hexadecimal = json ? false : options.format.hexadecimal;
     quotes = json ? 'double' : options.format.quotes;
     escapeless = options.format.escapeless;
-    newline = options.format.newline;
+
+    _.newline = options.format.newline;
     optSpace = options.format.space;
-    if (options.format.compact) {
-        newline = optSpace = indentUnit = indent = '';
-    }
+
+    if (options.format.compact)
+        _.newline = optSpace = indentUnit = indent = '';
+
     parentheses = options.format.parentheses;
     semicolons = options.format.semicolons;
     safeConcatenation = options.format.safeConcatenation;
