@@ -121,75 +121,6 @@ var Syntax = {
     YieldExpression: 'YieldExpression'
 };
 
-// Generation is done by generateExpression.
-function isExpression(node) {
-    switch (node.type) {
-        case Syntax.AssignmentExpression:
-        case Syntax.ArrayExpression:
-        case Syntax.ArrayPattern:
-        case Syntax.BinaryExpression:
-        case Syntax.CallExpression:
-        case Syntax.ConditionalExpression:
-        case Syntax.ClassExpression:
-        case Syntax.ExportBatchSpecifier:
-        case Syntax.ExportSpecifier:
-        case Syntax.FunctionExpression:
-        case Syntax.Identifier:
-        case Syntax.ImportSpecifier:
-        case Syntax.Literal:
-        case Syntax.LogicalExpression:
-        case Syntax.MemberExpression:
-        case Syntax.MethodDefinition:
-        case Syntax.NewExpression:
-        case Syntax.ObjectExpression:
-        case Syntax.ObjectPattern:
-        case Syntax.Property:
-        case Syntax.SequenceExpression:
-        case Syntax.ThisExpression:
-        case Syntax.UnaryExpression:
-        case Syntax.UpdateExpression:
-        case Syntax.YieldExpression:
-            return true;
-    }
-    return false;
-}
-
-// Generation is done by generateStatement.
-function isStatement(node) {
-    switch (node.type) {
-        case Syntax.BlockStatement:
-        case Syntax.BreakStatement:
-        case Syntax.CatchClause:
-        case Syntax.ContinueStatement:
-        case Syntax.ClassDeclaration:
-        case Syntax.ClassBody:
-        case Syntax.DirectiveStatement:
-        case Syntax.DoWhileStatement:
-        case Syntax.DebuggerStatement:
-        case Syntax.EmptyStatement:
-        case Syntax.ExpressionStatement:
-        case Syntax.ForStatement:
-        case Syntax.ForInStatement:
-        case Syntax.ForOfStatement:
-        case Syntax.FunctionDeclaration:
-        case Syntax.IfStatement:
-        case Syntax.LabeledStatement:
-        case Syntax.ModuleDeclaration:
-        case Syntax.Program:
-        case Syntax.ReturnStatement:
-        case Syntax.SwitchStatement:
-        case Syntax.SwitchCase:
-        case Syntax.ThrowStatement:
-        case Syntax.TryStatement:
-        case Syntax.VariableDeclaration:
-        case Syntax.VariableDeclarator:
-        case Syntax.WhileStatement:
-        case Syntax.WithStatement:
-            return true;
-    }
-    return false;
-}
-
 var Precedence = {
     Sequence: 0,
     Yield: 1,
@@ -2120,7 +2051,8 @@ var StmtGen = {
         // export VariableStatement
         // export Declaration[Default]
         else if (stmt.declaration) {
-            var decl = g.generate(generateStatement, stmt.declaration, Settings.exportDeclDecl(settings.semicolon === ''));
+            var decl = g.generate(generateStatement, stmt.declaration, Settings.exportDeclDecl(settings.semicolon ===
+                                                                                               ''));
 
             _.js += joinWithSpacing('export', decl);
         }
@@ -2314,7 +2246,7 @@ var StmtGen = {
         for (; i < conseqCount; i++) {
             _.js += _.newline + indent;
             g.expand(generateStatement, stmt.consequent[i], Settings.switchCaseConseq(i === lastConseqIdx &&
-                                                                                     settings.semicolon === ''));
+                                                                                      settings.semicolon === ''));
         }
 
         indent = prevIndent;
@@ -2496,10 +2428,10 @@ function generateStatement(g, stmt, option) {
 }
 
 function generateInternal(g, node) {
-    if (isStatement(node))
+    if (StmtGen[node.type])
         generateStatement(g, node);
 
-    else if (isExpression(node))
+    else if (ExprGen[node.type])
         generateExpression(g, node, {
             precedence: Precedence.Sequence,
             allowIn: true,
