@@ -1832,7 +1832,7 @@ function generateExpression(expr, option) {
 /**
  * Regular expressions
  */
-var EXPRESSION_STATEMENT_UNALLOWED_EXPR_REGEX = /^{|^class(?:\s|{)|^function(?:\s|\*|\()/;
+var EXPR_STMT_UNALLOWED_EXPR_REGEXP = /^{|^class(?:\s|{)|^function(?:\s|\*|\()/;
 
 
 /**
@@ -2057,7 +2057,7 @@ var StmtGen = {
 
     ExpressionStatement: function generateExpressionStatement(stmt, settings) {
         var exprSource = source(generateExpression, stmt.expression, Settings.exprStmtExpr),
-            parenthesize = EXPRESSION_STATEMENT_UNALLOWED_EXPR_REGEX.test(exprSource) ||
+            parenthesize = EXPR_STMT_UNALLOWED_EXPR_REGEXP.test(exprSource) ||
                            (directive &&
                             settings.directiveContext &&
                             stmt.expression.type === Syntax.Literal &&
