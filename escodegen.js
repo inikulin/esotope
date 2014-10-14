@@ -35,9 +35,6 @@
 'use strict';
 
 var isArray,
-    indent,
-    indentUnit,
-    space,
     json,
     renumber,
     hexadecimal,
@@ -506,7 +503,7 @@ function joinWithSpacing(left, right) {
     if ((leftCp === 0x2B  /* + */ || leftCp === 0x2D  /* - */) && leftCp === rightCp ||
         esutils.code.isIdentifierPart(leftCp) && esutils.code.isIdentifierPart(rightCp) ||
         leftCp === 0x2F  /* / */ && rightCp === 0x69  /* i */) { // infix word operators all start with `i`
-        return left + space + right;
+        return left + _.space + right;
     }
 
     else if (esutils.code.isWhiteSpace(leftCp) || esutils.code.isLineTerminator(leftCp) ||
@@ -517,9 +514,9 @@ function joinWithSpacing(left, right) {
 }
 
 function shiftIndent() {
-    var prevIndent = indent;
+    var prevIndent = _.indent;
 
-    indent += indentUnit;
+    _.indent += _.indentUnit;
     return prevIndent;
 }
 
@@ -530,14 +527,14 @@ function adoptionPrefix(stmt) {
     if (stmt.type === Syntax.EmptyStatement)
         return '';
 
-    return _.newline + indent + indentUnit;
+    return _.newline + _.indent + _.indentUnit;
 }
 
 function adoptionSuffix(stmt) {
     if (stmt.type === Syntax.BlockStatement)
         return _.optSpace;
 
-    return _.newline + indent;
+    return _.newline + _.indent;
 }
 
 /**
@@ -558,7 +555,7 @@ function generateVerbatim(g, expr, settings) {
     _.js += chunks[0];
 
     for (var i = 1; i < chunkCount; i++)
-        _.js += _.newline + indent + chunks[i];
+        _.js += _.newline + _.indent + chunks[i];
 
     if (parenthesize)
         _.js += ')';
@@ -1234,7 +1231,7 @@ function generateLogicalOrBinaryExpression(g, expr, settings) {
         _.js += '(';
 
     if (js.charCodeAt(js.length - 1) === 0x2F /* / */ && esutils.code.isIdentifierPart(op.charCodeAt(0)))
-        js = js + space + op;
+        js = js + _.space + op;
 
     else
         js = joinWithSpacing(js, op);
@@ -1245,7 +1242,7 @@ function generateLogicalOrBinaryExpression(g, expr, settings) {
 
     // If '/' concats with '/' or `<` concats with `!--`, it is interpreted as comment start
     if (op === '/' && right.charAt(0) === '/' || op.slice(-1) === '<' && right.slice(0, 3) === '!--')
-        js += space + right;
+        js += _.space + right;
 
     else
         js = joinWithSpacing(js, right);
@@ -1263,7 +1260,7 @@ function generateArrayPatternOrExpression(g, expr) {
         var lastElemIdx = elemCount - 1,
             multiline = elemCount > 1,
             prevIndent = shiftIndent(),
-            itemPrefix = _.newline + indent;
+            itemPrefix = _.newline + _.indent;
 
         _.js += '[';
 
@@ -1278,10 +1275,10 @@ function generateArrayPatternOrExpression(g, expr) {
                 _.js += ',';
         }
 
-        indent = prevIndent;
+        _.indent = prevIndent;
 
         if (multiline)
-            _.js += _.newline + indent;
+            _.js += _.newline + _.indent;
 
         _.js += ']';
     }
@@ -1294,7 +1291,7 @@ function generateImportOrExportSpecifier(g, expr) {
     _.js += expr.id.name;
 
     if (expr.name)
-        _.js += space + 'as' + space + expr.name.name;
+        _.js += _.space + 'as' + _.space + expr.name.name;
 }
 
 function generateGeneratorOrComprehensionExpression(g, expr) {
@@ -1313,7 +1310,7 @@ function generateGeneratorOrComprehensionExpression(g, expr) {
             js = i > 0 ? joinWithSpacing(js, block) : (js + block);
         }
 
-        indent = prevIndent;
+        _.indent = prevIndent;
     }
 
     if (expr.filter) {
@@ -1515,7 +1512,7 @@ var ExprGen = {
 
             if (((left === 0x2B  /* + */ || left === 0x2D  /* - */) && left === right) ||
                 (esutils.code.isIdentifierPart(left) && esutils.code.isIdentifierPart(right))) {
-                _.js += space;
+                _.js += _.space;
             }
 
             _.js += arg;
@@ -1571,7 +1568,7 @@ var ExprGen = {
         _.js += isGenerator ? 'function*' : 'function';
 
         if (expr.id) {
-            _.js += isGenerator ? _.optSpace : space;
+            _.js += isGenerator ? _.optSpace : _.space;
             _.js += expr.id.name;
         }
         else
@@ -1640,7 +1637,7 @@ var ExprGen = {
             propKey = '[' + propKey + ']';
 
         if (expr.kind === 'get' || expr.kind === 'set') {
-            _.js += expr.kind + space + propKey;
+            _.js += expr.kind + _.space + propKey;
             generateFunctionBody(g, expr.value);
         }
 
@@ -1670,15 +1667,15 @@ var ExprGen = {
             _.js += '{';
 
             for (var i = 0; i < propCount; i++) {
-                _.js += _.newline + indent;
+                _.js += _.newline + _.indent;
                 g.expand(generateExpression, expr.properties[i], Settings.objExprProperty);
 
                 if (i !== lastPropIdx)
                     _.js += ',';
             }
 
-            indent = prevIndent;
-            _.js += _.newline + indent + '}';
+            _.indent = prevIndent;
+            _.js += _.newline + _.indent + '}';
         }
 
         else
@@ -1711,7 +1708,7 @@ var ExprGen = {
 
             for (var i = 0; i < propCount; i++) {
                 if (multiline)
-                    _.js += indent;
+                    _.js += _.indent;
 
                 g.expand(generateExpression, expr.properties[i], Settings.objPatternProp);
 
@@ -1719,8 +1716,8 @@ var ExprGen = {
                     _.js += propSuffix;
             }
 
-            indent = prevIndent;
-            _.js += multiline ? (_.newline + indent + '}') : '}';
+            _.indent = prevIndent;
+            _.js += multiline ? (_.newline + _.indent + '}') : '}';
         }
         else
             _.js += '{}';
@@ -1750,7 +1747,7 @@ var ExprGen = {
 
         if (expr.left.type === Syntax.VariableDeclaration) {
             left = expr.left.kind +
-                   space +
+                   _.space +
                    g.generate(generateStatement, expr.left.declarations[0], Settings.comprBlockVarDeclaration);
         }
 
@@ -1864,9 +1861,9 @@ function generateForStatementIterator(g, operator, stmt, settings) {
 
     if (stmt.left.type === Syntax.VariableDeclaration) {
         var prevIndent2 = shiftIndent();
-        js += stmt.left.kind + space;
+        js += stmt.left.kind + _.space;
         js += g.generate(generateStatement, stmt.left.declarations[0], Settings.forIterVarDecl);
-        indent = prevIndent2;
+        _.indent = prevIndent2;
     }
 
     else
@@ -1878,7 +1875,7 @@ function generateForStatementIterator(g, operator, stmt, settings) {
 
     js = joinWithSpacing(js, right) + ')';
 
-    indent = prevIndent1;
+    _.indent = prevIndent1;
 
     _.js += js + adoptionPrefix(stmt.body);
     g.expand(generateStatement, stmt.body, Settings.forStmtIterBody(settings.semicolon === ''));
@@ -1896,13 +1893,13 @@ var StmtGen = {
         _.js += '{' + _.newline;
 
         for (var i = 0; i < len; i++) {
-            _.js += indent;
+            _.js += _.indent;
             g.expand(generateStatement, stmt.body[i], Settings.blockStmtBodyItem(settings.functionBody, i === lastIdx));
             _.js += _.newline;
         }
 
-        indent = prevIndent;
-        _.js += indent + '}';
+        _.indent = prevIndent;
+        _.js += _.indent + '}';
     },
 
     BreakStatement: function generateBreakStatement(g, stmt, settings) {
@@ -1929,15 +1926,15 @@ var StmtGen = {
         _.js += '{' + _.newline;
 
         for (var i = 0; i < len; i++) {
-            _.js += indent;
+            _.js += _.indent;
             g.expand(generateExpression, classBody.body[i], Settings.classBodyItem);
 
             if (i !== lastIdx)
                 _.js += _.newline;
         }
 
-        indent = prevIndent;
-        _.js += _.newline + indent + '}';
+        _.indent = prevIndent;
+        _.js += _.newline + _.indent + '}';
     },
 
     ClassDeclaration: function generateClassDeclaration(g, stmt) {
@@ -1946,7 +1943,7 @@ var StmtGen = {
         if (stmt.superClass) {
             var fragment = g.generate(generateExpression, stmt.superClass, Settings.classDeclarationSuperClass);
 
-            js += space + joinWithSpacing('extends', fragment);
+            js += _.space + joinWithSpacing('extends', fragment);
         }
 
         _.js += js + _.optSpace;
@@ -1986,7 +1983,7 @@ var StmtGen = {
             g.expand(generateExpression, stmt.guard, Settings.catchClauseGuard);
         }
 
-        indent = prevIndent;
+        _.indent = prevIndent;
         _.js += ')' + adoptionPrefix(stmt.body);
         g.expand(generateStatement, stmt.body, Settings.catchClauseBody);
     },
@@ -2030,15 +2027,15 @@ var StmtGen = {
                 js += _.optSpace + '{';
 
                 for (var i = 0; i < specCount; ++i) {
-                    js += _.newline + indent;
+                    js += _.newline + _.indent;
                     js += g.generate(generateExpression, stmt.specifiers[i], Settings.exportDeclSpec);
 
                     if (i !== lastSpecIdx)
                         js += ',';
                 }
 
-                indent = prevIndent;
-                js += _.newline + indent + '}';
+                _.indent = prevIndent;
+                js += _.newline + _.indent + '}';
             }
 
             if (stmt.source)
@@ -2114,15 +2111,15 @@ var StmtGen = {
                     // } from "...";
                     for (var i = firstNamedIdx; i < specCount; i++) {
                         js += _.newline +
-                              indent +
+                              _.indent +
                               g.generate(generateExpression, stmt.specifiers[i], Settings.importDeclSpec);
 
                         if (i !== lastSpecIdx)
                             js += ',';
                     }
 
-                    indent = prevIndent;
-                    js += _.newline + indent;
+                    _.indent = prevIndent;
+                    js += _.newline + _.indent;
                 }
 
                 js += '}' + _.optSpace;
@@ -2156,18 +2153,18 @@ var StmtGen = {
 
     VariableDeclaration: function generateVariableDeclaration(g, stmt, settings) {
         var len = stmt.declarations.length,
-            prevIndent = len > 1 ? shiftIndent() : indent,
+            prevIndent = len > 1 ? shiftIndent() : _.indent,
             expandOpt = Settings.varDeclaration(settings.allowIn);
 
         _.js += stmt.kind;
 
         for (var i = 0; i < len; i++) {
-            _.js += i === 0 ? space : (',' + _.optSpace);
+            _.js += i === 0 ? _.space : (',' + _.optSpace);
             g.expand(generateStatement, stmt.declarations[i], expandOpt);
         }
 
         _.js += settings.semicolon;
-        indent = prevIndent;
+        _.indent = prevIndent;
     },
 
     ThrowStatement: function generateThrowStatement(g, stmt, settings) {
@@ -2206,20 +2203,20 @@ var StmtGen = {
         _.js += 'switch' + _.optSpace + '(';
         g.expand(generateExpression, stmt.discriminant, Settings.switchStmtDiscriminant);
         _.js += ')' + _.optSpace + '{' + _.newline;
-        indent = prevIndent;
+        _.indent = prevIndent;
 
         if (stmt.cases) {
             var len = stmt.cases.length,
                 lastIdx = len - 1;
 
             for (var i = 0; i < len; i++) {
-                _.js += indent;
+                _.js += _.indent;
                 g.expand(generateStatement, stmt.cases[i], Settings.switchStmtCase(i === lastIdx));
                 _.js += _.newline;
             }
         }
 
-        _.js += indent + '}';
+        _.js += _.indent + '}';
     },
 
     SwitchCase: function generateSwitchCase(g, stmt, settings) {
@@ -2244,12 +2241,12 @@ var StmtGen = {
         }
 
         for (; i < conseqCount; i++) {
-            _.js += _.newline + indent;
+            _.js += _.newline + _.indent;
             g.expand(generateStatement, stmt.consequent[i], Settings.switchCaseConseq(i === lastConseqIdx &&
                                                                                       settings.semicolon === ''));
         }
 
-        indent = prevIndent;
+        _.indent = prevIndent;
     },
 
     IfStatement: function generateIfStatement(g, stmt, settings) {
@@ -2259,7 +2256,7 @@ var StmtGen = {
         _.js += 'if' + _.optSpace + '(';
         g.expand(generateExpression, stmt.test, Settings.ifStmtTest);
         _.js += ')';
-        indent = prevIndent;
+        _.indent = prevIndent;
         _.js += adoptionPrefix(stmt.consequent);
 
         if (stmt.alternate) {
@@ -2312,7 +2309,7 @@ var StmtGen = {
 
         _.js += ')';
 
-        indent = prevIndent;
+        _.indent = prevIndent;
 
         _.js += adoptionPrefix(stmt.body);
         g.expand(generateStatement, stmt.body, Settings.forStmtBody(settings.semicolon === ''));
@@ -2327,7 +2324,7 @@ var StmtGen = {
     },
 
     LabeledStatement: function generateLabeledStatement(g, stmt, settings) {
-        var prevIndent = indent;
+        var prevIndent = _.indent;
 
         _.js += stmt.label.name + ':' + adoptionPrefix(stmt.body);
 
@@ -2335,11 +2332,11 @@ var StmtGen = {
             prevIndent = shiftIndent();
 
         g.expand(generateStatement, stmt.body, Settings.labeledStmtBody(settings.semicolon === ''));
-        indent = prevIndent;
+        _.indent = prevIndent;
     },
 
     ModuleDeclaration: function generateModuleDeclaration(g, stmt, settings) {
-        _.js += 'module' + space + stmt.id.name + space +
+        _.js += 'module' + _.space + stmt.id.name + _.space +
                 'from' + _.optSpace + generateLiteral(g, stmt.source) + settings.semicolon;
     },
 
@@ -2351,7 +2348,7 @@ var StmtGen = {
             _.js += '\n';
 
         for (var i = 0; i < len; i++) {
-            _.js += indent;
+            _.js += _.indent;
             g.expand(generateStatement, stmt.body[i], Settings.programBodyItem(!safeConcatenation && i === lastIdx));
 
             if (i !== lastIdx)
@@ -2362,7 +2359,7 @@ var StmtGen = {
     FunctionDeclaration: function generateFunctionDeclaration(g, stmt) {
         var isGenerator = !!stmt.generator;
 
-        _.js += isGenerator ? ('function*' + _.optSpace) : ('function' + space );
+        _.js += isGenerator ? ('function*' + _.optSpace) : ('function' + _.space );
         _.js += stmt.id.name;
         generateFunctionBody(g, stmt);
     },
@@ -2384,7 +2381,7 @@ var StmtGen = {
         _.js += 'while' + _.optSpace + '(';
         g.expand(generateExpression, stmt.test, Settings.whileStmtTest);
         _.js += ')';
-        indent = prevIndent;
+        _.indent = prevIndent;
 
         _.js += adoptionPrefix(stmt.body);
         g.expand(generateStatement, stmt.body, Settings.whileStmtBody(settings.semicolon === ''));
@@ -2396,7 +2393,7 @@ var StmtGen = {
         _.js += 'with' + _.optSpace + '(';
         g.expand(generateExpression, stmt.object, Settings.withStmtObj);
         _.js += ')';
-        indent = prevIndent;
+        _.indent = prevIndent;
 
         _.js += adoptionPrefix(stmt.body);
         g.expand(generateStatement, stmt.body, Settings.withStmtBody(settings.semicolon === ''));
@@ -2478,7 +2475,10 @@ CodeGen.run = function (node) {
 var _ = {
     js: '',
     newline: '\n',
-    optSpace: ' '
+    optSpace: ' ',
+    space: ' ',
+    indentUnit: '    ',
+    indent: ''
 };
 
 function generate(node, options) {
@@ -2498,16 +2498,16 @@ function generate(node, options) {
             defaultOptions.format.indent.base = options.base;
         }
         options = updateDeeply(defaultOptions, options);
-        indentUnit = options.format.indent.style;
+        _.indentUnit = options.format.indent.style;
         if (typeof options.base === 'string') {
-            indent = options.base;
+            _.indent = options.base;
         } else {
-            indent = stringRepeat(indentUnit, options.format.indent.base);
+            _.indent = stringRepeat(_.indentUnit, options.format.indent.base);
         }
     } else {
         options = defaultOptions;
-        indentUnit = options.format.indent.style;
-        indent = stringRepeat(indentUnit, options.format.indent.base);
+        _.indentUnit = options.format.indent.style;
+        _.indent = stringRepeat(_.indentUnit, options.format.indent.base);
     }
     json = options.format.json;
     renumber = options.format.renumber;
@@ -2519,15 +2519,15 @@ function generate(node, options) {
     _.optSpace = options.format.space;
 
     if (options.format.compact)
-        _.newline = _.optSpace = indentUnit = indent = '';
+        _.newline = _.optSpace = _.indentUnit = _.indent = '';
 
+    _.space = _.optSpace ? _.optSpace : ' ';
     parentheses = options.format.parentheses;
     semicolons = options.format.semicolons;
     safeConcatenation = options.format.safeConcatenation;
     directive = options.directive;
     parse = json ? null : options.parse;
     extra = options;
-    space = _.optSpace ? _.optSpace : ' ';
 
     return CodeGen.run(node);
 }
