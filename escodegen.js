@@ -540,7 +540,7 @@ function adoptionSuffix(stmt) {
 /**
  * Subentities generators
  */
-function generateVerbatim(g, expr, settings) {
+function generateVerbatim(expr, settings) {
     var verbatim = expr[extra.verbatim],
         strVerbatim = typeof verbatim === 'string',
         precedence = !strVerbatim && verbatim.precedence !== void 0 ? verbatim.precedence : Precedence.Sequence,
@@ -561,7 +561,7 @@ function generateVerbatim(g, expr, settings) {
         _.js += ')';
 }
 
-function generateFunctionParams(g, node) {
+function generateFunctionParams(node) {
     var params = node.params,
         paramCount = node.params.length,
         lastParamIdx = paramCount - 1,
@@ -587,7 +587,7 @@ function generateFunctionParams(g, node) {
                     operator: '='
                 };
 
-                g.expand(generateExpression, fakeAssignExpr, Settings.funcArg);
+                expand(generateExpression, fakeAssignExpr, Settings.funcArg);
             }
 
             else {
@@ -595,7 +595,7 @@ function generateFunctionParams(g, node) {
                     _.js += params[i].name;
 
                 else
-                    g.expand(generateExpression, params[i], Settings.funcArg);
+                    expand(generateExpression, params[i], Settings.funcArg);
             }
 
             if (i !== lastParamIdx)
@@ -613,8 +613,8 @@ function generateFunctionParams(g, node) {
     }
 }
 
-function generateFunctionBody(g, node) {
-    generateFunctionParams(g, node);
+function generateFunctionBody(node) {
+    generateFunctionParams(node);
 
     if (node.type === Syntax.ArrowFunctionExpression)
         _.js += _.optSpace + '=>';
@@ -622,7 +622,7 @@ function generateFunctionBody(g, node) {
     if (node.expression) {
         _.js += _.optSpace;
 
-        var expr = g.generate(generateExpression, node.body, Settings.funcBodyExpr);
+        var expr = source(generateExpression, node.body, Settings.funcBodyExpr);
 
         if (expr.charAt(0) === '{')
             expr = '(' + expr + ')';
@@ -632,7 +632,7 @@ function generateFunctionBody(g, node) {
 
     else {
         _.js += adoptionPrefix(node.body);
-        g.expand(generateStatement, node.body, Settings.funcBodyStmt);
+        expand(generateStatement, node.body, Settings.funcBodyStmt);
     }
 }
 
@@ -651,7 +651,7 @@ function canUseRawLiteral(expr) {
     return false;
 }
 
-function generateLiteral(g, expr) {
+function generateLiteral(expr) {
     if (parse && extra.raw && canUseRawLiteral(expr)) {
         return expr.raw;
     }
@@ -1217,13 +1217,13 @@ var FLOATING_OR_OCTAL_REGEXP = /[.eExX]|^0[0-9]+|/,
 /**
  *  Common expression generators
  */
-function generateLogicalOrBinaryExpression(g, expr, settings) {
+function generateLogicalOrBinaryExpression(expr, settings) {
     var op = expr.operator,
         precedence = BinaryPrecedence[expr.operator],
         parenthesize = precedence < settings.precedence,
         allowIn = settings.allowIn || parenthesize,
         operandGenOpt = Settings.binExprOperand(precedence, allowIn),
-        js = g.generate(generateExpression, expr.left, operandGenOpt);
+        js = source(generateExpression, expr.left, operandGenOpt);
 
     parenthesize |= op === 'in' && !allowIn;
 
@@ -1238,7 +1238,7 @@ function generateLogicalOrBinaryExpression(g, expr, settings) {
 
     operandGenOpt.precedence++;
 
-    var right = g.generate(generateExpression, expr.right, operandGenOpt);
+    var right = source(generateExpression, expr.right, operandGenOpt);
 
     // If '/' concats with '/' or `<` concats with `!--`, it is interpreted as comment start
     if (op === '/' && right.charAt(0) === '/' || op.slice(-1) === '<' && right.slice(0, 3) === '!--')
@@ -1253,7 +1253,7 @@ function generateLogicalOrBinaryExpression(g, expr, settings) {
         _.js += ')';
 }
 
-function generateArrayPatternOrExpression(g, expr) {
+function generateArrayPatternOrExpression(expr) {
     var elemCount = expr.elements.length;
 
     if (elemCount) {
@@ -1269,7 +1269,7 @@ function generateArrayPatternOrExpression(g, expr) {
                 _.js += itemPrefix;
 
             if (expr.elements[i])
-                g.expand(generateExpression, expr.elements[i], Settings.arrayExprElement);
+                expand(generateExpression, expr.elements[i], Settings.arrayExprElement);
 
             if (i !== lastElemIdx || !expr.elements[i])
                 _.js += ',';
@@ -1287,25 +1287,25 @@ function generateArrayPatternOrExpression(g, expr) {
         _.js += '[]';
 }
 
-function generateImportOrExportSpecifier(g, expr) {
+function generateImportOrExportSpecifier(expr) {
     _.js += expr.id.name;
 
     if (expr.name)
         _.js += _.space + 'as' + _.space + expr.name.name;
 }
 
-function generateGeneratorOrComprehensionExpression(g, expr) {
+function generateGeneratorOrComprehensionExpression(expr) {
     // GeneratorExpression should be parenthesized with (...), ComprehensionExpression with [...]
     var isGenerator = expr.type === Syntax.GeneratorExpression,
         js = isGenerator ? '(' : '[',
-        body = g.generate(generateExpression, expr.body, Settings.genExprBody);
+        body = source(generateExpression, expr.body, Settings.genExprBody);
 
     if (expr.blocks) {
         var prevIndent = shiftIndent(),
             blockCount = expr.blocks.length;
 
         for (var i = 0; i < blockCount; ++i) {
-            var block = g.generate(generateExpression, expr.blocks[i], Settings.genExprBlock);
+            var block = source(generateExpression, expr.blocks[i], Settings.genExprBlock);
 
             js = i > 0 ? joinWithSpacing(js, block) : (js + block);
         }
@@ -1314,7 +1314,7 @@ function generateGeneratorOrComprehensionExpression(g, expr) {
     }
 
     if (expr.filter) {
-        var filter = g.generate(generateExpression, expr.filter, Settings.genExprFilter);
+        var filter = source(generateExpression, expr.filter, Settings.genExprFilter);
         js = joinWithSpacing(js, 'if' + _.optSpace);
         js = joinWithSpacing(js, '(' + filter + ')');
     }
@@ -1330,7 +1330,7 @@ function generateGeneratorOrComprehensionExpression(g, expr) {
  * Expression generator dictionary
  */
 var ExprGen = {
-    SequenceExpression: function generateSequenceExpression(g, expr, settings) {
+    SequenceExpression: function generateSequenceExpression(expr, settings) {
         var len = expr.expressions.length,
             lastIdx = len - 1,
             parenthesize = Precedence.Sequence < settings.precedence,
@@ -1340,7 +1340,7 @@ var ExprGen = {
             _.js += '(';
 
         for (var i = 0; i < len; i++) {
-            g.expand(generateExpression, expr.expressions[i], expandOpt);
+            expand(generateExpression, expr.expressions[i], expandOpt);
 
             if (i !== lastIdx)
                 _.js += ',' + _.optSpace;
@@ -1350,34 +1350,34 @@ var ExprGen = {
             _.js += ')';
     },
 
-    AssignmentExpression: function generateAssignmentExpression(g, expr, settings) {
+    AssignmentExpression: function generateAssignmentExpression(expr, settings) {
         var parenthesize = Precedence.Assignment < settings.precedence,
             allowIn = settings.allowIn || parenthesize;
 
         if (parenthesize)
             _.js += '(';
 
-        g.expand(generateExpression, expr.left, Settings.assignExprLeftOperand(allowIn));
+        expand(generateExpression, expr.left, Settings.assignExprLeftOperand(allowIn));
         _.js += _.optSpace + expr.operator + _.optSpace;
-        g.expand(generateExpression, expr.right, Settings.assignExprRightOperand(allowIn));
+        expand(generateExpression, expr.right, Settings.assignExprRightOperand(allowIn));
 
         if (parenthesize)
             _.js += ')';
     },
 
-    ArrowFunctionExpression: function generateArrowFunctionExpression(g, expr, settings) {
+    ArrowFunctionExpression: function generateArrowFunctionExpression(expr, settings) {
         var parenthesize = Precedence.ArrowFunction < settings.precedence;
 
         if (parenthesize)
             _.js += '(';
 
-        generateFunctionBody(g, expr);
+        generateFunctionBody(expr);
 
         if (parenthesize)
             _.js += ')';
     },
 
-    ConditionalExpression: function generateConditionalExpression(g, expr, settings) {
+    ConditionalExpression: function generateConditionalExpression(expr, settings) {
         var parenthesize = Precedence.Conditional < settings.precedence,
             allowIn = settings.allowIn || parenthesize,
             testExpandOpt = Settings.conditionalExprTest(allowIn),
@@ -1386,11 +1386,11 @@ var ExprGen = {
         if (parenthesize)
             _.js += '(';
 
-        g.expand(generateExpression, expr.test, testExpandOpt);
+        expand(generateExpression, expr.test, testExpandOpt);
         _.js += _.optSpace + '?' + _.optSpace;
-        g.expand(generateExpression, expr.consequent, branchExpandOpt);
+        expand(generateExpression, expr.consequent, branchExpandOpt);
         _.js += _.optSpace + ':' + _.optSpace;
-        g.expand(generateExpression, expr.alternate, branchExpandOpt);
+        expand(generateExpression, expr.alternate, branchExpandOpt);
 
         if (parenthesize)
             _.js += ')';
@@ -1399,7 +1399,7 @@ var ExprGen = {
     LogicalExpression: generateLogicalOrBinaryExpression,
     BinaryExpression: generateLogicalOrBinaryExpression,
 
-    CallExpression: function generateCallExpression(g, expr, settings) {
+    CallExpression: function generateCallExpression(expr, settings) {
         var argCount = expr['arguments'].length,
             lastArgIdx = argCount - 1,
             parenthesize = !settings.allowCall || Precedence.Call < settings.precedence;
@@ -1407,11 +1407,11 @@ var ExprGen = {
         if (parenthesize)
             _.js += '(';
 
-        g.expand(generateExpression, expr.callee, Settings.callExprCallee);
+        expand(generateExpression, expr.callee, Settings.callExprCallee);
         _.js += '(';
 
         for (var i = 0; i < argCount; ++i) {
-            g.expand(generateExpression, expr['arguments'][i], Settings.callExprArgs);
+            expand(generateExpression, expr['arguments'][i], Settings.callExprArgs);
 
             if (i !== lastArgIdx)
                 _.js += ',' + _.optSpace;
@@ -1423,13 +1423,13 @@ var ExprGen = {
             _.js += ')';
     },
 
-    NewExpression: function generateNewExpression(g, expr, settings) {
+    NewExpression: function generateNewExpression(expr, settings) {
         var parenthesize = Precedence.New < settings.precedence,
             argCount = expr['arguments'].length,
             lastArgIdx = argCount - 1,
             allowUnparenthesizedNew = settings.allowUnparenthesizedNew === void 0 || settings.allowUnparenthesizedNew,
             withCall = !allowUnparenthesizedNew || parentheses || argCount > 0,
-            callee = g.generate(generateExpression, expr.callee, Settings.newExprCallee(!withCall));
+            callee = source(generateExpression, expr.callee, Settings.newExprCallee(!withCall));
 
         if (parenthesize)
             _.js += '(';
@@ -1440,7 +1440,7 @@ var ExprGen = {
             _.js += '(';
 
             for (var i = 0; i < argCount; ++i) {
-                g.expand(generateExpression, expr['arguments'][i], Settings.newExprArg);
+                expand(generateExpression, expr['arguments'][i], Settings.newExprArg);
 
                 if (i !== lastArgIdx)
                     _.js += ',' + _.optSpace;
@@ -1453,14 +1453,14 @@ var ExprGen = {
             _.js += ')';
     },
 
-    MemberExpression: function generateMemberExpression(g, expr, settings) {
+    MemberExpression: function generateMemberExpression(expr, settings) {
         var parenthesize = Precedence.Member < settings.precedence;
 
         if (parenthesize)
             _.js += '(';
 
         if (!expr.computed && expr.object.type === Syntax.Literal && typeof expr.object.value === 'number') {
-            var num = g.generate(generateExpression, expr.object, Settings.memberExprObj(settings.allowCall));
+            var num = source(generateExpression, expr.object, Settings.memberExprObj(settings.allowCall));
 
             // When the following conditions are all true:
             //   1. No floating point
@@ -1474,11 +1474,11 @@ var ExprGen = {
         }
 
         else
-            g.expand(generateExpression, expr.object, Settings.memberExprObj(settings.allowCall));
+            expand(generateExpression, expr.object, Settings.memberExprObj(settings.allowCall));
 
         if (expr.computed) {
             _.js += '[';
-            g.expand(generateExpression, expr.property, Settings.memberExprProp(settings.allowCall));
+            expand(generateExpression, expr.property, Settings.memberExprProp(settings.allowCall));
             _.js += ']';
         }
 
@@ -1489,10 +1489,10 @@ var ExprGen = {
             _.js += ')';
     },
 
-    UnaryExpression: function generateUnaryExpression(g, expr, settings) {
+    UnaryExpression: function generateUnaryExpression(expr, settings) {
         var parenthesize = Precedence.Unary < settings.precedence,
             op = expr.operator,
-            arg = g.generate(generateExpression, expr.argument, Settings.unaryExprArg);
+            arg = source(generateExpression, expr.argument, Settings.unaryExprArg);
 
         if (parenthesize)
             _.js += '(';
@@ -1522,7 +1522,7 @@ var ExprGen = {
             _.js += ')';
     },
 
-    YieldExpression: function generateYieldExpression(g, expr, settings) {
+    YieldExpression: function generateYieldExpression(expr, settings) {
         var js = expr.delegate ? 'yield*' : 'yield',
             parenthesize = Precedence.Yield < settings.precedence;
 
@@ -1530,7 +1530,7 @@ var ExprGen = {
             _.js += '(';
 
         if (expr.argument) {
-            var arg = g.generate(generateExpression, expr.argument, Settings.yieldExprArg);
+            var arg = source(generateExpression, expr.argument, Settings.yieldExprArg);
 
             js = joinWithSpacing(js, arg);
         }
@@ -1541,7 +1541,7 @@ var ExprGen = {
             _.js += ')';
     },
 
-    UpdateExpression: function generateUpdateExpression(g, expr, settings) {
+    UpdateExpression: function generateUpdateExpression(expr, settings) {
         var precedence = expr.prefix ? Precedence.Unary : Precedence.Postfix,
             parenthesize = precedence < settings.precedence;
 
@@ -1550,11 +1550,11 @@ var ExprGen = {
 
         if (expr.prefix) {
             _.js += expr.operator;
-            g.expand(generateExpression, expr.argument, Settings.prefixUpdateExprArg);
+            expand(generateExpression, expr.argument, Settings.prefixUpdateExprArg);
         }
 
         else {
-            g.expand(generateExpression, expr.argument, Settings.postfixUpdateExprArg);
+            expand(generateExpression, expr.argument, Settings.postfixUpdateExprArg);
             _.js += expr.operator;
         }
 
@@ -1562,7 +1562,7 @@ var ExprGen = {
             _.js += ')';
     },
 
-    FunctionExpression: function generateFunctionExpression(g, expr) {
+    FunctionExpression: function generateFunctionExpression(expr) {
         var isGenerator = !!expr.generator;
 
         _.js += isGenerator ? 'function*' : 'function';
@@ -1574,7 +1574,7 @@ var ExprGen = {
         else
             _.js += _.optSpace;
 
-        generateFunctionBody(g, expr);
+        generateFunctionBody(expr);
     },
 
     ExportBatchSpecifier: function generateExportBatchSpecifier(g) {
@@ -1584,34 +1584,34 @@ var ExprGen = {
     ArrayPattern: generateArrayPatternOrExpression,
     ArrayExpression: generateArrayPatternOrExpression,
 
-    ClassExpression: function generateClassExpression(g, expr) {
+    ClassExpression: function generateClassExpression(expr) {
         var js = 'class';
 
         if (expr.id) {
-            var id = g.generate(generateExpression, expr.id, Settings.classExprId);
+            var id = source(generateExpression, expr.id, Settings.classExprId);
 
             js = joinWithSpacing(js, id);
         }
 
         if (expr.superClass) {
-            var superClass = g.generate(generateExpression, expr.superClass, Settings.classDeclarationSuperClass);
+            var superClass = source(generateExpression, expr.superClass, Settings.classDeclarationSuperClass);
 
             superClass = joinWithSpacing('extends', superClass);
             js = joinWithSpacing(js, superClass);
         }
 
         _.js += js + _.optSpace;
-        g.expand(generateStatement, expr.body, Settings.classExprBody);
+        expand(generateStatement, expr.body, Settings.classExprBody);
     },
 
-    MethodDefinition: function generateMethodDefinition(g, expr) {
+    MethodDefinition: function generateMethodDefinition(expr) {
         var js = expr['static'] ? 'static' + _.optSpace : '',
-            propKey = g.generate(generateExpression, expr.key, expr.computed, Settings.propKey);
+            propKey = source(generateExpression, expr.key, expr.computed, Settings.propKey);
 
         if (expr.computed)
             propKey = '[' + propKey + ']';
 
-        var body = g.generate(generateFunctionBody, expr.value),
+        var body = source(generateFunctionBody, expr.value),
             propKeyWithBody = propKey + body;
 
         if (expr.kind === 'get' || expr.kind === 'set') {
@@ -1630,15 +1630,15 @@ var ExprGen = {
         _.js += js;
     },
 
-    Property: function generateProperty(g, expr) {
-        var propKey = g.generate(generateExpression, expr.key, Settings.propKey);
+    Property: function generateProperty(expr) {
+        var propKey = source(generateExpression, expr.key, Settings.propKey);
 
         if (expr.computed)
             propKey = '[' + propKey + ']';
 
         if (expr.kind === 'get' || expr.kind === 'set') {
             _.js += expr.kind + _.space + propKey;
-            generateFunctionBody(g, expr.value);
+            generateFunctionBody(expr.value);
         }
 
         else {
@@ -1647,17 +1647,17 @@ var ExprGen = {
 
             else if (expr.method) {
                 _.js += expr.value.generator ? ('*' + propKey) : propKey;
-                generateFunctionBody(g, expr.value)
+                generateFunctionBody(expr.value)
             }
 
             else {
                 _.js += propKey + ':' + _.optSpace;
-                g.expand(generateExpression, expr.value, Settings.propVal);
+                expand(generateExpression, expr.value, Settings.propVal);
             }
         }
     },
 
-    ObjectExpression: function generateObjectExpression(g, expr) {
+    ObjectExpression: function generateObjectExpression(expr) {
         var propCount = expr.properties.length;
 
         if (propCount) {
@@ -1668,7 +1668,7 @@ var ExprGen = {
 
             for (var i = 0; i < propCount; i++) {
                 _.js += _.newline + _.indent;
-                g.expand(generateExpression, expr.properties[i], Settings.objExprProperty);
+                expand(generateExpression, expr.properties[i], Settings.objExprProperty);
 
                 if (i !== lastPropIdx)
                     _.js += ',';
@@ -1682,7 +1682,7 @@ var ExprGen = {
             _.js += '{}';
     },
 
-    ObjectPattern: function generateObjectPattern(g, expr) {
+    ObjectPattern: function generateObjectPattern(expr) {
         var propCount = expr.properties.length;
 
         if (propCount) {
@@ -1710,7 +1710,7 @@ var ExprGen = {
                 if (multiline)
                     _.js += _.indent;
 
-                g.expand(generateExpression, expr.properties[i], Settings.objPatternProp);
+                expand(generateExpression, expr.properties[i], Settings.objPatternProp);
 
                 if (i !== lastPropIdx)
                     _.js += propSuffix;
@@ -1727,74 +1727,74 @@ var ExprGen = {
         _.js += 'this';
     },
 
-    Identifier: function generateIdentifier(g, node) {
+    Identifier: function generateIdentifier(node) {
         _.js += node.name;
     },
 
     ImportSpecifier: generateImportOrExportSpecifier,
     ExportSpecifier: generateImportOrExportSpecifier,
 
-    Literal: function (g, expr) {
-        _.js += generateLiteral(g, expr);
+    Literal: function (expr) {
+        _.js += generateLiteral(expr);
     },
 
     GeneratorExpression: generateGeneratorOrComprehensionExpression,
     ComprehensionExpression: generateGeneratorOrComprehensionExpression,
 
-    ComprehensionBlock: function generateComprehensionBlock(g, expr) {
+    ComprehensionBlock: function generateComprehensionBlock(expr) {
         var left = void 0,
-            right = g.generate(generateExpression, expr.right, Settings.comprBlockRightExpr);
+            right = source(generateExpression, expr.right, Settings.comprBlockRightExpr);
 
         if (expr.left.type === Syntax.VariableDeclaration) {
             left = expr.left.kind +
                    _.space +
-                   g.generate(generateStatement, expr.left.declarations[0], Settings.comprBlockVarDeclaration);
+                   source(generateStatement, expr.left.declarations[0], Settings.comprBlockVarDeclaration);
         }
 
         else
-            left = g.generate(generateExpression, expr.left, Settings.comprBlockLeftExpr);
+            left = source(generateExpression, expr.left, Settings.comprBlockLeftExpr);
 
         left = joinWithSpacing(left, expr.of ? 'of' : 'in');
 
         _.js += 'for' + _.optSpace + '(' + joinWithSpacing(left, right) + ')';
     },
 
-    SpreadElement: function generateSpreadElement(g, expr) {
+    SpreadElement: function generateSpreadElement(expr) {
         _.js += '...';
-        g.expand(generateExpression, expr.argument, Settings.spreadElementArg);
+        expand(generateExpression, expr.argument, Settings.spreadElementArg);
     },
 
-    TaggedTemplateExpression: function generateTaggedTemplateExpression(g, expr, settings) {
+    TaggedTemplateExpression: function generateTaggedTemplateExpression(expr, settings) {
         var parenthesize = Precedence.TaggedTemplate < settings.precedence;
 
         if (parenthesize)
             _.js += '(';
 
-        g.expand(generateExpression, expr.tag, Settings.taggedTemplateExprTag(settings.allowCall));
-        g.expand(generateExpression, expr.quasi, Settings.taggedTemplateExprQuasi);
+        expand(generateExpression, expr.tag, Settings.taggedTemplateExprTag(settings.allowCall));
+        expand(generateExpression, expr.quasi, Settings.taggedTemplateExprQuasi);
 
         if (parenthesize)
             _.js += ')';
     },
 
-    TemplateElement: function generateTemplateElement(g, expr) {
+    TemplateElement: function generateTemplateElement(expr) {
         // Don't use "cooked". Since tagged template can use raw template
         // representation. So if we do so, it breaks the script semantics.
         _.js += expr.value.raw;
     },
 
-    TemplateLiteral: function generateTemplateLiteral(g, expr) {
+    TemplateLiteral: function generateTemplateLiteral(expr) {
         var quasiCount = expr.quasis.length,
             lastQuasiIdx = quasiCount - 1;
 
         _.js += '`';
 
         for (var i = 0; i < quasiCount; ++i) {
-            g.expand(generateExpression, expr.quasis[i], Settings.templateLiteralQuasi);
+            expand(generateExpression, expr.quasis[i], Settings.templateLiteralQuasi);
 
             if (i !== lastQuasiIdx) {
                 _.js += '${' + _.optSpace;
-                g.expand(generateExpression, expr.expressions[i], Settings.templateLiteralExpr);
+                expand(generateExpression, expr.expressions[i], Settings.templateLiteralExpr);
                 _.js += _.optSpace + '}';
             }
         }
@@ -1803,7 +1803,7 @@ var ExprGen = {
     }
 };
 
-function generateExpression(g, expr, option) {
+function generateExpression(expr, option) {
     var precedence = option.precedence,
         allowIn = option.allowIn,
         allowCall = option.allowCall,
@@ -1811,10 +1811,10 @@ function generateExpression(g, expr, option) {
 
 
     if (extra.verbatim && expr.hasOwnProperty(extra.verbatim))
-        g.expand(generateVerbatim, expr, option);
+        expand(generateVerbatim, expr, option);
 
     else {
-        ExprGen[type](g, expr, {
+        ExprGen[type](expr, {
             precedence: precedence,
             allowIn: allowIn,
             allowCall: allowCall,
@@ -1839,12 +1839,12 @@ var EXPRESSION_STATEMENT_UNALLOWED_EXPR_REGEX = /^{|^class(?:\s|{)|^function(?:\
  * Common statement generators
  */
 
-function generateTryStatementHandlers(g, js, finalizer, handlers) {
+function generateTryStatementHandlers(js, finalizer, handlers) {
     var handlerCount = handlers.length,
         lastHandlerIdx = handlerCount - 1;
 
     for (var i = 0; i < handlerCount; ++i) {
-        var handler = g.generate(generateStatement, handlers[i], Settings.tryStmtHandler);
+        var handler = source(generateStatement, handlers[i], Settings.tryStmtHandler);
 
         js = joinWithSpacing(js, handler);
 
@@ -1855,37 +1855,37 @@ function generateTryStatementHandlers(g, js, finalizer, handlers) {
     return js;
 }
 
-function generateForStatementIterator(g, operator, stmt, settings) {
+function generateForStatementIterator(operator, stmt, settings) {
     var prevIndent1 = shiftIndent(),
         js = 'for' + _.optSpace + '(';
 
     if (stmt.left.type === Syntax.VariableDeclaration) {
         var prevIndent2 = shiftIndent();
         js += stmt.left.kind + _.space;
-        js += g.generate(generateStatement, stmt.left.declarations[0], Settings.forIterVarDecl);
+        js += source(generateStatement, stmt.left.declarations[0], Settings.forIterVarDecl);
         _.indent = prevIndent2;
     }
 
     else
-        js += g.generate(generateExpression, stmt.left, Settings.forStmtIterLeft);
+        js += source(generateExpression, stmt.left, Settings.forStmtIterLeft);
 
     js = joinWithSpacing(js, operator);
 
-    var right = g.generate(generateExpression, stmt.right, Settings.forStmtIterRight);
+    var right = source(generateExpression, stmt.right, Settings.forStmtIterRight);
 
     js = joinWithSpacing(js, right) + ')';
 
     _.indent = prevIndent1;
 
     _.js += js + adoptionPrefix(stmt.body);
-    g.expand(generateStatement, stmt.body, Settings.forStmtIterBody(settings.semicolon === ''));
+    expand(generateStatement, stmt.body, Settings.forStmtIterBody(settings.semicolon === ''));
 }
 
 /**
  * Statement generator dictionary
  */
 var StmtGen = {
-    BlockStatement: function generateBlockStatement(g, stmt, settings) {
+    BlockStatement: function generateBlockStatement(stmt, settings) {
         var len = stmt.body.length,
             lastIdx = len - 1,
             prevIndent = shiftIndent();
@@ -1894,7 +1894,7 @@ var StmtGen = {
 
         for (var i = 0; i < len; i++) {
             _.js += _.indent;
-            g.expand(generateStatement, stmt.body[i], Settings.blockStmtBodyItem(settings.functionBody, i === lastIdx));
+            expand(generateStatement, stmt.body[i], Settings.blockStmtBodyItem(settings.functionBody, i === lastIdx));
             _.js += _.newline;
         }
 
@@ -1902,7 +1902,7 @@ var StmtGen = {
         _.js += _.indent + '}';
     },
 
-    BreakStatement: function generateBreakStatement(g, stmt, settings) {
+    BreakStatement: function generateBreakStatement(stmt, settings) {
         if (stmt.label)
             _.js += 'break ' + stmt.label.name + settings.semicolon;
 
@@ -1910,7 +1910,7 @@ var StmtGen = {
             _.js += 'break' + settings.semicolon;
     },
 
-    ContinueStatement: function generateContinueStatement(g, stmt, settings) {
+    ContinueStatement: function generateContinueStatement(stmt, settings) {
         if (stmt.label)
             _.js += 'continue ' + stmt.label.name + settings.semicolon;
 
@@ -1918,7 +1918,7 @@ var StmtGen = {
             _.js += 'continue' + settings.semicolon;
     },
 
-    ClassBody: function generateClassBody(g, classBody) {
+    ClassBody: function generateClassBody(classBody) {
         var len = classBody.body.length,
             lastIdx = len - 1,
             prevIndent = shiftIndent();
@@ -1927,7 +1927,7 @@ var StmtGen = {
 
         for (var i = 0; i < len; i++) {
             _.js += _.indent;
-            g.expand(generateExpression, classBody.body[i], Settings.classBodyItem);
+            expand(generateExpression, classBody.body[i], Settings.classBodyItem);
 
             if (i !== lastIdx)
                 _.js += _.newline;
@@ -1937,20 +1937,20 @@ var StmtGen = {
         _.js += _.newline + _.indent + '}';
     },
 
-    ClassDeclaration: function generateClassDeclaration(g, stmt) {
+    ClassDeclaration: function generateClassDeclaration(stmt) {
         var js = 'class ' + stmt.id.name;
 
         if (stmt.superClass) {
-            var fragment = g.generate(generateExpression, stmt.superClass, Settings.classDeclarationSuperClass);
+            var fragment = source(generateExpression, stmt.superClass, Settings.classDeclarationSuperClass);
 
             js += _.space + joinWithSpacing('extends', fragment);
         }
 
         _.js += js + _.optSpace;
-        g.expand(generateStatement, stmt.body, Settings.classDeclarationBody);
+        expand(generateStatement, stmt.body, Settings.classDeclarationBody);
     },
 
-    DirectiveStatement: function generateDirectiveStatement(g, stmt, settings) {
+    DirectiveStatement: function generateDirectiveStatement(stmt, settings) {
         if (extra.raw && stmt.raw)
             _.js += stmt.raw + settings.semicolon;
 
@@ -1958,9 +1958,9 @@ var StmtGen = {
             _.js += escapeDirective(stmt.directive) + settings.semicolon;
     },
 
-    DoWhileStatement: function generateDoWhileStatement(g, stmt, settings) {
+    DoWhileStatement: function generateDoWhileStatement(stmt, settings) {
         var body = adoptionPrefix(stmt.body) +
-                   g.generate(generateStatement, stmt.body, Settings.doWhileStmtBody) +
+                   source(generateStatement, stmt.body, Settings.doWhileStmtBody) +
                    adoptionSuffix(stmt.body);
 
         //NOTE: Because `do 42 while (cond)` is Syntax Error. We need semicolon.
@@ -1968,27 +1968,27 @@ var StmtGen = {
         js = joinWithSpacing(js, 'while' + _.optSpace + '(');
 
         _.js += js;
-        g.expand(generateExpression, stmt.test, Settings.doWhileStmtTest);
+        expand(generateExpression, stmt.test, Settings.doWhileStmtTest);
         _.js += ')' + settings.semicolon;
     },
 
-    CatchClause: function generateCatchClause(g, stmt) {
+    CatchClause: function generateCatchClause(stmt) {
         var prevIndent = shiftIndent();
 
         _.js += 'catch' + _.optSpace + '(';
-        g.expand(generateExpression, stmt.param, Settings.catchClauseParam);
+        expand(generateExpression, stmt.param, Settings.catchClauseParam);
 
         if (stmt.guard) {
             _.js += ' if ';
-            g.expand(generateExpression, stmt.guard, Settings.catchClauseGuard);
+            expand(generateExpression, stmt.guard, Settings.catchClauseGuard);
         }
 
         _.indent = prevIndent;
         _.js += ')' + adoptionPrefix(stmt.body);
-        g.expand(generateStatement, stmt.body, Settings.catchClauseBody);
+        expand(generateStatement, stmt.body, Settings.catchClauseBody);
     },
 
-    DebuggerStatement: function generateDebuggerStatement(g, stmt, settings) {
+    DebuggerStatement: function generateDebuggerStatement(stmt, settings) {
         _.js += 'debugger' + settings.semicolon;
     },
 
@@ -1996,10 +1996,10 @@ var StmtGen = {
         _.js += ';';
     },
 
-    ExportDeclaration: function generateExportDeclaration(g, stmt, settings) {
+    ExportDeclaration: function generateExportDeclaration(stmt, settings) {
         // export default AssignmentExpression[In] ;
         if (stmt['default']) {
-            var decl = g.generate(generateExpression, stmt.declaration, Settings.exportDeclDefaultDecl);
+            var decl = source(generateExpression, stmt.declaration, Settings.exportDeclDefaultDecl);
 
             _.js += joinWithSpacing('export default', decl) + settings.semicolon;
         }
@@ -2014,7 +2014,7 @@ var StmtGen = {
                 js += _.optSpace + '{' + _.optSpace + '}';
 
             else if (stmt.specifiers[0].type === Syntax.ExportBatchSpecifier) {
-                var spec = g.generate(generateExpression, stmt.specifiers[0], Settings.exportDeclSpec);
+                var spec = source(generateExpression, stmt.specifiers[0], Settings.exportDeclSpec);
 
                 js = joinWithSpacing(js, spec);
             }
@@ -2028,7 +2028,7 @@ var StmtGen = {
 
                 for (var i = 0; i < specCount; ++i) {
                     js += _.newline + _.indent;
-                    js += g.generate(generateExpression, stmt.specifiers[i], Settings.exportDeclSpec);
+                    js += source(generateExpression, stmt.specifiers[i], Settings.exportDeclSpec);
 
                     if (i !== lastSpecIdx)
                         js += ',';
@@ -2039,7 +2039,7 @@ var StmtGen = {
             }
 
             if (stmt.source)
-                js = joinWithSpacing(js, 'from' + _.optSpace + generateLiteral(g, stmt.source));
+                js = joinWithSpacing(js, 'from' + _.optSpace + generateLiteral(stmt.source));
 
             _.js += js + settings.semicolon;
 
@@ -2048,15 +2048,15 @@ var StmtGen = {
         // export VariableStatement
         // export Declaration[Default]
         else if (stmt.declaration) {
-            var decl = g.generate(generateStatement, stmt.declaration, Settings.exportDeclDecl(settings.semicolon ===
-                                                                                               ''));
+            var decl = source(generateStatement, stmt.declaration, Settings.exportDeclDecl(settings.semicolon ===
+                                                                                           ''));
 
             _.js += joinWithSpacing('export', decl);
         }
     },
 
-    ExpressionStatement: function generateExpressionStatement(g, stmt, settings) {
-        var exprSource = g.generate(generateExpression, stmt.expression, Settings.exprStmtExpr),
+    ExpressionStatement: function generateExpressionStatement(stmt, settings) {
+        var exprSource = source(generateExpression, stmt.expression, Settings.exprStmtExpr),
             parenthesize = EXPRESSION_STATEMENT_UNALLOWED_EXPR_REGEX.test(exprSource) ||
                            (directive &&
                             settings.directiveContext &&
@@ -2072,7 +2072,7 @@ var StmtGen = {
             _.js += exprSource + settings.semicolon;
     },
 
-    ImportDeclaration: function generateImportDeclaration(g, stmt, settings) {
+    ImportDeclaration: function generateImportDeclaration(stmt, settings) {
         var js = 'import',
             specCount = stmt.specifiers.length;
 
@@ -2098,7 +2098,7 @@ var StmtGen = {
                 // import { ... } from "...";
                 if (firstNamedIdx === lastSpecIdx) {
                     js += _.optSpace +
-                          g.generate(generateExpression, stmt.specifiers[firstNamedIdx], Settings.importDeclSpec) +
+                          source(generateExpression, stmt.specifiers[firstNamedIdx], Settings.importDeclSpec) +
                           _.optSpace;
                 }
 
@@ -2112,7 +2112,7 @@ var StmtGen = {
                     for (var i = firstNamedIdx; i < specCount; i++) {
                         js += _.newline +
                               _.indent +
-                              g.generate(generateExpression, stmt.specifiers[i], Settings.importDeclSpec);
+                              source(generateExpression, stmt.specifiers[i], Settings.importDeclSpec);
 
                         if (i !== lastSpecIdx)
                             js += ',';
@@ -2128,18 +2128,18 @@ var StmtGen = {
             js = joinWithSpacing(js, 'from')
         }
 
-        js += _.optSpace + generateLiteral(g, stmt.source) + settings.semicolon;
+        js += _.optSpace + generateLiteral(stmt.source) + settings.semicolon;
 
         _.js += js;
     },
 
-    VariableDeclarator: function generateVariableDeclarator(g, stmt, settings) {
+    VariableDeclarator: function generateVariableDeclarator(stmt, settings) {
         var genOpt = Settings.varDeclaratorInit(settings.allowIn);
 
         if (stmt.init) {
-            g.expand(generateExpression, stmt.id, genOpt);
+            expand(generateExpression, stmt.id, genOpt);
             _.js += _.optSpace + '=' + _.optSpace;
-            g.expand(generateExpression, stmt.init, genOpt);
+            expand(generateExpression, stmt.init, genOpt);
         }
 
         else {
@@ -2147,11 +2147,11 @@ var StmtGen = {
                 _.js += stmt.id.name;
 
             else
-                g.expand(generateExpression, stmt.id, genOpt);
+                expand(generateExpression, stmt.id, genOpt);
         }
     },
 
-    VariableDeclaration: function generateVariableDeclaration(g, stmt, settings) {
+    VariableDeclaration: function generateVariableDeclaration(stmt, settings) {
         var len = stmt.declarations.length,
             prevIndent = len > 1 ? shiftIndent() : _.indent,
             expandOpt = Settings.varDeclaration(settings.allowIn);
@@ -2160,48 +2160,48 @@ var StmtGen = {
 
         for (var i = 0; i < len; i++) {
             _.js += i === 0 ? _.space : (',' + _.optSpace);
-            g.expand(generateStatement, stmt.declarations[i], expandOpt);
+            expand(generateStatement, stmt.declarations[i], expandOpt);
         }
 
         _.js += settings.semicolon;
         _.indent = prevIndent;
     },
 
-    ThrowStatement: function generateThrowStatement(g, stmt, settings) {
-        var arg = g.generate(generateExpression, stmt.argument, Settings.throwStmtArg);
+    ThrowStatement: function generateThrowStatement(stmt, settings) {
+        var arg = source(generateExpression, stmt.argument, Settings.throwStmtArg);
 
         _.js += joinWithSpacing('throw', arg) + settings.semicolon;
     },
 
-    TryStatement: function generateTryStatement(g, stmt) {
+    TryStatement: function generateTryStatement(stmt) {
         var js = 'try' +
                  adoptionPrefix(stmt.block) +
-                 g.generate(generateStatement, stmt.block, Settings.tryStmtBlock) +
+                 source(generateStatement, stmt.block, Settings.tryStmtBlock) +
                  adoptionSuffix(stmt.block);
 
         var handlers = stmt.handlers || stmt.guardedHandlers;
 
         if (handlers)
-            js = generateTryStatementHandlers(g, js, stmt.finalizer, handlers);
+            js = generateTryStatementHandlers(js, stmt.finalizer, handlers);
 
         if (stmt.handler) {
             handlers = isArray(stmt.handler) ? stmt.handler : [stmt.handler];
-            js = generateTryStatementHandlers(g, js, stmt.finalizer, handlers);
+            js = generateTryStatementHandlers(js, stmt.finalizer, handlers);
         }
 
         if (stmt.finalizer) {
             js = joinWithSpacing(js, 'finally' + adoptionPrefix(stmt.finalizer));
-            js += g.generate(generateStatement, stmt.finalizer, Settings.tryStmtFinalizer);
+            js += source(generateStatement, stmt.finalizer, Settings.tryStmtFinalizer);
         }
 
         _.js += js;
     },
 
-    SwitchStatement: function generateSwitchStatement(g, stmt) {
+    SwitchStatement: function generateSwitchStatement(stmt) {
         var prevIndent = shiftIndent();
 
         _.js += 'switch' + _.optSpace + '(';
-        g.expand(generateExpression, stmt.discriminant, Settings.switchStmtDiscriminant);
+        expand(generateExpression, stmt.discriminant, Settings.switchStmtDiscriminant);
         _.js += ')' + _.optSpace + '{' + _.newline;
         _.indent = prevIndent;
 
@@ -2211,7 +2211,7 @@ var StmtGen = {
 
             for (var i = 0; i < len; i++) {
                 _.js += _.indent;
-                g.expand(generateStatement, stmt.cases[i], Settings.switchStmtCase(i === lastIdx));
+                expand(generateStatement, stmt.cases[i], Settings.switchStmtCase(i === lastIdx));
                 _.js += _.newline;
             }
         }
@@ -2219,14 +2219,14 @@ var StmtGen = {
         _.js += _.indent + '}';
     },
 
-    SwitchCase: function generateSwitchCase(g, stmt, settings) {
+    SwitchCase: function generateSwitchCase(stmt, settings) {
         var i = 0,
             prevIndent = shiftIndent(),
             conseqCount = stmt.consequent.length,
             lastConseqIdx = conseqCount - 1;
 
         if (stmt.test) {
-            var test = g.generate(generateExpression, stmt.test, Settings.switchCaseTest);
+            var test = source(generateExpression, stmt.test, Settings.switchCaseTest);
             _.js += joinWithSpacing('case', test) + ':';
         }
 
@@ -2237,32 +2237,32 @@ var StmtGen = {
         if (conseqCount && stmt.consequent[0].type === Syntax.BlockStatement) {
             i++;
             _.js += adoptionPrefix(stmt.consequent[0]);
-            g.expand(generateStatement, stmt.consequent[0], Settings.switchCaseConseqBlock);
+            expand(generateStatement, stmt.consequent[0], Settings.switchCaseConseqBlock);
         }
 
         for (; i < conseqCount; i++) {
             _.js += _.newline + _.indent;
-            g.expand(generateStatement, stmt.consequent[i], Settings.switchCaseConseq(i === lastConseqIdx &&
-                                                                                      settings.semicolon === ''));
+            expand(generateStatement, stmt.consequent[i], Settings.switchCaseConseq(i === lastConseqIdx &&
+                                                                                    settings.semicolon === ''));
         }
 
         _.indent = prevIndent;
     },
 
-    IfStatement: function generateIfStatement(g, stmt, settings) {
+    IfStatement: function generateIfStatement(stmt, settings) {
         var prevIndent = shiftIndent(),
             semicolonOptional = settings.semicolon === '';
 
         _.js += 'if' + _.optSpace + '(';
-        g.expand(generateExpression, stmt.test, Settings.ifStmtTest);
+        expand(generateExpression, stmt.test, Settings.ifStmtTest);
         _.js += ')';
         _.indent = prevIndent;
         _.js += adoptionPrefix(stmt.consequent);
 
         if (stmt.alternate) {
-            var conseq = g.generate(generateStatement, stmt.consequent, Settings.ifStmtConseqWithAlt) +
+            var conseq = source(generateStatement, stmt.consequent, Settings.ifStmtConseqWithAlt) +
                          adoptionSuffix(stmt.consequent),
-                alt = g.generate(generateStatement, stmt.alternate, Settings.ifStmtAlt(semicolonOptional));
+                alt = source(generateStatement, stmt.alternate, Settings.ifStmtAlt(semicolonOptional));
 
             if (stmt.alternate.type === Syntax.IfStatement)
                 alt = 'else ' + alt;
@@ -2274,20 +2274,20 @@ var StmtGen = {
         }
 
         else
-            g.expand(generateStatement, stmt.consequent, Settings.ifStmtConseq(semicolonOptional))
+            expand(generateStatement, stmt.consequent, Settings.ifStmtConseq(semicolonOptional))
     },
 
-    ForStatement: function generateForStatement(g, stmt, settings) {
+    ForStatement: function generateForStatement(stmt, settings) {
         var prevIndent = shiftIndent();
 
         _.js += 'for' + _.optSpace + '(';
 
         if (stmt.init) {
             if (stmt.init.type === Syntax.VariableDeclaration)
-                g.expand(generateStatement, stmt.init, Settings.forStmtVarInit);
+                expand(generateStatement, stmt.init, Settings.forStmtVarInit);
 
             else {
-                g.expand(generateExpression, stmt.init, Settings.forStmtInit);
+                expand(generateExpression, stmt.init, Settings.forStmtInit);
                 _.js += ';';
             }
         }
@@ -2297,14 +2297,14 @@ var StmtGen = {
 
         if (stmt.test) {
             _.js += _.optSpace;
-            g.expand(generateExpression, stmt.test, Settings.forStmtTest);
+            expand(generateExpression, stmt.test, Settings.forStmtTest);
         }
 
         _.js += ';';
 
         if (stmt.update) {
             _.js += _.optSpace;
-            g.expand(generateExpression, stmt.update, Settings.forStmtUpdate);
+            expand(generateExpression, stmt.update, Settings.forStmtUpdate);
         }
 
         _.js += ')';
@@ -2312,18 +2312,18 @@ var StmtGen = {
         _.indent = prevIndent;
 
         _.js += adoptionPrefix(stmt.body);
-        g.expand(generateStatement, stmt.body, Settings.forStmtBody(settings.semicolon === ''));
+        expand(generateStatement, stmt.body, Settings.forStmtBody(settings.semicolon === ''));
     },
 
-    ForInStatement: function generateForInStatement(g, stmt, settings) {
-        generateForStatementIterator(g, 'in', stmt, settings);
+    ForInStatement: function generateForInStatement(stmt, settings) {
+        generateForStatementIterator('in', stmt, settings);
     },
 
-    ForOfStatement: function generateForOfStatement(g, stmt, settings) {
-        generateForStatementIterator(g, 'of', stmt, settings);
+    ForOfStatement: function generateForOfStatement(stmt, settings) {
+        generateForStatementIterator('of', stmt, settings);
     },
 
-    LabeledStatement: function generateLabeledStatement(g, stmt, settings) {
+    LabeledStatement: function generateLabeledStatement(stmt, settings) {
         var prevIndent = _.indent;
 
         _.js += stmt.label.name + ':' + adoptionPrefix(stmt.body);
@@ -2331,16 +2331,16 @@ var StmtGen = {
         if (stmt.body.type !== Syntax.BlockStatement)
             prevIndent = shiftIndent();
 
-        g.expand(generateStatement, stmt.body, Settings.labeledStmtBody(settings.semicolon === ''));
+        expand(generateStatement, stmt.body, Settings.labeledStmtBody(settings.semicolon === ''));
         _.indent = prevIndent;
     },
 
-    ModuleDeclaration: function generateModuleDeclaration(g, stmt, settings) {
+    ModuleDeclaration: function generateModuleDeclaration(stmt, settings) {
         _.js += 'module' + _.space + stmt.id.name + _.space +
-                'from' + _.optSpace + generateLiteral(g, stmt.source) + settings.semicolon;
+                'from' + _.optSpace + generateLiteral(stmt.source) + settings.semicolon;
     },
 
-    Program: function generateProgram(g, stmt) {
+    Program: function generateProgram(stmt) {
         var len = stmt.body.length,
             lastIdx = len - 1;
 
@@ -2349,24 +2349,24 @@ var StmtGen = {
 
         for (var i = 0; i < len; i++) {
             _.js += _.indent;
-            g.expand(generateStatement, stmt.body[i], Settings.programBodyItem(!safeConcatenation && i === lastIdx));
+            expand(generateStatement, stmt.body[i], Settings.programBodyItem(!safeConcatenation && i === lastIdx));
 
             if (i !== lastIdx)
                 _.js += _.newline;
         }
     },
 
-    FunctionDeclaration: function generateFunctionDeclaration(g, stmt) {
+    FunctionDeclaration: function generateFunctionDeclaration(stmt) {
         var isGenerator = !!stmt.generator;
 
         _.js += isGenerator ? ('function*' + _.optSpace) : ('function' + _.space );
         _.js += stmt.id.name;
-        generateFunctionBody(g, stmt);
+        generateFunctionBody(stmt);
     },
 
-    ReturnStatement: function generateReturnStatement(g, stmt, settings) {
+    ReturnStatement: function generateReturnStatement(stmt, settings) {
         if (stmt.argument) {
-            var arg = g.generate(generateExpression, stmt.argument, Settings.returnStmtArg);
+            var arg = source(generateExpression, stmt.argument, Settings.returnStmtArg);
 
             _.js += joinWithSpacing('return', arg) + settings.semicolon;
         }
@@ -2375,33 +2375,33 @@ var StmtGen = {
             _.js += 'return' + settings.semicolon;
     },
 
-    WhileStatement: function generateWhileStatement(g, stmt, settings) {
+    WhileStatement: function generateWhileStatement(stmt, settings) {
         var prevIndent = shiftIndent();
 
         _.js += 'while' + _.optSpace + '(';
-        g.expand(generateExpression, stmt.test, Settings.whileStmtTest);
+        expand(generateExpression, stmt.test, Settings.whileStmtTest);
         _.js += ')';
         _.indent = prevIndent;
 
         _.js += adoptionPrefix(stmt.body);
-        g.expand(generateStatement, stmt.body, Settings.whileStmtBody(settings.semicolon === ''));
+        expand(generateStatement, stmt.body, Settings.whileStmtBody(settings.semicolon === ''));
     },
 
-    WithStatement: function generateWithStatement(g, stmt, settings) {
+    WithStatement: function generateWithStatement(stmt, settings) {
         var prevIndent = shiftIndent();
 
         _.js += 'with' + _.optSpace + '(';
-        g.expand(generateExpression, stmt.object, Settings.withStmtObj);
+        expand(generateExpression, stmt.object, Settings.withStmtObj);
         _.js += ')';
         _.indent = prevIndent;
 
         _.js += adoptionPrefix(stmt.body);
-        g.expand(generateStatement, stmt.body, Settings.withStmtBody(settings.semicolon === ''));
+        expand(generateStatement, stmt.body, Settings.withStmtBody(settings.semicolon === ''));
 
     }
 };
 
-function generateStatement(g, stmt, option) {
+function generateStatement(stmt, option) {
     var allowIn = true,
         semicolon = ';',
         functionBody = false,
@@ -2416,7 +2416,7 @@ function generateStatement(g, stmt, option) {
         directiveContext = option.directiveContext;
     }
 
-    StmtGen[stmt.type](g, stmt, {
+    StmtGen[stmt.type](stmt, {
         allowIn: allowIn,
         semicolon: semicolon,
         functionBody: functionBody,
@@ -2424,12 +2424,12 @@ function generateStatement(g, stmt, option) {
     });
 }
 
-function generateInternal(g, node) {
+function generateInternal(node) {
     if (StmtGen[node.type])
-        generateStatement(g, node);
+        generateStatement(node);
 
     else if (ExprGen[node.type])
-        generateExpression(g, node, {
+        generateExpression(node, {
             precedence: Precedence.Sequence,
             allowIn: true,
             allowCall: true
@@ -2441,32 +2441,29 @@ function generateInternal(g, node) {
 
 //CodeGen
 //-----------------------------------------------------------------------------------
-var CodeGen = function () {
-    _.js = '';
-};
-
-CodeGen.prototype.generate = function (proc, node, settings) {
+function source(proc, node, settings) {
     var savedJs = _.js;
     _.js = '';
 
-    proc(this, node, settings);
+    proc(node, settings);
 
-    var result = _.js;
+    var src = _.js;
     _.js = savedJs;
 
-    return result;
-};
+    return src;
+}
 
-CodeGen.prototype.expand = function (proc, node, settings) {
-    proc(this, node, settings);
-};
 
-CodeGen.run = function (node) {
-    var cg = new CodeGen();
-    generateInternal(cg, node);
+function expand(proc, node, settings) {
+    proc(node, settings);
+}
+
+function run(node) {
+    _.js = '';
+    generateInternal(node);
 
     return _.js;
-};
+}
 
 /**
  * Strings
@@ -2529,7 +2526,7 @@ function generate(node, options) {
     parse = json ? null : options.parse;
     extra = options;
 
-    return CodeGen.run(node);
+    return run(node);
 }
 
 FORMAT_MINIFY = {
