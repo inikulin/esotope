@@ -614,6 +614,8 @@ function generateFunctionParams($node) {
 }
 
 function generateFunctionBody($node) {
+    var $body = $node.body;
+
     generateFunctionParams($node);
 
     if ($node.type === Syntax.ArrowFunctionExpression)
@@ -622,7 +624,7 @@ function generateFunctionBody($node) {
     if ($node.expression) {
         _.js += _.optSpace;
 
-        var expr = source(generateExpression, $node.body, Settings.funcBodyExpr);
+        var expr = source(generateExpression, $body, Settings.funcBodyExpr);
 
         if (expr.charAt(0) === '{')
             expr = '(' + expr + ')';
@@ -631,8 +633,8 @@ function generateFunctionBody($node) {
     }
 
     else {
-        _.js += adoptionPrefix($node.body);
-        expand(generateStatement, $node.body, Settings.funcBodyStmt);
+        _.js += adoptionPrefix($body);
+        StmtGen[$body.type]($body, Settings.funcBodyStmt);
     }
 }
 
@@ -1545,13 +1547,13 @@ var ExprRawGen = {
         var len = $expr.expressions.length,
             lastIdx = len - 1,
             parenthesize = Precedence.Sequence < settings.precedence,
-            expandOpt = Settings.sequenceExprChildren(settings.allowIn || parenthesize);
+            exprGenSettings = Settings.sequenceExprChildren(settings.allowIn || parenthesize);
 
         if (parenthesize)
             _.js += '(';
 
         for (var i = 0; i < len; i++) {
-            expand(generateExpression, $expr.expressions[i], expandOpt);
+            expand(generateExpression, $expr.expressions[i], exprGenSettings);
 
             if (i !== lastIdx)
                 _.js += ',' + _.optSpace;
@@ -1591,17 +1593,17 @@ var ExprRawGen = {
     ConditionalExpression: function generateConditionalExpression($expr, settings) {
         var parenthesize = Precedence.Conditional < settings.precedence,
             allowIn = settings.allowIn || parenthesize,
-            testExpandOpt = Settings.conditionalExprTest(allowIn),
-            branchExpandOpt = Settings.conditionalExprBranch(allowIn);
+            testGenSettings = Settings.conditionalExprTest(allowIn),
+            branchGenSettings = Settings.conditionalExprBranch(allowIn);
 
         if (parenthesize)
             _.js += '(';
 
-        expand(generateExpression, $expr.test, testExpandOpt);
+        expand(generateExpression, $expr.test, testGenSettings);
         _.js += _.optSpace + '?' + _.optSpace;
-        expand(generateExpression, $expr.consequent, branchExpandOpt);
+        expand(generateExpression, $expr.consequent, branchGenSettings);
         _.js += _.optSpace + ':' + _.optSpace;
-        expand(generateExpression, $expr.alternate, branchExpandOpt);
+        expand(generateExpression, $expr.alternate, branchGenSettings);
 
         if (parenthesize)
             _.js += ')';
@@ -1796,7 +1798,8 @@ var ExprRawGen = {
     ArrayExpression: generateArrayPatternOrExpression,
 
     ClassExpression: function generateClassExpression($expr) {
-        var js = 'class';
+        var $body = $expr.body,
+            js = 'class';
 
         if ($expr.id) {
             var id = source(generateExpression, $expr.id, Settings.classExprId);
@@ -1812,7 +1815,7 @@ var ExprRawGen = {
         }
 
         _.js += js + _.optSpace;
-        expand(generateStatement, $expr.body, Settings.classExprBody);
+        StmtGen[$body.type]($body, Settings.classExprBody);
     },
 
     MethodDefinition: function generateMethodDefinition($expr) {
@@ -2052,7 +2055,8 @@ function generateTryStatementHandlers(js, finalizer, handlers) {
 }
 
 function generateForStatementIterator(op, $stmt, settings) {
-    var bodySemicolonOptional = !semicolons && settings.semicolonOptional,
+    var $body = $stmt.body,
+        bodySemicolonOptional = !semicolons && settings.semicolonOptional,
         prevIndent1 = shiftIndent(),
         js = 'for' + _.optSpace + '(';
 
@@ -2074,8 +2078,8 @@ function generateForStatementIterator(op, $stmt, settings) {
 
     _.indent = prevIndent1;
 
-    _.js += js + adoptionPrefix($stmt.body);
-    expand(generateStatement, $stmt.body, Settings.forStmtIterBody(bodySemicolonOptional));
+    _.js += js + adoptionPrefix($body);
+    StmtGen[$body.type]($body, Settings.forStmtIterBody(bodySemicolonOptional));
 }
 
 /**
@@ -2083,15 +2087,18 @@ function generateForStatementIterator(op, $stmt, settings) {
  */
 var StmtRawGen = {
     BlockStatement: function generateBlockStatement($stmt, settings) {
-        var len = $stmt.body.length,
+        var $body = $stmt.body,
+            len = $body.length,
             lastIdx = len - 1,
             prevIndent = shiftIndent();
 
         _.js += '{' + _.newline;
 
         for (var i = 0; i < len; i++) {
+            var $item = $body[i];
+
             _.js += _.indent;
-            expand(generateStatement, $stmt.body[i], Settings.blockStmtBodyItem(settings.functionBody, i === lastIdx));
+            StmtGen[$item.type]($item, Settings.blockStmtBodyItem(settings.functionBody, i === lastIdx));
             _.js += _.newline;
         }
 
@@ -2141,7 +2148,8 @@ var StmtRawGen = {
     },
 
     ClassDeclaration: function generateClassDeclaration($stmt) {
-        var js = 'class ' + $stmt.id.name;
+        var $body = $stmt.body,
+            js = 'class ' + $stmt.id.name;
 
         if ($stmt.superClass) {
             var fragment = source(generateExpression, $stmt.superClass, Settings.classDeclarationSuperClass);
@@ -2150,7 +2158,7 @@ var StmtRawGen = {
         }
 
         _.js += js + _.optSpace;
-        expand(generateStatement, $stmt.body, Settings.classDeclarationBody);
+        StmtGen[$body.type]($body, Settings.classDeclarationBody);
     },
 
     DirectiveStatement: function generateDirectiveStatement($stmt, settings) {
@@ -2182,7 +2190,8 @@ var StmtRawGen = {
     },
 
     CatchClause: function generateCatchClause($stmt) {
-        var prevIndent = shiftIndent();
+        var $body = $stmt.body,
+            prevIndent = shiftIndent();
 
         _.js += 'catch' + _.optSpace + '(';
         expand(generateExpression, $stmt.param, Settings.catchClauseParam);
@@ -2193,8 +2202,8 @@ var StmtRawGen = {
         }
 
         _.indent = prevIndent;
-        _.js += ')' + adoptionPrefix($stmt.body);
-        expand(generateStatement, $stmt.body, Settings.catchClauseBody);
+        _.js += ')' + adoptionPrefix($body);
+        StmtGen[$body.type]($body, Settings.catchClauseBody);
     },
 
     DebuggerStatement: function generateDebuggerStatement($stmt, settings) {
@@ -2376,15 +2385,18 @@ var StmtRawGen = {
     },
 
     VariableDeclaration: function generateVariableDeclaration($stmt, settings) {
-        var len = $stmt.declarations.length,
+        var $decls = $stmt.declarations,
+            len = $decls.length,
             prevIndent = len > 1 ? shiftIndent() : _.indent,
-            expandOpt = Settings.varDeclaration(settings.allowIn);
+            declGenSettings = Settings.varDeclaration(settings.allowIn);
 
         _.js += $stmt.kind;
 
         for (var i = 0; i < len; i++) {
+            var $decl = $decls[i];
+
             _.js += i === 0 ? _.space : (',' + _.optSpace);
-            expand(generateStatement, $stmt.declarations[i], expandOpt);
+            StmtGen[$decl.type]($decl, declGenSettings);
         }
 
         if (semicolons || !settings.semicolonOptional)
@@ -2427,20 +2439,23 @@ var StmtRawGen = {
     },
 
     SwitchStatement: function generateSwitchStatement($stmt) {
-        var prevIndent = shiftIndent();
+        var $cases = $stmt.cases,
+            prevIndent = shiftIndent();
 
         _.js += 'switch' + _.optSpace + '(';
         expand(generateExpression, $stmt.discriminant, Settings.switchStmtDiscriminant);
         _.js += ')' + _.optSpace + '{' + _.newline;
         _.indent = prevIndent;
 
-        if ($stmt.cases) {
-            var len = $stmt.cases.length,
+        if ($cases) {
+            var len = $cases.length,
                 lastIdx = len - 1;
 
             for (var i = 0; i < len; i++) {
+                var $case = $cases[i];
+
                 _.js += _.indent;
-                expand(generateStatement, $stmt.cases[i], Settings.switchStmtCase(i === lastIdx));
+                StmtGen[$case.type]($case, Settings.switchStmtCase(i === lastIdx));
                 _.js += _.newline;
             }
         }
@@ -2449,10 +2464,12 @@ var StmtRawGen = {
     },
 
     SwitchCase: function generateSwitchCase($stmt, settings) {
-        var i = 0,
+        var $conseqs = $stmt.consequent,
+            $firstConseq = $conseqs[0],
+            i = 0,
             prevIndent = shiftIndent(),
             conseqSemicolonOptional = !semicolons && settings.semicolonOptional,
-            conseqCount = $stmt.consequent.length,
+            conseqCount = $conseqs.length,
             lastConseqIdx = conseqCount - 1;
 
         if ($stmt.test) {
@@ -2464,35 +2481,37 @@ var StmtRawGen = {
             _.js += 'default:';
 
 
-        if (conseqCount && $stmt.consequent[0].type === Syntax.BlockStatement) {
+        if (conseqCount && $firstConseq.type === Syntax.BlockStatement) {
             i++;
-            _.js += adoptionPrefix($stmt.consequent[0]);
-            expand(generateStatement, $stmt.consequent[0], Settings.switchCaseConseqBlock);
+            _.js += adoptionPrefix($firstConseq);
+            StmtGen[$firstConseq.type]($firstConseq, Settings.switchCaseConseqBlock);
         }
 
         for (; i < conseqCount; i++) {
-            var semicolonOptional = i === lastConseqIdx && conseqSemicolonOptional;
+            var $conseq = $conseqs[i],
+                semicolonOptional = i === lastConseqIdx && conseqSemicolonOptional;
 
             _.js += _.newline + _.indent;
-            expand(generateStatement, $stmt.consequent[i], Settings.switchCaseConseq(semicolonOptional));
+            StmtGen[$conseq.type]($conseq, Settings.switchCaseConseq(semicolonOptional));
         }
 
         _.indent = prevIndent;
     },
 
     IfStatement: function generateIfStatement($stmt, settings) {
-        var prevIndent = shiftIndent(),
+        var $conseq = $stmt.consequent,
+            prevIndent = shiftIndent(),
             semicolonOptional = !semicolons && settings.semicolonOptional;
 
         _.js += 'if' + _.optSpace + '(';
         expand(generateExpression, $stmt.test, Settings.ifStmtTest);
         _.js += ')';
         _.indent = prevIndent;
-        _.js += adoptionPrefix($stmt.consequent);
+        _.js += adoptionPrefix($conseq);
 
         if ($stmt.alternate) {
-            var conseq = source(generateStatement, $stmt.consequent, Settings.ifStmtConseqWithAlt) +
-                         adoptionSuffix($stmt.consequent),
+            var conseq = source(generateStatement, $conseq, Settings.ifStmtConseqWithAlt) +
+                         adoptionSuffix($conseq),
                 alt = source(generateStatement, $stmt.alternate, Settings.ifStmtAlt(semicolonOptional));
 
             if ($stmt.alternate.type === Syntax.IfStatement)
@@ -2505,21 +2524,23 @@ var StmtRawGen = {
         }
 
         else
-            expand(generateStatement, $stmt.consequent, Settings.ifStmtConseq(semicolonOptional))
+            StmtGen[$conseq.type]($conseq, Settings.ifStmtConseq(semicolonOptional));
     },
 
     ForStatement: function generateForStatement($stmt, settings) {
-        var bodySemicolonOptional = !semicolons && settings.semicolonOptional,
+        var $init = $stmt.init,
+            $body = $stmt.body,
+            bodySemicolonOptional = !semicolons && settings.semicolonOptional,
             prevIndent = shiftIndent();
 
         _.js += 'for' + _.optSpace + '(';
 
-        if ($stmt.init) {
-            if ($stmt.init.type === Syntax.VariableDeclaration)
-                expand(generateStatement, $stmt.init, Settings.forStmtVarInit);
+        if ($init) {
+            if ($init.type === Syntax.VariableDeclaration)
+                StmtGen[$init.type]($init, Settings.forStmtVarInit);
 
             else {
-                expand(generateExpression, $stmt.init, Settings.forStmtInit);
+                expand(generateExpression, $init, Settings.forStmtInit);
                 _.js += ';';
             }
         }
@@ -2541,8 +2562,8 @@ var StmtRawGen = {
 
         _.js += ')';
         _.indent = prevIndent;
-        _.js += adoptionPrefix($stmt.body);
-        expand(generateStatement, $stmt.body, Settings.forStmtBody(bodySemicolonOptional));
+        _.js += adoptionPrefix($body);
+        StmtGen[$body.type]($body, Settings.forStmtBody(bodySemicolonOptional));
     },
 
     ForInStatement: function generateForInStatement($stmt, settings) {
@@ -2554,15 +2575,16 @@ var StmtRawGen = {
     },
 
     LabeledStatement: function generateLabeledStatement($stmt, settings) {
-        var bodySemicolonOptional = !semicolons && settings.semicolonOptional,
+        var $body = $stmt.body,
+            bodySemicolonOptional = !semicolons && settings.semicolonOptional,
             prevIndent = _.indent;
 
-        _.js += $stmt.label.name + ':' + adoptionPrefix($stmt.body);
+        _.js += $stmt.label.name + ':' + adoptionPrefix($body);
 
-        if ($stmt.body.type !== Syntax.BlockStatement)
+        if ($body.type !== Syntax.BlockStatement)
             prevIndent = shiftIndent();
 
-        expand(generateStatement, $stmt.body, Settings.labeledStmtBody(bodySemicolonOptional));
+        StmtGen[$body.type]($body, Settings.labeledStmtBody(bodySemicolonOptional));
         _.indent = prevIndent;
     },
 
@@ -2575,15 +2597,18 @@ var StmtRawGen = {
     },
 
     Program: function generateProgram($stmt) {
-        var len = $stmt.body.length,
+        var $body = $stmt.body,
+            len = $body.length,
             lastIdx = len - 1;
 
         if (safeConcatenation && len > 0)
             _.js += '\n';
 
         for (var i = 0; i < len; i++) {
+            var $item = $body[i];
+
             _.js += _.indent;
-            expand(generateStatement, $stmt.body[i], Settings.programBodyItem(!safeConcatenation && i === lastIdx));
+            StmtGen[$item.type]($item, Settings.programBodyItem(!safeConcatenation && i === lastIdx));
 
             if (i !== lastIdx)
                 _.js += _.newline;
@@ -2613,7 +2638,8 @@ var StmtRawGen = {
     },
 
     WhileStatement: function generateWhileStatement($stmt, settings) {
-        var bodySemicolonOptional = !semicolons && settings.semicolonOptional,
+        var $body = $stmt.body,
+            bodySemicolonOptional = !semicolons && settings.semicolonOptional,
             prevIndent = shiftIndent();
 
         _.js += 'while' + _.optSpace + '(';
@@ -2621,21 +2647,21 @@ var StmtRawGen = {
         _.js += ')';
         _.indent = prevIndent;
 
-        _.js += adoptionPrefix($stmt.body);
-        expand(generateStatement, $stmt.body, Settings.whileStmtBody(bodySemicolonOptional));
+        _.js += adoptionPrefix($body);
+        StmtGen[$body.type]($body, Settings.whileStmtBody(bodySemicolonOptional));
     },
 
     WithStatement: function generateWithStatement($stmt, settings) {
-        var bodySemicolonOptional = !semicolons && settings.semicolonOptional,
+        var $body = $stmt.body,
+            bodySemicolonOptional = !semicolons && settings.semicolonOptional,
             prevIndent = shiftIndent();
 
         _.js += 'with' + _.optSpace + '(';
         expand(generateExpression, $stmt.object, Settings.withStmtObj);
         _.js += ')';
         _.indent = prevIndent;
-        _.js += adoptionPrefix($stmt.body);
-        expand(generateStatement, $stmt.body, Settings.withStmtBody(bodySemicolonOptional));
-
+        _.js += adoptionPrefix($body);
+        StmtGen[$body.type]($body, Settings.withStmtBody(bodySemicolonOptional));
     }
 };
 
