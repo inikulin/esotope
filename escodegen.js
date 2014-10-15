@@ -732,6 +732,8 @@ var Settings = {
     //TODO s
     blockStmtBodyItem: function (functionBody, semicolonOptional) {
         return {
+            allowIn: true,
+            functionBody: false,
             directiveContext: functionBody,
             semicolonOptional: semicolonOptional
         };
@@ -756,8 +758,10 @@ var Settings = {
 
     //TODO s
     classDeclarationBody: {
-        semicolonOptional: true,
-        directiveContext: false
+        allowIn: true,
+        functionBody: false,
+        directiveContext: false,
+        semicolonOptional: true
     },
 
     //TODO e
@@ -773,7 +777,10 @@ var Settings = {
     //TODO s
     varDeclaration: function (allowIn) {
         return {
-            allowIn: allowIn
+            allowIn: allowIn,
+            functionBody: false,
+            directiveContext: false,
+            semicolonOptional: false
         };
     },
 
@@ -788,6 +795,9 @@ var Settings = {
     //TODO s
     switchStmtCase: function (semicolonOptional) {
         return {
+            allowIn: true,
+            functionBody: false,
+            directiveContext: false,
             semicolonOptional: semicolonOptional
         };
     },
@@ -795,8 +805,10 @@ var Settings = {
     //TODO s
     programBodyItem: function (semicolonOptional) {
         return {
+            allowIn: true,
+            functionBody: false,
+            directiveContext: true,
             semicolonOptional: semicolonOptional,
-            directiveContext: true
         };
     },
 
@@ -869,8 +881,10 @@ var Settings = {
 
     //TODO s
     classExprBody: {
-        semicolonOptional: true,
-        directiveContext: false
+        allowIn: true,
+        functionBody: false,
+        directiveContext: false,
+        semicolonOptional: true
     },
 
     //TODO e
@@ -898,7 +912,10 @@ var Settings = {
 
     //TODO s
     comprBlockVarDeclaration: {
-        allowIn: false
+        allowIn: false,
+        functionBody: false,
+        directiveContext: false,
+        semicolonOptional: false
     },
 
     //TODO e
@@ -977,7 +994,9 @@ var Settings = {
 
     //TODO s
     doWhileStmtBody: {
+        allowIn: true,
         functionBody: false,
+        directiveContext: false,
         semicolonOptional: false
     },
 
@@ -1007,7 +1026,9 @@ var Settings = {
 
     //TODO s
     catchClauseBody: {
+        allowIn: true,
         functionBody: false,
+        directiveContext: false,
         semicolonOptional: false
     },
 
@@ -1029,14 +1050,18 @@ var Settings = {
 
     //TODO s
     ifStmtConseqWithAlt: {
+        allowIn: true,
         functionBody: false,
+        directiveContext: false,
         semicolonOptional: false
     },
 
     //TODO s
     ifStmtAlt: function (semicolonOptional) {
         return {
+            allowIn: true,
             functionBody: false,
+            directiveContext: false,
             semicolonOptional: semicolonOptional
         };
     },
@@ -1044,7 +1069,9 @@ var Settings = {
     //TODO s
     ifStmtConseq: function (semicolonOptional) {
         return {
+            allowIn: true,
             functionBody: false,
+            directiveContext: false,
             semicolonOptional: semicolonOptional
         };
     },
@@ -1068,7 +1095,9 @@ var Settings = {
     //TODO s
     whileStmtBody: function (semicolonOptional) {
         return {
+            allowIn: true,
             functionBody: false,
+            directiveContext: false,
             semicolonOptional: semicolonOptional
         };
     },
@@ -1084,7 +1113,9 @@ var Settings = {
     //TODO s
     withStmtBody: function (semicolonOptional) {
         return {
+            allowIn: true,
             functionBody: false,
+            directiveContext: false,
             semicolonOptional: semicolonOptional
         };
     },
@@ -1092,14 +1123,19 @@ var Settings = {
     //TODO s
     labeledStmtBody: function (semicolonOptional) {
         return {
+            allowIn: true,
             functionBody: false,
+            directiveContext: false,
             semicolonOptional: semicolonOptional
         };
     },
 
     //TODO s
     forStmtVarInit: {
-        allowIn: false
+        allowIn: false,
+        functionBody: false,
+        directiveContext: false,
+        semicolonOptional: false
     },
 
     //TODO e
@@ -1129,7 +1165,9 @@ var Settings = {
     //TODO s
     forStmtBody: function (semicolonOptional) {
         return {
+            allowIn: true,
             functionBody: false,
+            directiveContext: false,
             semicolonOptional: semicolonOptional
         };
     },
@@ -1144,14 +1182,18 @@ var Settings = {
 
     //TODO s
     switchCaseConseqBlock: {
+        allowIn: true,
         functionBody: false,
+        directiveContext: false,
         semicolonOptional: false
     },
 
     //TODO s
     switchCaseConseq: function (semicolonOptional) {
         return {
+            allowIn: true,
             functionBody: false,
+            directiveContext: false,
             semicolonOptional: semicolonOptional
         };
     },
@@ -1175,26 +1217,34 @@ var Settings = {
     //TODO s
     exportDeclDecl: function (semicolonOptional) {
         return {
+            allowIn: true,
             functionBody: false,
+            directiveContext: false,
             semicolonOptional: semicolonOptional
         };
     },
 
     //TODO s
     tryStmtBlock: {
+        allowIn: true,
         functionBody: false,
+        directiveContext: false,
         semicolonOptional: false
     },
 
     //TODO s
     tryStmtHandler: {
+        allowIn: true,
         functionBody: false,
+        directiveContext: false,
         semicolonOptional: false
     },
 
     //TODO s
     tryStmtFinalizer: {
+        allowIn: true,
         functionBody: false,
+        directiveContext: false,
         semicolonOptional: false
     },
 
@@ -1270,7 +1320,10 @@ var Settings = {
 
     //TODO s
     forIterVarDecl: {
-        allowIn: false
+        allowIn: false,
+        functionBody: false,
+        directiveContext: false,
+        semicolonOptional: false
     },
 
     //TODO e
@@ -1292,7 +1345,9 @@ var Settings = {
     //TODO s
     forStmtIterBody: function (semicolonOptional) {
         return {
+            allowIn: true,
             functionBody: false,
+            directiveContext: false,
             semicolonOptional: semicolonOptional
         };
     },
@@ -1327,7 +1382,9 @@ var Settings = {
 
     //TODO s
     funcBodyStmt: {
+        allowIn: true,
         functionBody: true,
+        directiveContext: false,
         semicolonOptional: false
     },
 
@@ -1337,6 +1394,22 @@ var Settings = {
         allowIn: true,
         allowCall: true,
         allowUnparenthesizedNew: void 0
+    },
+
+    //TODO e
+    exprInitial: {
+        precedence: Precedence.Sequence,
+        allowIn: true,
+        allowCall: true,
+        semicolonOptional: false
+    },
+
+    //TODO s
+    stmtInitial: {
+        allowIn: true,
+        functionBody: false,
+        directiveContext: false,
+        semicolonOptional: false
     }
 };
 
@@ -2566,7 +2639,6 @@ var StmtGen = {
         expand(generateExpression, stmt.object, Settings.withStmtObj);
         _.js += ')';
         _.indent = prevIndent;
-
         _.js += adoptionPrefix(stmt.body);
         expand(generateStatement, stmt.body, Settings.withStmtBody(bodySemicolonOptional));
 
@@ -2574,39 +2646,7 @@ var StmtGen = {
 };
 
 function generateStatement(stmt, option) {
-    var allowIn = true,
-        functionBody = false,
-        directiveContext = false,
-        semicolonOptional = false;
-
-    if (option) {
-        allowIn = option.allowIn === void 0 || option.allowIn;
-        functionBody = option.functionBody;
-        directiveContext = option.directiveContext;
-        semicolonOptional = option.semicolonOptional;
-    }
-
-    StmtGen[stmt.type](stmt, {
-        allowIn: allowIn,
-        functionBody: functionBody,
-        directiveContext: directiveContext,
-        semicolonOptional: semicolonOptional
-    });
-}
-
-function generateInternal(node) {
-    if (StmtGen[node.type])
-        generateStatement(node);
-
-    else if (ExprGen[node.type])
-        generateExpression(node, {
-            precedence: Precedence.Sequence,
-            allowIn: true,
-            allowCall: true
-        });
-
-    else
-        fatalError('Unknown node type: ' + node.type);
+    StmtGen[stmt.type](stmt, option);
 }
 
 //CodeGen
@@ -2630,7 +2670,12 @@ function expand(proc, node, settings) {
 
 function run(node) {
     _.js = '';
-    generateInternal(node);
+
+    if (StmtGen[node.type])
+        generateStatement(node, Settings.stmtInitial);
+
+    else
+        generateExpression(node, Settings.exprInitial);
 
     return _.js;
 }
