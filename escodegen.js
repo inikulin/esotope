@@ -562,8 +562,8 @@ function generateVerbatim($expr, settings) {
 }
 
 function generateFunctionParams($node) {
-    var params = $node.params,
-        paramCount = $node.params.length,
+    var $params = $node.params,
+        paramCount = $params.length,
         lastParamIdx = paramCount - 1,
         defaults = $node.defaults,
         hasDefaults = !!defaults;
@@ -571,31 +571,33 @@ function generateFunctionParams($node) {
 
     // arg => { } case
     if ($node.type === Syntax.ArrowFunctionExpression && !$node.rest && (!hasDefaults || defaults.length === 0) &&
-        paramCount === 1 && params[0].type === Syntax.Identifier) {
-        _.js += params[0].name;
+        paramCount === 1 && $params[0].type === Syntax.Identifier) {
+        _.js += $params[0].name;
     }
 
     else {
         _.js += '(';
 
         for (var i = 0; i < paramCount; ++i) {
+            var $param = $params[i];
+
             if (hasDefaults && defaults[i]) {
-                var fakeAssignExpr = {
+                var $fakeAssign = {
                     type: Syntax.AssignmentExpression,
-                    left: params[i],
+                    left: $param,
                     right: $node.defaults[i],
                     operator: '='
                 };
 
-                expand(generateExpression, fakeAssignExpr, Settings.funcArg);
+                ExprGen[$fakeAssign.type]($fakeAssign, Settings.funcArg);
             }
 
             else {
-                if (params[i].type === Syntax.Identifier)
-                    _.js += params[i].name;
+                if ($params[i].type === Syntax.Identifier)
+                    _.js += $param.name;
 
                 else
-                    expand(generateExpression, params[i], Settings.funcArg);
+                    ExprGen[$param.type]($param, Settings.funcArg);
             }
 
             if (i !== lastParamIdx)
