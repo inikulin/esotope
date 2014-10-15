@@ -563,17 +563,19 @@ function generateVerbatim($expr, settings) {
 
 function generateFunctionParams($node) {
     var $params = $node.params,
+        $rest = $node.rest,
         paramCount = $params.length,
         lastParamIdx = paramCount - 1,
-        defaults = $node.defaults,
-        hasDefaults = !!defaults;
-
+        $defaults = $node.defaults,
+        hasDefaults = !!$defaults,
+        arrowFuncWithSingleParam = $node.type === Syntax.ArrowFunctionExpression && !$rest &&
+                                   (!hasDefaults || $defaults.length === 0) &&
+                                   paramCount === 1 &&
+                                   $params[0].type === Syntax.Identifier;
 
     // arg => { } case
-    if ($node.type === Syntax.ArrowFunctionExpression && !$node.rest && (!hasDefaults || defaults.length === 0) &&
-        paramCount === 1 && $params[0].type === Syntax.Identifier) {
+    if (arrowFuncWithSingleParam)
         _.js += $params[0].name;
-    }
 
     else {
         _.js += '(';
@@ -581,11 +583,11 @@ function generateFunctionParams($node) {
         for (var i = 0; i < paramCount; ++i) {
             var $param = $params[i];
 
-            if (hasDefaults && defaults[i]) {
+            if (hasDefaults && $defaults[i]) {
                 var $fakeAssign = {
                     type: Syntax.AssignmentExpression,
                     left: $param,
-                    right: $node.defaults[i],
+                    right: $defaults[i],
                     operator: '='
                 };
 
@@ -604,11 +606,11 @@ function generateFunctionParams($node) {
                 _.js += ',' + _.optSpace;
         }
 
-        if ($node.rest) {
+        if ($rest) {
             if (paramCount)
                 _.js += ',' + _.optSpace;
 
-            _.js += '...' + $node.rest.name;
+            _.js += '...' + $rest.name;
         }
 
         _.js += ')';
