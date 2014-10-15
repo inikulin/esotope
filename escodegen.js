@@ -683,34 +683,37 @@ function generateLiteral(expr) {
 //-------------------------------------------------===------------------------------------------------------
 
 var Settings = {
-    //TODO
+    //TODO e
     sequenceExprChildren: function (allowIn) {
         return {
             precedence: Precedence.Assignment,
             allowIn: allowIn,
-            allowCall: true
+            allowCall: true,
+            allowUnparenthesizedNew: void 0
         };
     },
 
-    //TODO
+    //TODO e
     conditionalExprTest: function (allowIn) {
         return {
             precedence: Precedence.LogicalOR,
             allowIn: allowIn,
-            allowCall: true
+            allowCall: true,
+            allowUnparenthesizedNew: void 0
         };
     },
 
-    //TODO
+    //TODO e
     conditionalExprBranch: function (allowIn) {
         return {
             precedence: Precedence.Assignment,
             allowIn: allowIn,
-            allowCall: true
+            allowCall: true,
+            allowUnparenthesizedNew: void 0
         };
     },
 
-    //TODO
+    //TODO e
     callExprCallee: {
         precedence: Precedence.Call,
         allowIn: true,
@@ -718,14 +721,15 @@ var Settings = {
         allowUnparenthesizedNew: false
     },
 
-//TODO
+    //TODO e
     callExprArgs: {
         precedence: Precedence.Assignment,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO s
     blockStmtBodyItem: function (functionBody, semicolonOptional) {
         return {
             directiveContext: functionBody,
@@ -733,58 +737,62 @@ var Settings = {
         };
     },
 
-    //TODO
+    //TODO e
     classBodyItem: {
         precedence: Precedence.Sequence,
         allowIn: true,
         allowCall: true,
-        type: Syntax.Property
+        type: Syntax.Property,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     classDeclarationSuperClass: {
         precedence: Precedence.Assignment,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO s
     classDeclarationBody: {
         semicolonOptional: true,
         directiveContext: false
     },
 
-    //TODO
+    //TODO e
     varDeclaratorInit: function (allowIn) {
         return {
             precedence: Precedence.Assignment,
             allowIn: allowIn,
-            allowCall: true
+            allowCall: true,
+            allowUnparenthesizedNew: void 0
         };
     },
 
-    //TODO
+    //TODO s
     varDeclaration: function (allowIn) {
         return {
             allowIn: allowIn
         };
     },
 
-    //TODO
+    //TODO e
     switchStmtDiscriminant: {
         precedence: Precedence.Sequence,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO s
     switchStmtCase: function (semicolonOptional) {
         return {
             semicolonOptional: semicolonOptional
         };
     },
 
-    //TODO
+    //TODO s
     programBodyItem: function (semicolonOptional) {
         return {
             semicolonOptional: semicolonOptional,
@@ -792,7 +800,7 @@ var Settings = {
         };
     },
 
-    //TODO
+    //TODO e
     newExprCallee: function (allowUnparenthesizedNew) {
         return {
             precedence: Precedence.New,
@@ -802,109 +810,122 @@ var Settings = {
         };
     },
 
-    //TODO
+    //TODO e
     newExprArg: {
         precedence: Precedence.Assignment,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
 
-    //TODO
+    //TODO e
     yieldExprArg: {
         precedence: Precedence.Yield,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     prefixUpdateExprArg: {
         precedence: Precedence.Unary,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     postfixUpdateExprArg: {
         precedence: Precedence.Postfix,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     arrayExprElement: {
         precedence: Precedence.Assignment,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     classExprId: {
+        precedence: void 0,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     classExprSuperClass: {
         precedence: Precedence.Assignment,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO s
     classExprBody: {
         semicolonOptional: true,
         directiveContext: false
     },
 
-    //TODO
+    //TODO e
     propKey: {
         precedence: Precedence.Sequence,
         allowIn: true,
         allowCall: true
     },
 
-    //TODO
+    //TODO e
     propVal: {
         precedence: Precedence.Assignment,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     objPatternProp: {
         precedence: Precedence.Sequence,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO s
     comprBlockVarDeclaration: {
         allowIn: false
     },
 
-    //TODO
+    //TODO e
     comprBlockLeftExpr: {
         precedence: Precedence.Call,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     comprBlockRightExpr: {
         precedence: Precedence.Sequence,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     spreadElementArg: {
         precedence: Precedence.Assignment,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     taggedTemplateExprTag: function (allowCall) {
         return {
             precedence: Precedence.Call,
@@ -914,33 +935,39 @@ var Settings = {
         };
     },
 
-    //TODO
+    //TODO e
     taggedTemplateExprQuasi: {
-        precedence: Precedence.Primary
+        precedence: Precedence.Primary,
+        allowIn: void 0,
+        allowCall: void 0,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     templateLiteralQuasi: {
         precedence: Precedence.Primary,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     templateLiteralExpr: {
         precedence: Precedence.Sequence,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     throwStmtArg: {
         precedence: Precedence.Sequence,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     objExprProperty: {
         precedence: Precedence.Sequence,
         allowIn: true,
@@ -948,60 +975,65 @@ var Settings = {
         type: Syntax.Property
     },
 
-    //TODO
+    //TODO s
     doWhileStmtBody: {
         functionBody: false,
         semicolonOptional: false
     },
 
-    //TODO
+    //TODO e
     doWhileStmtTest: {
         precedence: Precedence.Sequence,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     catchClauseGuard: {
         precedence: Precedence.Sequence,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     catchClauseParam: {
         precedence: Precedence.Sequence,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO s
     catchClauseBody: {
         functionBody: false,
         semicolonOptional: false
     },
 
-    //TODO
+    //TODO e
     exprStmtExpr: {
         precedence: Precedence.Sequence,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     ifStmtTest: {
         precedence: Precedence.Sequence,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO s
     ifStmtConseqWithAlt: {
         functionBody: false,
         semicolonOptional: false
     },
 
-    //TODO
+    //TODO s
     ifStmtAlt: function (semicolonOptional) {
         return {
             functionBody: false,
@@ -1009,7 +1041,7 @@ var Settings = {
         };
     },
 
-    //TODO
+    //TODO s
     ifStmtConseq: function (semicolonOptional) {
         return {
             functionBody: false,
@@ -1017,21 +1049,23 @@ var Settings = {
         };
     },
 
-    //TODO
+    //TODO e
     returnStmtArg: {
         precedence: Precedence.Sequence,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     whileStmtTest: {
         precedence: Precedence.Sequence,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO s
     whileStmtBody: function (semicolonOptional) {
         return {
             functionBody: false,
@@ -1039,14 +1073,15 @@ var Settings = {
         };
     },
 
-    //TODO
+    //TODO e
     withStmtObj: {
         precedence: Precedence.Sequence,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO s
     withStmtBody: function (semicolonOptional) {
         return {
             functionBody: false,
@@ -1054,7 +1089,7 @@ var Settings = {
         };
     },
 
-    //TODO
+    //TODO s
     labeledStmtBody: function (semicolonOptional) {
         return {
             functionBody: false,
@@ -1062,33 +1097,36 @@ var Settings = {
         };
     },
 
-    //TODO
+    //TODO s
     forStmtVarInit: {
         allowIn: false
     },
 
-    //TODO
+    //TODO e
     forStmtInit: {
         precedence: Precedence.Sequence,
         allowIn: false,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     forStmtTest: {
         precedence: Precedence.Sequence,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     forStmtUpdate: {
         precedence: Precedence.Sequence,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO s
     forStmtBody: function (semicolonOptional) {
         return {
             functionBody: false,
@@ -1096,20 +1134,21 @@ var Settings = {
         };
     },
 
-    //TODO
+    //TODO e
     switchCaseTest: {
         precedence: Precedence.Sequence,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO s
     switchCaseConseqBlock: {
         functionBody: false,
         semicolonOptional: false
     },
 
-    //TODO
+    //TODO s
     switchCaseConseq: function (semicolonOptional) {
         return {
             functionBody: false,
@@ -1117,21 +1156,23 @@ var Settings = {
         };
     },
 
-    //TODO
+    //TODO e
     exportDeclSpec: {
         precedence: Precedence.Sequence,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     exportDeclDefaultDecl: {
         precedence: Precedence.Assignment,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO s
     exportDeclDecl: function (semicolonOptional) {
         return {
             functionBody: false,
@@ -1139,25 +1180,25 @@ var Settings = {
         };
     },
 
-    //TODO
+    //TODO s
     tryStmtBlock: {
         functionBody: false,
         semicolonOptional: false
     },
 
-    //TODO
+    //TODO s
     tryStmtHandler: {
         functionBody: false,
         semicolonOptional: false
     },
 
-    //TODO
+    //TODO s
     tryStmtFinalizer: {
         functionBody: false,
         semicolonOptional: false
     },
 
-    //TODO
+    //TODO e
     memberExprObj: function (allowCall) {
         return {
             precedence: Precedence.Call,
@@ -1167,79 +1208,88 @@ var Settings = {
         };
     },
 
-    //TODO
+    //TODO e
     memberExprProp: function (allowCall) {
         return {
             precedence: Precedence.Sequence,
             allowIn: true,
-            allowCall: allowCall
+            allowCall: allowCall,
+            allowUnparenthesizedNew: void 0
         };
     },
 
-    //TODO
+    //TODO e
     importDeclSpec: {
         precedence: Precedence.Sequence,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     genExprBody: {
         precedence: Precedence.Assignment,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     genExprBlock: {
         precedence: Precedence.Sequence,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     genExprFilter: {
         precedence: Precedence.Sequence,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     unaryExprArg: {
         precedence: Precedence.Unary,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     binExprOperand: function (precedence, allowIn) {
         return {
             precedence: precedence,
             allowIn: allowIn,
-            allowCall: true
+            allowCall: true,
+            allowUnparenthesizedNew: void 0
         };
     },
 
-    //TODO
+    //TODO s
     forIterVarDecl: {
         allowIn: false
     },
 
-    //TODO
+    //TODO e
     forStmtIterLeft: {
         precedence: Precedence.Call,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO e
     forStmtIterRight: {
         precedence: Precedence.Sequence,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO s
     forStmtIterBody: function (semicolonOptional) {
         return {
             functionBody: false,
@@ -1247,42 +1297,46 @@ var Settings = {
         };
     },
 
-    //TODO
+    //TODO e
     assignExprLeftOperand: function (allowIn) {
         return  {
             precedence: Precedence.Call,
             allowIn: allowIn,
-            allowCall: true
+            allowCall: true,
+            allowUnparenthesizedNew: void 0
         }
     },
 
-    //TODO
+    //TODO e
     assignExprRightOperand: function (allowIn) {
         return  {
             precedence: Precedence.Assignment,
             allowIn: allowIn,
-            allowCall: true
+            allowCall: true,
+            allowUnparenthesizedNew: void 0
         }
     },
 
-    //TODO
+    //TODO e
     funcBodyExpr: {
         precedence: Precedence.Assignment,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     },
 
-    //TODO
+    //TODO s
     funcBodyStmt: {
         functionBody: true,
         semicolonOptional: false
     },
 
-    //TODO
+    //TODO e
     funcArg: {
         precedence: Precedence.Assignment,
         allowIn: true,
-        allowCall: true
+        allowCall: true,
+        allowUnparenthesizedNew: void 0
     }
 };
 
@@ -1678,7 +1732,7 @@ var ExprGen = {
         }
 
         if (expr.superClass) {
-            var superClass = source(generateExpression, expr.superClass, Settings.classDeclarationSuperClass);
+            var superClass = source(generateExpression, expr.superClass, Settings.classExprSuperClass);
 
             superClass = joinWithSpacing('extends', superClass);
             js = joinWithSpacing(js, superClass);
@@ -1888,24 +1942,15 @@ var ExprGen = {
 };
 
 function generateExpression(expr, option) {
-    var precedence = option.precedence,
-        allowIn = option.allowIn,
-        allowCall = option.allowCall,
-        type = expr.type || option.type;
+    //TODO
+    var type = expr.type || option.type;
 
 
     if (extra.verbatim && expr.hasOwnProperty(extra.verbatim))
         expand(generateVerbatim, expr, option);
 
-    else {
-        ExprGen[type](expr, {
-            precedence: precedence,
-            allowIn: allowIn,
-            allowCall: allowCall,
-            type: type,
-            allowUnparenthesizedNew: option.allowUnparenthesizedNew
-        });
-    }
+    else
+        ExprGen[type](expr, option);
 }
 
 //-------------------------------------------------===------------------------------------------------------
