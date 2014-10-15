@@ -1538,9 +1538,9 @@ function generateGeneratorOrComprehensionExpression(expr) {
 
 
 /**
- * Expression generator dictionary
+ * Expression raw generator dictionary
  */
-var ExprGen = {
+var ExprRawGen = {
     SequenceExpression: function generateSequenceExpression(expr, settings) {
         var len = expr.expressions.length,
             lastIdx = len - 1,
@@ -2017,13 +2017,7 @@ var ExprGen = {
 function generateExpression(expr, option) {
     //TODO
     var type = expr.type || option.type;
-
-
-    if (extra.verbatim && expr.hasOwnProperty(extra.verbatim))
-        expand(generateVerbatim, expr, option);
-
-    else
-        ExprGen[type](expr, option);
+    ExprGen[type](expr, option);
 }
 
 //-------------------------------------------------===------------------------------------------------------
@@ -2087,7 +2081,7 @@ function generateForStatementIterator(operator, stmt, settings) {
 /**
  * Statement generator dictionary
  */
-var StmtGen = {
+var StmtRawGen = {
     BlockStatement: function generateBlockStatement(stmt, settings) {
         var len = stmt.body.length,
             lastIdx = len - 1,
@@ -2680,6 +2674,27 @@ function run(node) {
     return _.js;
 }
 
+function wrapExprGen(gen) {
+    return function (expr, settings) {
+        if (extra.verbatim && expr.hasOwnProperty(extra.verbatim))
+            expand(generateVerbatim, expr, settings);
+
+        else
+            gen(expr, settings);
+    }
+}
+
+function createExprGenWithExtras() {
+    var gens = {};
+
+    for (var key in ExprRawGen) {
+        if (ExprRawGen.hasOwnProperty(key))
+            gens[key] = wrapExprGen(ExprRawGen[key]);
+    }
+
+    return gens;
+}
+
 /**
  * Strings
  */
@@ -2692,6 +2707,13 @@ var _ = {
     indentUnit: '    ',
     indent: ''
 };
+
+/**
+ * Generators
+ */
+var ExprGen = void 0,
+    StmtGen = StmtRawGen;
+
 
 function generate(node, options) {
     var defaultOptions = getDefaultOptions(), result, pair;
@@ -2740,6 +2762,12 @@ function generate(node, options) {
     directive = options.directive;
     parse = json ? null : options.parse;
     extra = options;
+
+    if (extra.verbatim)
+        ExprGen = createExprGenWithExtras();
+
+    else
+        ExprGen = ExprRawGen;
 
     return run(node);
 }
