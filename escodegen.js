@@ -761,7 +761,7 @@ var Settings = {
     },
 
     //TODO e
-    varDeclaratorInit: function (allowIn) {
+    varDeclarator: function (allowIn) {
         return {
             precedence: Precedence.Assignment,
             allowIn: allowIn,
@@ -1360,8 +1360,8 @@ function generateLogicalOrBinaryExpression(expr, settings) {
         precedence = BinaryPrecedence[expr.operator],
         parenthesize = precedence < settings.precedence,
         allowIn = settings.allowIn || parenthesize,
-        operandGenOpt = Settings.binExprOperand(precedence, allowIn),
-        js = source(generateExpression, expr.left, operandGenOpt);
+        operandGenSettings = Settings.binExprOperand(precedence, allowIn),
+        js = source(generateExpression, expr.left, operandGenSettings);
 
     parenthesize |= op === 'in' && !allowIn;
 
@@ -1374,9 +1374,9 @@ function generateLogicalOrBinaryExpression(expr, settings) {
     else
         js = joinWithSpacing(js, op);
 
-    operandGenOpt.precedence++;
+    operandGenSettings.precedence++;
 
-    var right = source(generateExpression, expr.right, operandGenOpt);
+    var right = source(generateExpression, expr.right, operandGenSettings);
 
     // If '/' concats with '/' or `<` concats with `!--`, it is interpreted as comment start
     if (op === '/' && right.charAt(0) === '/' || op.slice(-1) === '<' && right.slice(0, 3) === '!--')
@@ -1985,7 +1985,8 @@ function generateTryStatementHandlers(js, finalizer, handlers) {
 }
 
 function generateForStatementIterator(operator, stmt, settings) {
-    var prevIndent1 = shiftIndent(),
+    var bodySemicolonOptional = !semicolons && settings.semicolonOptional,
+        prevIndent1 = shiftIndent(),
         js = 'for' + _.optSpace + '(';
 
     if (stmt.left.type === Syntax.VariableDeclaration) {
@@ -2007,7 +2008,7 @@ function generateForStatementIterator(operator, stmt, settings) {
     _.indent = prevIndent1;
 
     _.js += js + adoptionPrefix(stmt.body);
-    expand(generateStatement, stmt.body, Settings.forStmtIterBody(settings.semicolon === ''));
+    expand(generateStatement, stmt.body, Settings.forStmtIterBody(bodySemicolonOptional));
 }
 
 /**
@@ -2033,18 +2034,24 @@ var StmtGen = {
 
     BreakStatement: function generateBreakStatement(stmt, settings) {
         if (stmt.label)
-            _.js += 'break ' + stmt.label.name + settings.semicolon;
+            _.js += 'break ' + stmt.label.name;
 
         else
-            _.js += 'break' + settings.semicolon;
+            _.js += 'break';
+
+        if (semicolons || !settings.semicolonOptional)
+            _.js += ';';
     },
 
     ContinueStatement: function generateContinueStatement(stmt, settings) {
         if (stmt.label)
-            _.js += 'continue ' + stmt.label.name + settings.semicolon;
+            _.js += 'continue ' + stmt.label.name;
 
         else
-            _.js += 'continue' + settings.semicolon;
+            _.js += 'continue';
+
+        if (semicolons || !settings.semicolonOptional)
+            _.js += ';';
     },
 
     ClassBody: function generateClassBody(classBody) {
@@ -2081,10 +2088,13 @@ var StmtGen = {
 
     DirectiveStatement: function generateDirectiveStatement(stmt, settings) {
         if (extra.raw && stmt.raw)
-            _.js += stmt.raw + settings.semicolon;
+            _.js += stmt.raw;
 
         else
-            _.js += escapeDirective(stmt.directive) + settings.semicolon;
+            _.js += escapeDirective(stmt.directive);
+
+        if (semicolons || !settings.semicolonOptional)
+            _.js += ';';
     },
 
     DoWhileStatement: function generateDoWhileStatement(stmt, settings) {
@@ -2098,7 +2108,10 @@ var StmtGen = {
 
         _.js += js;
         expand(generateExpression, stmt.test, Settings.doWhileStmtTest);
-        _.js += ')' + settings.semicolon;
+        _.js += ')';
+
+        if (semicolons || !settings.semicolonOptional)
+            _.js += ';';
     },
 
     CatchClause: function generateCatchClause(stmt) {
@@ -2118,7 +2131,10 @@ var StmtGen = {
     },
 
     DebuggerStatement: function generateDebuggerStatement(stmt, settings) {
-        _.js += 'debugger' + settings.semicolon;
+        _.js += 'debugger';
+
+        if (semicolons || !settings.semicolonOptional)
+            _.js += ';';
     },
 
     EmptyStatement: function generateEmptyStatement(g) {
@@ -2126,11 +2142,16 @@ var StmtGen = {
     },
 
     ExportDeclaration: function generateExportDeclaration(stmt, settings) {
+        var withSemicolon = semicolons || !settings.semicolonOptional;
+
         // export default AssignmentExpression[In] ;
         if (stmt['default']) {
             var decl = source(generateExpression, stmt.declaration, Settings.exportDeclDefaultDecl);
 
-            _.js += joinWithSpacing('export default', decl) + settings.semicolon;
+            _.js += joinWithSpacing('export default', decl);
+
+            if (withSemicolon)
+                _.js += ';';
         }
 
         // export * FromClause ;
@@ -2170,15 +2191,16 @@ var StmtGen = {
             if (stmt.source)
                 js = joinWithSpacing(js, 'from' + _.optSpace + generateLiteral(stmt.source));
 
-            _.js += js + settings.semicolon;
+            _.js += js;
 
+            if (withSemicolon)
+                _.js += ';';
         }
 
         // export VariableStatement
         // export Declaration[Default]
         else if (stmt.declaration) {
-            var decl = source(generateStatement, stmt.declaration, Settings.exportDeclDecl(settings.semicolon ===
-                                                                                           ''));
+            var decl = source(generateStatement, stmt.declaration, Settings.exportDeclDecl(!withSemicolon));
 
             _.js += joinWithSpacing('export', decl);
         }
@@ -2195,10 +2217,13 @@ var StmtGen = {
         // '{', 'function', 'class' are not allowed in expression statement.
         // Therefore, they should be parenthesized.
         if (parenthesize)
-            _.js += '(' + exprSource + ')' + settings.semicolon;
+            _.js += '(' + exprSource + ')';
 
         else
-            _.js += exprSource + settings.semicolon;
+            _.js += exprSource;
+
+        if (semicolons || !settings.semicolonOptional)
+            _.js += ';';
     },
 
     ImportDeclaration: function generateImportDeclaration(stmt, settings) {
@@ -2257,18 +2282,21 @@ var StmtGen = {
             js = joinWithSpacing(js, 'from')
         }
 
-        js += _.optSpace + generateLiteral(stmt.source) + settings.semicolon;
+        js += _.optSpace + generateLiteral(stmt.source);
+
+        if (semicolons || !settings.semicolonOptional)
+            js += ';';
 
         _.js += js;
     },
 
     VariableDeclarator: function generateVariableDeclarator(stmt, settings) {
-        var genOpt = Settings.varDeclaratorInit(settings.allowIn);
+        var genSettings = Settings.varDeclarator(settings.allowIn);
 
         if (stmt.init) {
-            expand(generateExpression, stmt.id, genOpt);
+            expand(generateExpression, stmt.id, genSettings);
             _.js += _.optSpace + '=' + _.optSpace;
-            expand(generateExpression, stmt.init, genOpt);
+            expand(generateExpression, stmt.init, genSettings);
         }
 
         else {
@@ -2276,7 +2304,7 @@ var StmtGen = {
                 _.js += stmt.id.name;
 
             else
-                expand(generateExpression, stmt.id, genOpt);
+                expand(generateExpression, stmt.id, genSettings);
         }
     },
 
@@ -2292,14 +2320,19 @@ var StmtGen = {
             expand(generateStatement, stmt.declarations[i], expandOpt);
         }
 
-        _.js += settings.semicolon;
+        if (semicolons || !settings.semicolonOptional)
+            _.js += ';';
+
         _.indent = prevIndent;
     },
 
     ThrowStatement: function generateThrowStatement(stmt, settings) {
         var arg = source(generateExpression, stmt.argument, Settings.throwStmtArg);
 
-        _.js += joinWithSpacing('throw', arg) + settings.semicolon;
+        _.js += joinWithSpacing('throw', arg);
+
+        if (semicolons || !settings.semicolonOptional)
+            _.js += ';';
     },
 
     TryStatement: function generateTryStatement(stmt) {
@@ -2351,6 +2384,7 @@ var StmtGen = {
     SwitchCase: function generateSwitchCase(stmt, settings) {
         var i = 0,
             prevIndent = shiftIndent(),
+            conseqSemicolonOptional = !semicolons && settings.semicolonOptional,
             conseqCount = stmt.consequent.length,
             lastConseqIdx = conseqCount - 1;
 
@@ -2370,9 +2404,10 @@ var StmtGen = {
         }
 
         for (; i < conseqCount; i++) {
+            var semicolonOptional = i === lastConseqIdx && conseqSemicolonOptional;
+
             _.js += _.newline + _.indent;
-            expand(generateStatement, stmt.consequent[i], Settings.switchCaseConseq(i === lastConseqIdx &&
-                                                                                    settings.semicolon === ''));
+            expand(generateStatement, stmt.consequent[i], Settings.switchCaseConseq(semicolonOptional));
         }
 
         _.indent = prevIndent;
@@ -2380,7 +2415,7 @@ var StmtGen = {
 
     IfStatement: function generateIfStatement(stmt, settings) {
         var prevIndent = shiftIndent(),
-            semicolonOptional = settings.semicolon === '';
+            semicolonOptional = !semicolons && settings.semicolonOptional;
 
         _.js += 'if' + _.optSpace + '(';
         expand(generateExpression, stmt.test, Settings.ifStmtTest);
@@ -2407,7 +2442,8 @@ var StmtGen = {
     },
 
     ForStatement: function generateForStatement(stmt, settings) {
-        var prevIndent = shiftIndent();
+        var bodySemicolonOptional = !semicolons && settings.semicolonOptional,
+            prevIndent = shiftIndent();
 
         _.js += 'for' + _.optSpace + '(';
 
@@ -2437,11 +2473,9 @@ var StmtGen = {
         }
 
         _.js += ')';
-
         _.indent = prevIndent;
-
         _.js += adoptionPrefix(stmt.body);
-        expand(generateStatement, stmt.body, Settings.forStmtBody(settings.semicolon === ''));
+        expand(generateStatement, stmt.body, Settings.forStmtBody(bodySemicolonOptional));
     },
 
     ForInStatement: function generateForInStatement(stmt, settings) {
@@ -2453,20 +2487,24 @@ var StmtGen = {
     },
 
     LabeledStatement: function generateLabeledStatement(stmt, settings) {
-        var prevIndent = _.indent;
+        var bodySemicolonOptional = !semicolons && settings.semicolonOptional,
+            prevIndent = _.indent;
 
         _.js += stmt.label.name + ':' + adoptionPrefix(stmt.body);
 
         if (stmt.body.type !== Syntax.BlockStatement)
             prevIndent = shiftIndent();
 
-        expand(generateStatement, stmt.body, Settings.labeledStmtBody(settings.semicolon === ''));
+        expand(generateStatement, stmt.body, Settings.labeledStmtBody(bodySemicolonOptional));
         _.indent = prevIndent;
     },
 
     ModuleDeclaration: function generateModuleDeclaration(stmt, settings) {
         _.js += 'module' + _.space + stmt.id.name + _.space +
-                'from' + _.optSpace + generateLiteral(stmt.source) + settings.semicolon;
+                'from' + _.optSpace + generateLiteral(stmt.source);
+
+        if (semicolons || !settings.semicolonOptional)
+            _.js += ';';
     },
 
     Program: function generateProgram(stmt) {
@@ -2497,15 +2535,19 @@ var StmtGen = {
         if (stmt.argument) {
             var arg = source(generateExpression, stmt.argument, Settings.returnStmtArg);
 
-            _.js += joinWithSpacing('return', arg) + settings.semicolon;
+            _.js += joinWithSpacing('return', arg);
         }
 
         else
-            _.js += 'return' + settings.semicolon;
+            _.js += 'return';
+
+        if (semicolons || !settings.semicolonOptional)
+            _.js += ';';
     },
 
     WhileStatement: function generateWhileStatement(stmt, settings) {
-        var prevIndent = shiftIndent();
+        var bodySemicolonOptional = !semicolons && settings.semicolonOptional,
+            prevIndent = shiftIndent();
 
         _.js += 'while' + _.optSpace + '(';
         expand(generateExpression, stmt.test, Settings.whileStmtTest);
@@ -2513,11 +2555,12 @@ var StmtGen = {
         _.indent = prevIndent;
 
         _.js += adoptionPrefix(stmt.body);
-        expand(generateStatement, stmt.body, Settings.whileStmtBody(settings.semicolon === ''));
+        expand(generateStatement, stmt.body, Settings.whileStmtBody(bodySemicolonOptional));
     },
 
     WithStatement: function generateWithStatement(stmt, settings) {
-        var prevIndent = shiftIndent();
+        var bodySemicolonOptional = !semicolons && settings.semicolonOptional,
+            prevIndent = shiftIndent();
 
         _.js += 'with' + _.optSpace + '(';
         expand(generateExpression, stmt.object, Settings.withStmtObj);
@@ -2525,31 +2568,29 @@ var StmtGen = {
         _.indent = prevIndent;
 
         _.js += adoptionPrefix(stmt.body);
-        expand(generateStatement, stmt.body, Settings.withStmtBody(settings.semicolon === ''));
+        expand(generateStatement, stmt.body, Settings.withStmtBody(bodySemicolonOptional));
 
     }
 };
 
 function generateStatement(stmt, option) {
     var allowIn = true,
-        semicolon = ';',
         functionBody = false,
-        directiveContext = false;
+        directiveContext = false,
+        semicolonOptional = false;
 
     if (option) {
         allowIn = option.allowIn === void 0 || option.allowIn;
-        if (!semicolons && option.semicolonOptional === true) {
-            semicolon = '';
-        }
         functionBody = option.functionBody;
         directiveContext = option.directiveContext;
+        semicolonOptional = option.semicolonOptional;
     }
 
     StmtGen[stmt.type](stmt, {
         allowIn: allowIn,
-        semicolon: semicolon,
         functionBody: functionBody,
-        directiveContext: directiveContext
+        directiveContext: directiveContext,
+        semicolonOptional: semicolonOptional
     });
 }
 
