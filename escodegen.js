@@ -490,7 +490,7 @@ function escapeString(str) {
 }
 
 
-function joinWithSpacing(left, right) {
+function join(left, right) {
     if (!left.length)
         return right;
 
@@ -627,12 +627,12 @@ function generateFunctionBody($node) {
     if ($node.expression) {
         _.js += _.optSpace;
 
-        var expr = source(generateExpression, $body, Settings.funcBodyExpr);
+        var exprJs = exprToJs($body, Settings.funcBodyExpr);
 
-        if (expr.charAt(0) === '{')
-            expr = '(' + expr + ')';
+        if (exprJs.charAt(0) === '{')
+            exprJs = '(' + exprJs + ')';
 
-        _.js += expr;
+        _.js += exprJs;
     }
 
     else {
@@ -1437,31 +1437,31 @@ function generateLogicalOrBinaryExpression($expr, settings) {
         parenthesize = precedence < settings.precedence,
         allowIn = settings.allowIn || parenthesize,
         operandGenSettings = Settings.binExprOperand(precedence, allowIn),
-        js = source(generateExpression, $expr.left, operandGenSettings);
+        exprJs = exprToJs($expr.left, operandGenSettings);
 
     parenthesize |= op === 'in' && !allowIn;
 
     if (parenthesize)
         _.js += '(';
 
-    if (js.charCodeAt(js.length - 1) === 0x2F /* / */ && esutils.code.isIdentifierPart(op.charCodeAt(0)))
-        js = js + _.space + op;
+    if (exprJs.charCodeAt(exprJs.length - 1) === 0x2F /* / */ && esutils.code.isIdentifierPart(op.charCodeAt(0)))
+        exprJs = exprJs + _.space + op;
 
     else
-        js = joinWithSpacing(js, op);
+        exprJs = join(exprJs, op);
 
     operandGenSettings.precedence++;
 
-    var right = source(generateExpression, $expr.right, operandGenSettings);
+    var rightJs = exprToJs($expr.right, operandGenSettings);
 
     // If '/' concats with '/' or `<` concats with `!--`, it is interpreted as comment start
-    if (op === '/' && right.charAt(0) === '/' || op.slice(-1) === '<' && right.slice(0, 3) === '!--')
-        js += _.space + right;
+    if (op === '/' && rightJs.charAt(0) === '/' || op.slice(-1) === '<' && rightJs.slice(0, 3) === '!--')
+        exprJs += _.space + rightJs;
 
     else
-        js = joinWithSpacing(js, right);
+        exprJs = join(exprJs, rightJs);
 
-    _.js += js;
+    _.js += exprJs;
 
     if (parenthesize)
         _.js += ')';
@@ -1513,33 +1513,36 @@ function generateImportOrExportSpecifier($expr) {
 
 function generateGeneratorOrComprehensionExpression($expr) {
     // GeneratorExpression should be parenthesized with (...), ComprehensionExpression with [...]
-    var isGenerator = $expr.type === Syntax.GeneratorExpression,
-        js = isGenerator ? '(' : '[',
-        body = source(generateExpression, $expr.body, Settings.genExprBody);
+    var $blocks = $expr.blocks,
+        $filter = $expr.filter,
+        isGenerator = $expr.type === Syntax.GeneratorExpression,
+        exprJs = isGenerator ? '(' : '[',
+        bodyJs = exprToJs($expr.body, Settings.genExprBody);
 
-    if ($expr.blocks) {
+    if ($blocks) {
         var prevIndent = shiftIndent(),
-            blockCount = $expr.blocks.length;
+            blockCount = $blocks.length;
 
         for (var i = 0; i < blockCount; ++i) {
-            var block = source(generateExpression, $expr.blocks[i], Settings.genExprBlock);
+            var blockJs = exprToJs($blocks[i], Settings.genExprBlock);
 
-            js = i > 0 ? joinWithSpacing(js, block) : (js + block);
+            exprJs = i > 0 ? join(exprJs, blockJs) : (exprJs + blockJs);
         }
 
         _.indent = prevIndent;
     }
 
-    if ($expr.filter) {
-        var filter = source(generateExpression, $expr.filter, Settings.genExprFilter);
-        js = joinWithSpacing(js, 'if' + _.optSpace);
-        js = joinWithSpacing(js, '(' + filter + ')');
+    if ($filter) {
+        var filterJs = exprToJs($filter, Settings.genExprFilter);
+
+        exprJs = join(exprJs, 'if' + _.optSpace);
+        exprJs = join(exprJs, '(' + filterJs + ')');
     }
 
-    js = joinWithSpacing(js, body);
-    js += isGenerator ? ')' : ']';
+    exprJs = join(exprJs, bodyJs);
+    exprJs += isGenerator ? ')' : ']';
 
-    _.js += js;
+    _.js += exprJs;
 }
 
 
@@ -1660,12 +1663,12 @@ var ExprRawGen = {
             lastArgIdx = argCount - 1,
             allowUnparenthesizedNew = settings.allowUnparenthesizedNew === void 0 || settings.allowUnparenthesizedNew,
             withCall = !allowUnparenthesizedNew || parentheses || argCount > 0,
-            callee = source(generateExpression, $expr.callee, Settings.newExprCallee(!withCall));
+            calleeJs = exprToJs($expr.callee, Settings.newExprCallee(!withCall));
 
         if (parenthesize)
             _.js += '(';
 
-        _.js += joinWithSpacing('new', callee);
+        _.js += join('new', calleeJs);
 
         if (withCall) {
             _.js += '(';
@@ -1696,6 +1699,7 @@ var ExprRawGen = {
             _.js += '(';
 
         if (isNumObj) {
+
             // When the following conditions are all true:
             //   1. No floating point
             //   2. Don't have exponents
@@ -1703,10 +1707,10 @@ var ExprRawGen = {
             //   4. Not hexadecimal OR octal number literal
             // we should add a floating point.
 
-            var num = source(generateExpression, $obj, Settings.memberExprObj(settings.allowCall)),
-                withPoint = LAST_DECIMAL_DIGIT_REGEXP.test(num) && !FLOATING_OR_OCTAL_REGEXP.test(num);
+            var numJs = exprToJs($obj, Settings.memberExprObj(settings.allowCall)),
+                withPoint = LAST_DECIMAL_DIGIT_REGEXP.test(numJs) && !FLOATING_OR_OCTAL_REGEXP.test(numJs);
 
-            _.js += withPoint ? (num + '.') : num;
+            _.js += withPoint ? (numJs + '.') : numJs;
         }
 
         else
@@ -1728,7 +1732,7 @@ var ExprRawGen = {
     UnaryExpression: function generateUnaryExpression($expr, settings) {
         var parenthesize = Precedence.Unary < settings.precedence,
             op = $expr.operator,
-            arg = source(generateExpression, $expr.argument, Settings.unaryExprArg);
+            argJs = exprToJs($expr.argument, Settings.unaryExprArg);
 
         if (parenthesize)
             _.js += '(';
@@ -1736,7 +1740,7 @@ var ExprRawGen = {
         // delete, void, typeof
         // get `typeof []`, not `typeof[]`
         if (_.optSpace === '' || op.length > 2)
-            _.js += joinWithSpacing(op, arg);
+            _.js += join(op, argJs);
 
         else {
             _.js += op;
@@ -1744,14 +1748,14 @@ var ExprRawGen = {
             // Prevent inserting spaces between operator and argument if it is unnecessary
             // like, `!cond`
             var left = op.charCodeAt(op.length - 1),
-                right = arg.charCodeAt(0);
+                right = argJs.charCodeAt(0);
 
             if (((left === 0x2B  /* + */ || left === 0x2D  /* - */) && left === right) ||
                 (esutils.code.isIdentifierPart(left) && esutils.code.isIdentifierPart(right))) {
                 _.js += _.space;
             }
 
-            _.js += arg;
+            _.js += argJs;
         }
 
         if (parenthesize)
@@ -1759,16 +1763,17 @@ var ExprRawGen = {
     },
 
     YieldExpression: function generateYieldExpression($expr, settings) {
-        var js = $expr.delegate ? 'yield*' : 'yield',
+        var $arg = $expr.argument,
+            js = $expr.delegate ? 'yield*' : 'yield',
             parenthesize = Precedence.Yield < settings.precedence;
 
         if (parenthesize)
             _.js += '(';
 
-        if ($expr.argument) {
-            var arg = source(generateExpression, $expr.argument, Settings.yieldExprArg);
+        if ($arg) {
+            var argJs = exprToJs($arg, Settings.yieldExprArg);
 
-            js = joinWithSpacing(js, arg);
+            js = join(js, argJs);
         }
 
         _.js += js;
@@ -1826,76 +1831,77 @@ var ExprRawGen = {
     ArrayExpression: generateArrayPatternOrExpression,
 
     ClassExpression: function generateClassExpression($expr) {
-        var $body = $expr.body,
-            js = 'class';
+        var $id = $expr.id,
+            $super = $expr.superClass,
+            $body = $expr.body,
+            exprJs = 'class';
 
-        if ($expr.id) {
-            var id = source(generateExpression, $expr.id, Settings.classExprId);
+        if ($id) {
+            var idJs = exprToJs($id, Settings.classExprId);
 
-            js = joinWithSpacing(js, id);
+            exprJs = join(exprJs, idJs);
         }
 
-        if ($expr.superClass) {
-            var superClass = source(generateExpression, $expr.superClass, Settings.classExprSuperClass);
+        if ($super) {
+            var superJs = exprToJs($super, Settings.classExprSuperClass);
 
-            superClass = joinWithSpacing('extends', superClass);
-            js = joinWithSpacing(js, superClass);
+            superJs = join('extends', superJs);
+            exprJs = join(exprJs, superJs);
         }
 
-        _.js += js + _.optSpace;
+        _.js += exprJs + _.optSpace;
         StmtGen[$body.type]($body, Settings.classExprBody);
     },
 
     MethodDefinition: function generateMethodDefinition($expr) {
-        var js = $expr['static'] ? 'static' + _.optSpace : '',
-            propKey = source(generateExpression, $expr.key, Settings.propKey);
+        var exprJs = $expr['static'] ? 'static' + _.optSpace : '',
+            keyJs = exprToJs($expr.key, Settings.propKey);
 
         if ($expr.computed)
-            propKey = '[' + propKey + ']';
+            keyJs = '[' + keyJs + ']';
 
-        var body = source(generateFunctionBody, $expr.value),
-            propKeyWithBody = propKey + body;
+        var propKeyWithBody = keyJs + source(generateFunctionBody, $expr.value);
 
         if ($expr.kind === 'get' || $expr.kind === 'set') {
-            propKeyWithBody = joinWithSpacing($expr.kind, propKeyWithBody);
-            js = joinWithSpacing(js, propKeyWithBody);
+            propKeyWithBody = join($expr.kind, propKeyWithBody);
+            exprJs = join(exprJs, propKeyWithBody);
         }
 
         else {
             if ($expr.value.generator)
-                js += '*' + propKeyWithBody;
+                exprJs += '*' + propKeyWithBody;
 
             else
-                js = joinWithSpacing(js, propKeyWithBody);
+                exprJs = join(exprJs, propKeyWithBody);
         }
 
-        _.js += js;
+        _.js += exprJs;
     },
 
     Property: function generateProperty($expr) {
         var $val = $expr.value,
             $kind = $expr.kind,
-            key = source(generateExpression, $expr.key, Settings.propKey);
+            keyJs = exprToJs($expr.key, Settings.propKey);
 
         if ($expr.computed)
-            key = '[' + key + ']';
+            keyJs = '[' + keyJs + ']';
 
         if ($kind === 'get' || $kind === 'set') {
-            _.js += $kind + _.space + key;
+            _.js += $kind + _.space + keyJs;
             generateFunctionBody($val);
         }
 
         else {
             if ($expr.shorthand)
-                _.js += key;
+                _.js += keyJs;
 
             else if ($expr.method) {
-                _.js += $val.generator ? ('*' + key) : key;
+                _.js += $val.generator ? ('*' + keyJs) : keyJs;
                 generateFunctionBody($val)
             }
 
             else {
-                _.js += key + ':' + _.optSpace;
+                _.js += keyJs + ':' + _.optSpace;
                 ExprGen[$val.type]($val, Settings.propVal);
             }
         }
@@ -1995,21 +2001,21 @@ var ExprRawGen = {
     ComprehensionExpression: generateGeneratorOrComprehensionExpression,
 
     ComprehensionBlock: function generateComprehensionBlock($expr) {
-        var left = void 0,
-            right = source(generateExpression, $expr.right, Settings.comprBlockRightExpr);
+        var $left = $expr.left,
+            leftJs = void 0,
+            rightJs = exprToJs($expr.right, Settings.comprBlockRightExpr);
 
-        if ($expr.left.type === Syntax.VariableDeclaration) {
-            left = $expr.left.kind +
-                   _.space +
-                   source(generateStatement, $expr.left.declarations[0], Settings.comprBlockVarDeclaration);
+        if ($left.type === Syntax.VariableDeclaration) {
+            leftJs = $left.kind + _.space +
+                     source(generateStatement, $left.declarations[0], Settings.comprBlockVarDeclaration);
         }
 
         else
-            left = source(generateExpression, $expr.left, Settings.comprBlockLeftExpr);
+            leftJs = exprToJs($left, Settings.comprBlockLeftExpr);
 
-        left = joinWithSpacing(left, $expr.of ? 'of' : 'in');
+        leftJs = join(leftJs, $expr.of ? 'of' : 'in');
 
-        _.js += 'for' + _.optSpace + '(' + joinWithSpacing(left, right) + ')';
+        _.js += 'for' + _.optSpace + '(' + join(leftJs, rightJs) + ')';
     },
 
     SpreadElement: function generateSpreadElement($expr) {
@@ -2092,7 +2098,7 @@ function generateTryStatementHandlers(js, finalizer, handlers) {
     for (var i = 0; i < handlerCount; ++i) {
         var handler = source(generateStatement, handlers[i], Settings.tryStmtHandler);
 
-        js = joinWithSpacing(js, handler);
+        js = join(js, handler);
 
         if (finalizer || i !== lastHandlerIdx)
             js += adoptionSuffix(handlers[i].body);
@@ -2103,29 +2109,30 @@ function generateTryStatementHandlers(js, finalizer, handlers) {
 
 function generateForStatementIterator($op, $stmt, settings) {
     var $body = $stmt.body,
+        $left = $stmt.left,
         bodySemicolonOptional = !semicolons && settings.semicolonOptional,
         prevIndent1 = shiftIndent(),
-        js = 'for' + _.optSpace + '(';
+        stmtJs = 'for' + _.optSpace + '(';
 
-    if ($stmt.left.type === Syntax.VariableDeclaration) {
+    if ($left.type === Syntax.VariableDeclaration) {
         var prevIndent2 = shiftIndent();
-        js += $stmt.left.kind + _.space;
-        js += source(generateStatement, $stmt.left.declarations[0], Settings.forIterVarDecl);
+        stmtJs += $left.kind + _.space;
+        stmtJs += source(generateStatement, $left.declarations[0], Settings.forIterVarDecl);
         _.indent = prevIndent2;
     }
 
     else
-        js += source(generateExpression, $stmt.left, Settings.forStmtIterLeft);
+        stmtJs += exprToJs($left, Settings.forStmtIterLeft);
 
-    js = joinWithSpacing(js, $op);
+    stmtJs = join(stmtJs, $op);
 
-    var right = source(generateExpression, $stmt.right, Settings.forStmtIterRight);
+    var rightJs = exprToJs($stmt.right, Settings.forStmtIterRight);
 
-    js = joinWithSpacing(js, right) + ')';
+    stmtJs = join(stmtJs, rightJs) + ')';
 
     _.indent = prevIndent1;
 
-    _.js += js + adoptionPrefix($body);
+    _.js += stmtJs + adoptionPrefix($body);
     StmtGen[$body.type]($body, Settings.forStmtIterBody(bodySemicolonOptional));
 }
 
@@ -2200,12 +2207,13 @@ var StmtRawGen = {
 
     ClassDeclaration: function generateClassDeclaration($stmt) {
         var $body = $stmt.body,
+            $super = $stmt.superClass,
             js = 'class ' + $stmt.id.name;
 
-        if ($stmt.superClass) {
-            var fragment = source(generateExpression, $stmt.superClass, Settings.classDeclarationSuperClass);
+        if ($super) {
+            var superJs = exprToJs($super, Settings.classDeclarationSuperClass);
 
-            js += _.space + joinWithSpacing('extends', fragment);
+            js += _.space + join('extends', superJs);
         }
 
         _.js += js + _.optSpace;
@@ -2231,8 +2239,8 @@ var StmtRawGen = {
                    adoptionSuffix($body);
 
         //NOTE: Because `do 42 while (cond)` is Syntax Error. We need semicolon.
-        var js = joinWithSpacing('do', body);
-        js = joinWithSpacing(js, 'while' + _.optSpace + '(');
+        var js = join('do', body);
+        js = join(js, 'while' + _.optSpace + '(');
 
         _.js += js;
         ExprGen[$test.type]($test, Settings.doWhileStmtTest);
@@ -2273,13 +2281,15 @@ var StmtRawGen = {
     },
 
     ExportDeclaration: function generateExportDeclaration($stmt, settings) {
-        var withSemicolon = semicolons || !settings.semicolonOptional;
+        var $specs = $stmt.specifiers,
+            $decl = $stmt.declaration,
+            withSemicolon = semicolons || !settings.semicolonOptional;
 
         // export default AssignmentExpression[In] ;
         if ($stmt['default']) {
-            var decl = source(generateExpression, $stmt.declaration, Settings.exportDeclDefaultDecl);
+            var declJs = exprToJs($stmt.declaration, Settings.exportDeclDefaultDecl);
 
-            _.js += joinWithSpacing('export default', decl);
+            _.js += join('export default', declJs);
 
             if (withSemicolon)
                 _.js += ';';
@@ -2288,41 +2298,41 @@ var StmtRawGen = {
         // export * FromClause ;
         // export ExportClause[NoReference] FromClause ;
         // export ExportClause ;
-        else if ($stmt.specifiers) {
-            var js = 'export';
+        else if ($specs) {
+            var stmtJs = 'export';
 
-            if ($stmt.specifiers.length === 0)
-                js += _.optSpace + '{' + _.optSpace + '}';
+            if ($specs.length === 0)
+                stmtJs += _.optSpace + '{' + _.optSpace + '}';
 
-            else if ($stmt.specifiers[0].type === Syntax.ExportBatchSpecifier) {
-                var spec = source(generateExpression, $stmt.specifiers[0], Settings.exportDeclSpec);
+            else if ($specs[0].type === Syntax.ExportBatchSpecifier) {
+                var specJs = exprToJs($specs[0], Settings.exportDeclSpec);
 
-                js = joinWithSpacing(js, spec);
+                stmtJs = join(stmtJs, specJs);
             }
 
             else {
                 var prevIndent = shiftIndent(),
-                    specCount = $stmt.specifiers.length,
+                    specCount = $specs.length,
                     lastSpecIdx = specCount - 1;
 
-                js += _.optSpace + '{';
+                stmtJs += _.optSpace + '{';
 
                 for (var i = 0; i < specCount; ++i) {
-                    js += _.newline + _.indent;
-                    js += source(generateExpression, $stmt.specifiers[i], Settings.exportDeclSpec);
+                    stmtJs += _.newline + _.indent;
+                    stmtJs += exprToJs($specs[i], Settings.exportDeclSpec);
 
                     if (i !== lastSpecIdx)
-                        js += ',';
+                        stmtJs += ',';
                 }
 
                 _.indent = prevIndent;
-                js += _.newline + _.indent + '}';
+                stmtJs += _.newline + _.indent + '}';
             }
 
             if ($stmt.source)
-                js = joinWithSpacing(js, 'from' + _.optSpace + generateLiteral($stmt.source));
+                stmtJs = join(stmtJs, 'from' + _.optSpace + generateLiteral($stmt.source));
 
-            _.js += js;
+            _.js += stmtJs;
 
             if (withSemicolon)
                 _.js += ';';
@@ -2330,16 +2340,16 @@ var StmtRawGen = {
 
         // export VariableStatement
         // export Declaration[Default]
-        else if ($stmt.declaration) {
-            var decl = source(generateStatement, $stmt.declaration, Settings.exportDeclDecl(!withSemicolon));
+        else if ($decl) {
+            var declJs = source(generateStatement, $decl, Settings.exportDeclDecl(!withSemicolon));
 
-            _.js += joinWithSpacing('export', decl);
+            _.js += join('export', declJs);
         }
     },
 
     ExpressionStatement: function generateExpressionStatement($stmt, settings) {
-        var exprSource = source(generateExpression, $stmt.expression, Settings.exprStmtExpr),
-            parenthesize = EXPR_STMT_UNALLOWED_EXPR_REGEXP.test(exprSource) ||
+        var exprJs = exprToJs($stmt.expression, Settings.exprStmtExpr),
+            parenthesize = EXPR_STMT_UNALLOWED_EXPR_REGEXP.test(exprJs) ||
                            (directive &&
                             settings.directiveContext &&
                             $stmt.expression.type === Syntax.Literal &&
@@ -2348,44 +2358,42 @@ var StmtRawGen = {
         // '{', 'function', 'class' are not allowed in expression statement.
         // Therefore, they should be parenthesized.
         if (parenthesize)
-            _.js += '(' + exprSource + ')';
+            _.js += '(' + exprJs + ')';
 
         else
-            _.js += exprSource;
+            _.js += exprJs;
 
         if (semicolons || !settings.semicolonOptional)
             _.js += ';';
     },
 
     ImportDeclaration: function generateImportDeclaration($stmt, settings) {
-        var js = 'import',
-            specCount = $stmt.specifiers.length;
+        var $specs = $stmt.specifiers,
+            stmtJs = 'import',
+            specCount = $specs.length;
 
         // If no ImportClause is present,
         // this should be `import ModuleSpecifier` so skip `from`
         // ModuleSpecifier is StringLiteral.
         if (specCount) {
-            var hasBinding = !!$stmt.specifiers[0]['default'],
+            var hasBinding = !!$specs[0]['default'],
                 firstNamedIdx = hasBinding ? 1 : 0,
                 lastSpecIdx = specCount - 1;
 
             // ImportedBinding
             if (hasBinding)
-                js = joinWithSpacing(js, $stmt.specifiers[0].id.name);
+                stmtJs = join(stmtJs, $specs[0].id.name);
 
             // NamedImports
             if (firstNamedIdx < specCount) {
                 if (hasBinding)
-                    js += ',';
+                    stmtJs += ',';
 
-                js += _.optSpace + '{';
+                stmtJs += _.optSpace + '{';
 
                 // import { ... } from "...";
-                if (firstNamedIdx === lastSpecIdx) {
-                    js += _.optSpace +
-                          source(generateExpression, $stmt.specifiers[firstNamedIdx], Settings.importDeclSpec) +
-                          _.optSpace;
-                }
+                if (firstNamedIdx === lastSpecIdx)
+                    stmtJs += _.optSpace + exprToJs($specs[firstNamedIdx], Settings.importDeclSpec) + _.optSpace;
 
                 else {
                     var prevIndent = shiftIndent();
@@ -2395,30 +2403,28 @@ var StmtRawGen = {
                     //    ...,
                     // } from "...";
                     for (var i = firstNamedIdx; i < specCount; i++) {
-                        js += _.newline +
-                              _.indent +
-                              source(generateExpression, $stmt.specifiers[i], Settings.importDeclSpec);
+                        stmtJs += _.newline + _.indent + exprToJs($specs[i], Settings.importDeclSpec);
 
                         if (i !== lastSpecIdx)
-                            js += ',';
+                            stmtJs += ',';
                     }
 
                     _.indent = prevIndent;
-                    js += _.newline + _.indent;
+                    stmtJs += _.newline + _.indent;
                 }
 
-                js += '}' + _.optSpace;
+                stmtJs += '}' + _.optSpace;
             }
 
-            js = joinWithSpacing(js, 'from')
+            stmtJs = join(stmtJs, 'from')
         }
 
-        js += _.optSpace + generateLiteral($stmt.source);
+        stmtJs += _.optSpace + generateLiteral($stmt.source);
 
         if (semicolons || !settings.semicolonOptional)
-            js += ';';
+            stmtJs += ';';
 
-        _.js += js;
+        _.js += stmtJs;
     },
 
     VariableDeclarator: function generateVariableDeclarator($stmt, settings) {
@@ -2463,9 +2469,9 @@ var StmtRawGen = {
     },
 
     ThrowStatement: function generateThrowStatement($stmt, settings) {
-        var arg = source(generateExpression, $stmt.argument, Settings.throwStmtArg);
+        var argJs = exprToJs($stmt.argument, Settings.throwStmtArg);
 
-        _.js += joinWithSpacing('throw', arg);
+        _.js += join('throw', argJs);
 
         if (semicolons || !settings.semicolonOptional)
             _.js += ';';
@@ -2488,7 +2494,7 @@ var StmtRawGen = {
         }
 
         if ($stmt.finalizer) {
-            js = joinWithSpacing(js, 'finally' + adoptionPrefix($stmt.finalizer));
+            js = join(js, 'finally' + adoptionPrefix($stmt.finalizer));
             js += source(generateStatement, $stmt.finalizer, Settings.tryStmtFinalizer);
         }
 
@@ -2524,15 +2530,17 @@ var StmtRawGen = {
     SwitchCase: function generateSwitchCase($stmt, settings) {
         var $conseqs = $stmt.consequent,
             $firstConseq = $conseqs[0],
+            $test = $stmt.test,
             i = 0,
-            prevIndent = shiftIndent(),
             conseqSemicolonOptional = !semicolons && settings.semicolonOptional,
             conseqCount = $conseqs.length,
-            lastConseqIdx = conseqCount - 1;
+            lastConseqIdx = conseqCount - 1,
+            prevIndent = shiftIndent();
 
-        if ($stmt.test) {
-            var test = source(generateExpression, $stmt.test, Settings.switchCaseTest);
-            _.js += joinWithSpacing('case', test) + ':';
+        if ($test) {
+            var testJs = exprToJs($test, Settings.switchCaseTest);
+
+            _.js += join('case', testJs) + ':';
         }
 
         else
@@ -2577,9 +2585,9 @@ var StmtRawGen = {
                 alt = 'else ' + alt;
 
             else
-                alt = joinWithSpacing('else', adoptionPrefix($stmt.alternate) + alt);
+                alt = join('else', adoptionPrefix($stmt.alternate) + alt);
 
-            _.js += joinWithSpacing(conseq, alt);
+            _.js += join(conseq, alt);
         }
 
         else
@@ -2685,10 +2693,12 @@ var StmtRawGen = {
     },
 
     ReturnStatement: function generateReturnStatement($stmt, settings) {
-        if ($stmt.argument) {
-            var arg = source(generateExpression, $stmt.argument, Settings.returnStmtArg);
+        var $arg = $stmt.argument;
 
-            _.js += joinWithSpacing('return', arg);
+        if ($arg) {
+            var argJs = exprToJs($arg, Settings.returnStmtArg);
+
+            _.js += join('return', argJs);
         }
 
         else
@@ -2738,6 +2748,7 @@ function source(proc, $node, settings) {
     var savedJs = _.js;
     _.js = '';
 
+
     proc($node, settings);
 
     var src = _.js;
@@ -2746,9 +2757,28 @@ function source(proc, $node, settings) {
     return src;
 }
 
+function exprToJs($expr, settings) {
+    var savedJs = _.js;
+    _.js = '';
 
-function expand(proc, $node, settings) {
-    proc($node, settings);
+    ExprGen[$expr.type]($expr, settings);
+
+    var src = _.js;
+    _.js = savedJs;
+
+    return src;
+}
+
+function stmtToJs($stmt, settings) {
+    var savedJs = _.js;
+    _.js = '';
+
+    StmtGen[$stmt.type]($stmt, settings);
+
+    var src = _.js;
+    _.js = savedJs;
+
+    return src;
 }
 
 function run($node) {
