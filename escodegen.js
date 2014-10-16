@@ -2766,7 +2766,7 @@ function run($node) {
 function wrapExprGen(gen) {
     return function ($expr, settings) {
         if (extra.verbatim && $expr.hasOwnProperty(extra.verbatim))
-            expand(generateVerbatim, $expr, settings);
+            generateVerbatim($expr, settings);
 
         else
             gen($expr, settings);
