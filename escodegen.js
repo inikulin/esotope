@@ -2285,7 +2285,7 @@ var StmtRawGen = {
 
         // export default AssignmentExpression[In] ;
         if ($stmt['default']) {
-            var declJs = exprToJs($stmt.declaration, Settings.exportDeclDefaultDecl);
+            var declJs = exprToJs($decl, Settings.exportDeclDefaultDecl);
 
             _.js += join('export default', declJs);
 
