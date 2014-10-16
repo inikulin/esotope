@@ -2072,9 +2072,7 @@ var ExprRawGen = {
     }
 };
 
-function generateExpression($expr, option) {
-    ExprGen[$expr.type]($expr, option);
-}
+
 
 //-------------------------------------------------===------------------------------------------------------
 //                                              Statements
@@ -2785,10 +2783,10 @@ function run($node) {
     _.js = '';
 
     if (StmtGen[$node.type])
-        generateStatement($node, Settings.stmtInitial);
+        StmtGen[$node.type]($node, Settings.stmtInitial);
 
     else
-        generateExpression($node, Settings.exprInitial);
+        ExprGen[$node.type]($node, Settings.exprInitial);
 
     return _.js;
 }
