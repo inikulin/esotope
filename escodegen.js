@@ -564,9 +564,9 @@ function generateVerbatim($expr, settings) {
 function generateFunctionParams($node) {
     var $params = $node.params,
         $rest = $node.rest,
+        $defaults = $node.defaults,
         paramCount = $params.length,
         lastParamIdx = paramCount - 1,
-        $defaults = $node.defaults,
         hasDefaults = !!$defaults,
         arrowFuncWithSingleParam = $node.type === Syntax.ArrowFunctionExpression && !$rest &&
                                    (!hasDefaults || $defaults.length === 0) &&
@@ -585,13 +585,12 @@ function generateFunctionParams($node) {
 
             if (hasDefaults && $defaults[i]) {
                 var $fakeAssign = {
-                    type: Syntax.AssignmentExpression,
                     left: $param,
                     right: $defaults[i],
                     operator: '='
                 };
 
-                ExprGen[$fakeAssign.type]($fakeAssign, Settings.funcArg);
+                ExprGen.AssignmentExpression($fakeAssign, Settings.funcArg);
             }
 
             else {
@@ -750,7 +749,6 @@ var Settings = {
         precedence: Precedence.Sequence,
         allowIn: true,
         allowCall: true,
-        type: Syntax.Property,
         allowUnparenthesizedNew: void 0
     },
 
@@ -994,8 +992,7 @@ var Settings = {
     objExprProperty: {
         precedence: Precedence.Sequence,
         allowIn: true,
-        allowCall: true,
-        type: Syntax.Property
+        allowCall: true
     },
 
     //TODO s
@@ -1471,7 +1468,8 @@ function generateLogicalOrBinaryExpression($expr, settings) {
 }
 
 function generateArrayPatternOrExpression($expr) {
-    var elemCount = $expr.elements.length;
+    var $elems = $expr.elements,
+        elemCount = $elems.length;
 
     if (elemCount) {
         var lastElemIdx = elemCount - 1,
@@ -1482,13 +1480,15 @@ function generateArrayPatternOrExpression($expr) {
         _.js += '[';
 
         for (var i = 0; i < elemCount; i++) {
+            var $elem = $elems[i];
+
             if (multiline)
                 _.js += itemPrefix;
 
-            if ($expr.elements[i])
-                expand(generateExpression, $expr.elements[i], Settings.arrayExprElement);
+            if ($elem)
+                ExprGen[$elem.type]($elem, Settings.arrayExprElement);
 
-            if (i !== lastElemIdx || !$expr.elements[i])
+            if (i !== lastElemIdx || !$elem)
                 _.js += ',';
         }
 
@@ -1548,18 +1548,21 @@ function generateGeneratorOrComprehensionExpression($expr) {
  */
 var ExprRawGen = {
     SequenceExpression: function generateSequenceExpression($expr, settings) {
-        var len = $expr.expressions.length,
-            lastIdx = len - 1,
+        var $children = $expr.expressions,
+            childrenCount = $children.length,
+            lastChildIdx = childrenCount - 1,
             parenthesize = Precedence.Sequence < settings.precedence,
             exprGenSettings = Settings.sequenceExprChildren(settings.allowIn || parenthesize);
 
         if (parenthesize)
             _.js += '(';
 
-        for (var i = 0; i < len; i++) {
-            expand(generateExpression, $expr.expressions[i], exprGenSettings);
+        for (var i = 0; i < childrenCount; i++) {
+            var $child = $children[i];
 
-            if (i !== lastIdx)
+            ExprGen[$child.type]($child, exprGenSettings);
+
+            if (i !== lastChildIdx)
                 _.js += ',' + _.optSpace;
         }
 
@@ -1568,15 +1571,17 @@ var ExprRawGen = {
     },
 
     AssignmentExpression: function generateAssignmentExpression($expr, settings) {
-        var parenthesize = Precedence.Assignment < settings.precedence,
+        var $left = $expr.left,
+            $right = $expr.right,
+            parenthesize = Precedence.Assignment < settings.precedence,
             allowIn = settings.allowIn || parenthesize;
 
         if (parenthesize)
             _.js += '(';
 
-        expand(generateExpression, $expr.left, Settings.assignExprLeftOperand(allowIn));
+        ExprGen[$left.type]($left, Settings.assignExprLeftOperand(allowIn));
         _.js += _.optSpace + $expr.operator + _.optSpace;
-        expand(generateExpression, $expr.right, Settings.assignExprRightOperand(allowIn));
+        ExprGen[$right.type]($right, Settings.assignExprRightOperand(allowIn));
 
         if (parenthesize)
             _.js += ')';
@@ -1595,7 +1600,10 @@ var ExprRawGen = {
     },
 
     ConditionalExpression: function generateConditionalExpression($expr, settings) {
-        var parenthesize = Precedence.Conditional < settings.precedence,
+        var $test = $expr.test,
+            $conseq = $expr.consequent,
+            $alt = $expr.alternate,
+            parenthesize = Precedence.Conditional < settings.precedence,
             allowIn = settings.allowIn || parenthesize,
             testGenSettings = Settings.conditionalExprTest(allowIn),
             branchGenSettings = Settings.conditionalExprBranch(allowIn);
@@ -1603,32 +1611,37 @@ var ExprRawGen = {
         if (parenthesize)
             _.js += '(';
 
-        expand(generateExpression, $expr.test, testGenSettings);
+        ExprGen[$test.type]($test, testGenSettings);
         _.js += _.optSpace + '?' + _.optSpace;
-        expand(generateExpression, $expr.consequent, branchGenSettings);
+        ExprGen[$conseq.type]($conseq, branchGenSettings);
         _.js += _.optSpace + ':' + _.optSpace;
-        expand(generateExpression, $expr.alternate, branchGenSettings);
+        ExprGen[$alt.type]($alt, branchGenSettings);
 
         if (parenthesize)
             _.js += ')';
     },
 
     LogicalExpression: generateLogicalOrBinaryExpression,
+
     BinaryExpression: generateLogicalOrBinaryExpression,
 
     CallExpression: function generateCallExpression($expr, settings) {
-        var argCount = $expr['arguments'].length,
+        var $callee = $expr.callee,
+            $args = $expr['arguments'],
+            argCount = $args.length,
             lastArgIdx = argCount - 1,
             parenthesize = !settings.allowCall || Precedence.Call < settings.precedence;
 
         if (parenthesize)
             _.js += '(';
 
-        expand(generateExpression, $expr.callee, Settings.callExprCallee);
+        ExprGen[$callee.type]($callee, Settings.callExprCallee);
         _.js += '(';
 
         for (var i = 0; i < argCount; ++i) {
-            expand(generateExpression, $expr['arguments'][i], Settings.callExprArgs);
+            var $arg = $args[i];
+
+            ExprGen[$arg.type]($arg, Settings.callExprArgs);
 
             if (i !== lastArgIdx)
                 _.js += ',' + _.optSpace;
@@ -1641,8 +1654,9 @@ var ExprRawGen = {
     },
 
     NewExpression: function generateNewExpression($expr, settings) {
-        var parenthesize = Precedence.New < settings.precedence,
-            argCount = $expr['arguments'].length,
+        var $args = $expr['arguments'],
+            parenthesize = Precedence.New < settings.precedence,
+            argCount = $args.length,
             lastArgIdx = argCount - 1,
             allowUnparenthesizedNew = settings.allowUnparenthesizedNew === void 0 || settings.allowUnparenthesizedNew,
             withCall = !allowUnparenthesizedNew || parentheses || argCount > 0,
@@ -1657,7 +1671,9 @@ var ExprRawGen = {
             _.js += '(';
 
             for (var i = 0; i < argCount; ++i) {
-                expand(generateExpression, $expr['arguments'][i], Settings.newExprArg);
+                var $arg = $args[i];
+
+                ExprGen[$arg.type]($arg, Settings.newExprArg);
 
                 if (i !== lastArgIdx)
                     _.js += ',' + _.optSpace;
@@ -1671,36 +1687,39 @@ var ExprRawGen = {
     },
 
     MemberExpression: function generateMemberExpression($expr, settings) {
-        var parenthesize = Precedence.Member < settings.precedence;
+        var $obj = $expr.object,
+            $prop = $expr.property,
+            parenthesize = Precedence.Member < settings.precedence,
+            isNumObj = !$expr.computed && $obj.type === Syntax.Literal && typeof $obj.value === 'number';
 
         if (parenthesize)
             _.js += '(';
 
-        if (!$expr.computed && $expr.object.type === Syntax.Literal && typeof $expr.object.value === 'number') {
-            var num = source(generateExpression, $expr.object, Settings.memberExprObj(settings.allowCall));
-
+        if (isNumObj) {
             // When the following conditions are all true:
             //   1. No floating point
             //   2. Don't have exponents
             //   3. The last character is a decimal digit
             //   4. Not hexadecimal OR octal number literal
             // we should add a floating point.
-            var withPoint = LAST_DECIMAL_DIGIT_REGEXP.test(num) && !FLOATING_OR_OCTAL_REGEXP.test(num);
+
+            var num = source(generateExpression, $obj, Settings.memberExprObj(settings.allowCall)),
+                withPoint = LAST_DECIMAL_DIGIT_REGEXP.test(num) && !FLOATING_OR_OCTAL_REGEXP.test(num);
 
             _.js += withPoint ? (num + '.') : num;
         }
 
         else
-            expand(generateExpression, $expr.object, Settings.memberExprObj(settings.allowCall));
+            ExprGen[$obj.type]($obj, Settings.memberExprObj(settings.allowCall));
 
         if ($expr.computed) {
             _.js += '[';
-            expand(generateExpression, $expr.property, Settings.memberExprProp(settings.allowCall));
+            ExprGen[$prop.type]($prop, Settings.memberExprProp(settings.allowCall));
             _.js += ']';
         }
 
         else
-            _.js += '.' + $expr.property.name;
+            _.js += '.' + $prop.name;
 
         if (parenthesize)
             _.js += ')';
@@ -1759,20 +1778,24 @@ var ExprRawGen = {
     },
 
     UpdateExpression: function generateUpdateExpression($expr, settings) {
-        var precedence = $expr.prefix ? Precedence.Unary : Precedence.Postfix,
+        var $arg = $expr.argument,
+            $op = $expr.operator,
+            prefix = $expr.prefix,
+            precedence = prefix ? Precedence.Unary : Precedence.Postfix,
             parenthesize = precedence < settings.precedence;
 
         if (parenthesize)
             _.js += '(';
 
-        if ($expr.prefix) {
-            _.js += $expr.operator;
-            expand(generateExpression, $expr.argument, Settings.prefixUpdateExprArg);
+        if (prefix) {
+            _.js += $op;
+            ExprGen[$arg.type]($arg, Settings.postfixUpdateExprArg);
+
         }
 
         else {
-            expand(generateExpression, $expr.argument, Settings.postfixUpdateExprArg);
-            _.js += $expr.operator;
+            ExprGen[$arg.type]($arg, Settings.postfixUpdateExprArg);
+            _.js += $op;
         }
 
         if (parenthesize)
@@ -1799,6 +1822,7 @@ var ExprRawGen = {
     },
 
     ArrayPattern: generateArrayPatternOrExpression,
+
     ArrayExpression: generateArrayPatternOrExpression,
 
     ClassExpression: function generateClassExpression($expr) {
@@ -1824,7 +1848,7 @@ var ExprRawGen = {
 
     MethodDefinition: function generateMethodDefinition($expr) {
         var js = $expr['static'] ? 'static' + _.optSpace : '',
-            propKey = source(generateExpression, $expr.key, $expr.computed, Settings.propKey);
+            propKey = source(generateExpression, $expr.key, Settings.propKey);
 
         if ($expr.computed)
             propKey = '[' + propKey + ']';
@@ -1849,34 +1873,37 @@ var ExprRawGen = {
     },
 
     Property: function generateProperty($expr) {
-        var propKey = source(generateExpression, $expr.key, Settings.propKey);
+        var $val = $expr.value,
+            $kind = $expr.kind,
+            key = source(generateExpression, $expr.key, Settings.propKey);
 
         if ($expr.computed)
-            propKey = '[' + propKey + ']';
+            key = '[' + key + ']';
 
-        if ($expr.kind === 'get' || $expr.kind === 'set') {
-            _.js += $expr.kind + _.space + propKey;
-            generateFunctionBody($expr.value);
+        if ($kind === 'get' || $kind === 'set') {
+            _.js += $kind + _.space + key;
+            generateFunctionBody($val);
         }
 
         else {
             if ($expr.shorthand)
-                _.js += propKey;
+                _.js += key;
 
             else if ($expr.method) {
-                _.js += $expr.value.generator ? ('*' + propKey) : propKey;
-                generateFunctionBody($expr.value)
+                _.js += $val.generator ? ('*' + key) : key;
+                generateFunctionBody($val)
             }
 
             else {
-                _.js += propKey + ':' + _.optSpace;
-                expand(generateExpression, $expr.value, Settings.propVal);
+                _.js += key + ':' + _.optSpace;
+                ExprGen[$val.type]($val, Settings.propVal);
             }
         }
     },
 
     ObjectExpression: function generateObjectExpression($expr) {
-        var propCount = $expr.properties.length;
+        var $props = $expr.properties,
+            propCount = $props.length;
 
         if (propCount) {
             var lastPropIdx = propCount - 1,
@@ -1885,8 +1912,11 @@ var ExprRawGen = {
             _.js += '{';
 
             for (var i = 0; i < propCount; i++) {
+                var $prop = $props[i],
+                    propType = $prop.type || Syntax.Property;
+
                 _.js += _.newline + _.indent;
-                expand(generateExpression, $expr.properties[i], Settings.objExprProperty);
+                ExprGen[propType]($prop, Settings.objExprProperty);
 
                 if (i !== lastPropIdx)
                     _.js += ',';
@@ -1901,18 +1931,19 @@ var ExprRawGen = {
     },
 
     ObjectPattern: function generateObjectPattern($expr) {
-        var propCount = $expr.properties.length;
+        var $props = $expr.properties,
+            propCount = $props.length;
 
         if (propCount) {
             var lastPropIdx = propCount - 1,
                 multiline = false;
 
-            if ($expr.properties.length === 1)
-                multiline = $expr.properties[0].value.type !== Syntax.Identifier;
+            if (propCount === 1)
+                multiline = $props[0].value.type !== Syntax.Identifier;
 
             else {
                 for (var i = 0; i < propCount; i++) {
-                    if (!$expr.properties[i].shorthand) {
+                    if (!$props[i].shorthand) {
                         multiline = true;
                         break;
                     }
@@ -1925,10 +1956,12 @@ var ExprRawGen = {
                 propSuffix = ',' + (multiline ? _.newline : _.optSpace);
 
             for (var i = 0; i < propCount; i++) {
+                var $prop = $props[i];
+
                 if (multiline)
                     _.js += _.indent;
 
-                expand(generateExpression, $expr.properties[i], Settings.objPatternProp);
+                ExprGen[$prop.type]($prop, Settings.objPatternProp);
 
                 if (i !== lastPropIdx)
                     _.js += propSuffix;
@@ -1950,6 +1983,7 @@ var ExprRawGen = {
     },
 
     ImportSpecifier: generateImportOrExportSpecifier,
+
     ExportSpecifier: generateImportOrExportSpecifier,
 
     Literal: function ($expr) {
@@ -1957,6 +1991,7 @@ var ExprRawGen = {
     },
 
     GeneratorExpression: generateGeneratorOrComprehensionExpression,
+
     ComprehensionExpression: generateGeneratorOrComprehensionExpression,
 
     ComprehensionBlock: function generateComprehensionBlock($expr) {
@@ -1978,18 +2013,22 @@ var ExprRawGen = {
     },
 
     SpreadElement: function generateSpreadElement($expr) {
+        var $arg = $expr.argument;
+
         _.js += '...';
-        expand(generateExpression, $expr.argument, Settings.spreadElementArg);
+        ExprGen[$arg.type]($arg, Settings.spreadElementArg);
     },
 
     TaggedTemplateExpression: function generateTaggedTemplateExpression($expr, settings) {
-        var parenthesize = Precedence.TaggedTemplate < settings.precedence;
+        var $tag = $expr.tag,
+            $quasi = $expr.quasi,
+            parenthesize = Precedence.TaggedTemplate < settings.precedence;
 
         if (parenthesize)
             _.js += '(';
 
-        expand(generateExpression, $expr.tag, Settings.taggedTemplateExprTag(settings.allowCall));
-        expand(generateExpression, $expr.quasi, Settings.taggedTemplateExprQuasi);
+        ExprGen[$tag.type]($tag, Settings.taggedTemplateExprTag(settings.allowCall));
+        ExprGen[$quasi.type]($quasi, Settings.taggedTemplateExprQuasi);
 
         if (parenthesize)
             _.js += ')';
@@ -2002,17 +2041,23 @@ var ExprRawGen = {
     },
 
     TemplateLiteral: function generateTemplateLiteral($expr) {
-        var quasiCount = $expr.quasis.length,
+        var $quasis = $expr.quasis,
+            $childExprs = $expr.expressions,
+            quasiCount = $quasis.length,
             lastQuasiIdx = quasiCount - 1;
 
         _.js += '`';
 
         for (var i = 0; i < quasiCount; ++i) {
-            expand(generateExpression, $expr.quasis[i], Settings.templateLiteralQuasi);
+            var $quasi = $quasis[i];
+
+            ExprGen[$quasi.type]($quasi, Settings.templateLiteralQuasi);
 
             if (i !== lastQuasiIdx) {
+                var $childExpr = $childExprs[i];
+
                 _.js += '${' + _.optSpace;
-                expand(generateExpression, $expr.expressions[i], Settings.templateLiteralExpr);
+                ExprGen[$childExpr.type]($childExpr, Settings.templateLiteralExpr);
                 _.js += _.optSpace + '}';
             }
         }
@@ -2022,9 +2067,7 @@ var ExprRawGen = {
 };
 
 function generateExpression($expr, option) {
-    //TODO
-    var type = $expr.type || option.type;
-    ExprGen[type]($expr, option);
+    ExprGen[$expr.type]($expr, option);
 }
 
 //-------------------------------------------------===------------------------------------------------------
@@ -2058,7 +2101,7 @@ function generateTryStatementHandlers(js, finalizer, handlers) {
     return js;
 }
 
-function generateForStatementIterator(op, $stmt, settings) {
+function generateForStatementIterator($op, $stmt, settings) {
     var $body = $stmt.body,
         bodySemicolonOptional = !semicolons && settings.semicolonOptional,
         prevIndent1 = shiftIndent(),
@@ -2074,7 +2117,7 @@ function generateForStatementIterator(op, $stmt, settings) {
     else
         js += source(generateExpression, $stmt.left, Settings.forStmtIterLeft);
 
-    js = joinWithSpacing(js, op);
+    js = joinWithSpacing(js, $op);
 
     var right = source(generateExpression, $stmt.right, Settings.forStmtIterRight);
 
@@ -2132,18 +2175,22 @@ var StmtRawGen = {
             _.js += ';';
     },
 
-    ClassBody: function generateClassBody(classBody) {
-        var len = classBody.body.length,
-            lastIdx = len - 1,
+    ClassBody: function generateClassBody($stmt) {
+        var $body = $stmt.body,
+            itemCount = $body.length,
+            lastItemIdx = itemCount - 1,
             prevIndent = shiftIndent();
 
         _.js += '{' + _.newline;
 
-        for (var i = 0; i < len; i++) {
-            _.js += _.indent;
-            expand(generateExpression, classBody.body[i], Settings.classBodyItem);
+        for (var i = 0; i < itemCount; i++) {
+            var $item = $body[i],
+                itemType = $item.type || Syntax.Property;
 
-            if (i !== lastIdx)
+            _.js += _.indent;
+            ExprGen[itemType]($item, Settings.classBodyItem);
+
+            if (i !== lastItemIdx)
                 _.js += _.newline;
         }
 
@@ -2177,16 +2224,18 @@ var StmtRawGen = {
     },
 
     DoWhileStatement: function generateDoWhileStatement($stmt, settings) {
-        var body = adoptionPrefix($stmt.body) +
-                   source(generateStatement, $stmt.body, Settings.doWhileStmtBody) +
-                   adoptionSuffix($stmt.body);
+        var $body = $stmt.body,
+            $test = $stmt.test,
+            body = adoptionPrefix($body) +
+                   source(generateStatement, $body, Settings.doWhileStmtBody) +
+                   adoptionSuffix($body);
 
         //NOTE: Because `do 42 while (cond)` is Syntax Error. We need semicolon.
         var js = joinWithSpacing('do', body);
         js = joinWithSpacing(js, 'while' + _.optSpace + '(');
 
         _.js += js;
-        expand(generateExpression, $stmt.test, Settings.doWhileStmtTest);
+        ExprGen[$test.type]($test, Settings.doWhileStmtTest);
         _.js += ')';
 
         if (semicolons || !settings.semicolonOptional)
@@ -2194,15 +2243,17 @@ var StmtRawGen = {
     },
 
     CatchClause: function generateCatchClause($stmt) {
-        var $body = $stmt.body,
+        var $param = $stmt.param,
+            $guard = $stmt.guard,
+            $body = $stmt.body,
             prevIndent = shiftIndent();
 
         _.js += 'catch' + _.optSpace + '(';
-        expand(generateExpression, $stmt.param, Settings.catchClauseParam);
+        ExprGen[$param.type]($param, Settings.catchClauseParam);
 
-        if ($stmt.guard) {
+        if ($guard) {
             _.js += ' if ';
-            expand(generateExpression, $stmt.guard, Settings.catchClauseGuard);
+            ExprGen[$guard.type]($guard, Settings.catchClauseGuard);
         }
 
         _.indent = prevIndent;
@@ -2371,20 +2422,22 @@ var StmtRawGen = {
     },
 
     VariableDeclarator: function generateVariableDeclarator($stmt, settings) {
-        var genSettings = Settings.varDeclarator(settings.allowIn);
+        var $id = $stmt.id,
+            $init = $stmt.init,
+            genSettings = Settings.varDeclarator(settings.allowIn);
 
-        if ($stmt.init) {
-            expand(generateExpression, $stmt.id, genSettings);
+        if ($init) {
+            ExprGen[$id.type]($id, genSettings);
             _.js += _.optSpace + '=' + _.optSpace;
-            expand(generateExpression, $stmt.init, genSettings);
+            ExprGen[$init.type]($init, genSettings);
         }
 
         else {
-            if ($stmt.id.type === Syntax.Identifier)
-                _.js += $stmt.id.name;
+            if ($id.type === Syntax.Identifier)
+                _.js += $id.name;
 
             else
-                expand(generateExpression, $stmt.id, genSettings);
+                ExprGen[$id.type]($id, genSettings);
         }
     },
 
@@ -2444,22 +2497,23 @@ var StmtRawGen = {
 
     SwitchStatement: function generateSwitchStatement($stmt) {
         var $cases = $stmt.cases,
+            $discr = $stmt.discriminant,
             prevIndent = shiftIndent();
 
         _.js += 'switch' + _.optSpace + '(';
-        expand(generateExpression, $stmt.discriminant, Settings.switchStmtDiscriminant);
+        ExprGen[$discr.type]($discr, Settings.switchStmtDiscriminant);
         _.js += ')' + _.optSpace + '{' + _.newline;
         _.indent = prevIndent;
 
         if ($cases) {
-            var len = $cases.length,
-                lastIdx = len - 1;
+            var caseCount = $cases.length,
+                lastCaseIdx = caseCount - 1;
 
-            for (var i = 0; i < len; i++) {
+            for (var i = 0; i < caseCount; i++) {
                 var $case = $cases[i];
 
                 _.js += _.indent;
-                StmtGen[$case.type]($case, Settings.switchStmtCase(i === lastIdx));
+                StmtGen[$case.type]($case, Settings.switchStmtCase(i === lastCaseIdx));
                 _.js += _.newline;
             }
         }
@@ -2504,11 +2558,12 @@ var StmtRawGen = {
 
     IfStatement: function generateIfStatement($stmt, settings) {
         var $conseq = $stmt.consequent,
+            $test = $stmt.test,
             prevIndent = shiftIndent(),
             semicolonOptional = !semicolons && settings.semicolonOptional;
 
         _.js += 'if' + _.optSpace + '(';
-        expand(generateExpression, $stmt.test, Settings.ifStmtTest);
+        ExprGen[$test.type]($test, Settings.ifStmtTest);
         _.js += ')';
         _.indent = prevIndent;
         _.js += adoptionPrefix($conseq);
@@ -2533,7 +2588,9 @@ var StmtRawGen = {
 
     ForStatement: function generateForStatement($stmt, settings) {
         var $init = $stmt.init,
+            $test = $stmt.test,
             $body = $stmt.body,
+            $update = $stmt.update,
             bodySemicolonOptional = !semicolons && settings.semicolonOptional,
             prevIndent = shiftIndent();
 
@@ -2544,7 +2601,7 @@ var StmtRawGen = {
                 StmtGen[$init.type]($init, Settings.forStmtVarInit);
 
             else {
-                expand(generateExpression, $init, Settings.forStmtInit);
+                ExprGen[$init.type]($init, Settings.forStmtInit);
                 _.js += ';';
             }
         }
@@ -2552,16 +2609,16 @@ var StmtRawGen = {
         else
             _.js += ';';
 
-        if ($stmt.test) {
+        if ($test) {
             _.js += _.optSpace;
-            expand(generateExpression, $stmt.test, Settings.forStmtTest);
+            ExprGen[$test.type]($test, Settings.forStmtTest);
         }
 
         _.js += ';';
 
-        if ($stmt.update) {
+        if ($update) {
             _.js += _.optSpace;
-            expand(generateExpression, $stmt.update, Settings.forStmtUpdate);
+            ExprGen[$update.type]($update, Settings.forStmtUpdate);
         }
 
         _.js += ')';
@@ -2643,11 +2700,12 @@ var StmtRawGen = {
 
     WhileStatement: function generateWhileStatement($stmt, settings) {
         var $body = $stmt.body,
+            $test = $stmt.test,
             bodySemicolonOptional = !semicolons && settings.semicolonOptional,
             prevIndent = shiftIndent();
 
         _.js += 'while' + _.optSpace + '(';
-        expand(generateExpression, $stmt.test, Settings.whileStmtTest);
+        ExprGen[$test.type]($test, Settings.whileStmtTest);
         _.js += ')';
         _.indent = prevIndent;
 
@@ -2657,11 +2715,12 @@ var StmtRawGen = {
 
     WithStatement: function generateWithStatement($stmt, settings) {
         var $body = $stmt.body,
+            $obj = $stmt.object,
             bodySemicolonOptional = !semicolons && settings.semicolonOptional,
             prevIndent = shiftIndent();
 
         _.js += 'with' + _.optSpace + '(';
-        expand(generateExpression, $stmt.object, Settings.withStmtObj);
+        ExprGen[$obj.type]($obj, Settings.withStmtObj);
         _.js += ')';
         _.indent = prevIndent;
         _.js += adoptionPrefix($body);
