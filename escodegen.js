@@ -1860,22 +1860,20 @@ var ExprRawGen = {
         if ($expr.computed)
             keyJs = '[' + keyJs + ']';
 
-        var propKeyWithBody = keyJs + source(generateFunctionBody, $expr.value);
-
         if ($expr.kind === 'get' || $expr.kind === 'set') {
-            propKeyWithBody = join($expr.kind, propKeyWithBody);
-            exprJs = join(exprJs, propKeyWithBody);
+            keyJs = join($expr.kind, keyJs);
+            _.js += join(exprJs, keyJs);
         }
 
         else {
             if ($expr.value.generator)
-                exprJs += '*' + propKeyWithBody;
+                _.js += exprJs + '*' + keyJs;
 
             else
-                exprJs = join(exprJs, propKeyWithBody);
+                _.js += join(exprJs, keyJs);
         }
 
-        _.js += exprJs;
+        generateFunctionBody($expr.value);
     },
 
     Property: function generateProperty($expr) {
@@ -2005,10 +2003,8 @@ var ExprRawGen = {
             leftJs = void 0,
             rightJs = exprToJs($expr.right, Settings.comprBlockRightExpr);
 
-        if ($left.type === Syntax.VariableDeclaration) {
-            leftJs = $left.kind + _.space +
-                     source(generateStatement, $left.declarations[0], Settings.comprBlockVarDeclaration);
-        }
+        if ($left.type === Syntax.VariableDeclaration)
+            leftJs = $left.kind + _.space + stmtToJs($left.declarations[0], Settings.comprBlockVarDeclaration);
 
         else
             leftJs = exprToJs($left, Settings.comprBlockLeftExpr);
@@ -2073,7 +2069,6 @@ var ExprRawGen = {
 };
 
 
-
 //-------------------------------------------------===------------------------------------------------------
 //                                              Statements
 //-------------------------------------------------===------------------------------------------------------
@@ -2089,20 +2084,20 @@ var EXPR_STMT_UNALLOWED_EXPR_REGEXP = /^{|^class(?:\s|{)|^function(?:\s|\*|\()/;
  * Common statement generators
  */
 
-function generateTryStatementHandlers(js, finalizer, handlers) {
+function generateTryStatementHandlers(stmtJs, $finalizer, handlers) {
     var handlerCount = handlers.length,
         lastHandlerIdx = handlerCount - 1;
 
     for (var i = 0; i < handlerCount; ++i) {
-        var handler = source(generateStatement, handlers[i], Settings.tryStmtHandler);
+        var handlerJs = stmtToJs(handlers[i], Settings.tryStmtHandler);
 
-        js = join(js, handler);
+        stmtJs = join(stmtJs, handlerJs);
 
-        if (finalizer || i !== lastHandlerIdx)
-            js += adoptionSuffix(handlers[i].body);
+        if ($finalizer || i !== lastHandlerIdx)
+            stmtJs += adoptionSuffix(handlers[i].body);
     }
 
-    return js;
+    return stmtJs;
 }
 
 function generateForStatementIterator($op, $stmt, settings) {
@@ -2114,8 +2109,8 @@ function generateForStatementIterator($op, $stmt, settings) {
 
     if ($left.type === Syntax.VariableDeclaration) {
         var prevIndent2 = shiftIndent();
-        stmtJs += $left.kind + _.space;
-        stmtJs += source(generateStatement, $left.declarations[0], Settings.forIterVarDecl);
+
+        stmtJs += $left.kind + _.space + stmtToJs($left.declarations[0], Settings.forIterVarDecl);
         _.indent = prevIndent2;
     }
 
@@ -2232,15 +2227,14 @@ var StmtRawGen = {
     DoWhileStatement: function generateDoWhileStatement($stmt, settings) {
         var $body = $stmt.body,
             $test = $stmt.test,
-            body = adoptionPrefix($body) +
-                   source(generateStatement, $body, Settings.doWhileStmtBody) +
-                   adoptionSuffix($body);
+            bodyJs = adoptionPrefix($body) +
+                     stmtToJs($body, Settings.doWhileStmtBody) +
+                     adoptionSuffix($body);
 
         //NOTE: Because `do 42 while (cond)` is Syntax Error. We need semicolon.
-        var js = join('do', body);
-        js = join(js, 'while' + _.optSpace + '(');
+        var stmtJs = join('do', bodyJs);
 
-        _.js += js;
+        _.js += join(stmtJs, 'while' + _.optSpace + '(');
         ExprGen[$test.type]($test, Settings.doWhileStmtTest);
         _.js += ')';
 
@@ -2339,7 +2333,7 @@ var StmtRawGen = {
         // export VariableStatement
         // export Declaration[Default]
         else if ($decl) {
-            var declJs = source(generateStatement, $decl, Settings.exportDeclDecl(!withSemicolon));
+            var declJs = stmtToJs($decl, Settings.exportDeclDecl(!withSemicolon));
 
             _.js += join('export', declJs);
         }
@@ -2476,27 +2470,29 @@ var StmtRawGen = {
     },
 
     TryStatement: function generateTryStatement($stmt) {
-        var js = 'try' +
-                 adoptionPrefix($stmt.block) +
-                 source(generateStatement, $stmt.block, Settings.tryStmtBlock) +
-                 adoptionSuffix($stmt.block);
+        var $block = $stmt.block,
+            $finalizer = $stmt.finalizer,
+            stmtJs = 'try' +
+                     adoptionPrefix($block) +
+                     stmtToJs($block, Settings.tryStmtBlock) +
+                     adoptionSuffix($block);
 
-        var handlers = $stmt.handlers || $stmt.guardedHandlers;
+        var $handlers = $stmt.handlers || $stmt.guardedHandlers;
 
-        if (handlers)
-            js = generateTryStatementHandlers(js, $stmt.finalizer, handlers);
+        if ($handlers)
+            stmtJs = generateTryStatementHandlers(stmtJs, $finalizer, $handlers);
 
         if ($stmt.handler) {
-            handlers = isArray($stmt.handler) ? $stmt.handler : [$stmt.handler];
-            js = generateTryStatementHandlers(js, $stmt.finalizer, handlers);
+            $handlers = isArray($stmt.handler) ? $stmt.handler : [$stmt.handler];
+            stmtJs = generateTryStatementHandlers(stmtJs, $finalizer, $handlers);
         }
 
-        if ($stmt.finalizer) {
-            js = join(js, 'finally' + adoptionPrefix($stmt.finalizer));
-            js += source(generateStatement, $stmt.finalizer, Settings.tryStmtFinalizer);
+        if ($finalizer) {
+            stmtJs = join(stmtJs, 'finally' + adoptionPrefix($finalizer));
+            stmtJs += stmtToJs($finalizer, Settings.tryStmtFinalizer);
         }
 
-        _.js += js;
+        _.js += stmtJs;
     },
 
     SwitchStatement: function generateSwitchStatement($stmt) {
@@ -2575,9 +2571,8 @@ var StmtRawGen = {
         _.js += adoptionPrefix($conseq);
 
         if ($stmt.alternate) {
-            var conseq = source(generateStatement, $conseq, Settings.ifStmtConseqWithAlt) +
-                         adoptionSuffix($conseq),
-                alt = source(generateStatement, $stmt.alternate, Settings.ifStmtAlt(semicolonOptional));
+            var conseq = stmtToJs($conseq, Settings.ifStmtConseqWithAlt) + adoptionSuffix($conseq),
+                alt = stmtToJs($stmt.alternate, Settings.ifStmtAlt(semicolonOptional));
 
             if ($stmt.alternate.type === Syntax.IfStatement)
                 alt = 'else ' + alt;
@@ -2742,19 +2737,6 @@ function generateStatement($stmt, option) {
 
 //CodeGen
 //-----------------------------------------------------------------------------------
-function source(proc, $node, settings) {
-    var savedJs = _.js;
-    _.js = '';
-
-
-    proc($node, settings);
-
-    var src = _.js;
-    _.js = savedJs;
-
-    return src;
-}
-
 function exprToJs($expr, settings) {
     var savedJs = _.js;
     _.js = '';
