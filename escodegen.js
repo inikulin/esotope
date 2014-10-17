@@ -207,7 +207,7 @@ function getDefaultOptions() {
 /**
  * Regular expressions
  */
-var NON_ASCII_IDENTIFIER_CHARACTERS = new RegExp(
+var NON_ASCII_IDENTIFIER_CHARACTERS_REGEXP = new RegExp(
     '[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376' +
     '\u0377\u037A-\u037D\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u0487\u048A-' +
     '\u0527\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA' +
@@ -274,7 +274,7 @@ function isIdentifierCh(cp) {
 
     var ch = String.fromCharCode(cp);
 
-    return NON_ASCII_IDENTIFIER_CHARACTERS.test(ch);
+    return NON_ASCII_IDENTIFIER_CHARACTERS_REGEXP.test(ch);
 }
 
 

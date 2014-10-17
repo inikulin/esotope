@@ -51,7 +51,7 @@
     }
   ],
   "scripts": {
-    "test": "gulp test && cd ./benchmark && npm install && node index",
+    "test": "gulp test",
     "unit-test": "gulp test",
     "lint": "gulp lint",
     "release": "node tools/release.js",

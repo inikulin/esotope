@@ -1,7 +1,6 @@
 Did not inline escapeString called from generateLiteral (target text too big).
 Did not inline generateNumber called from generateLiteral (target text too big).
 Did not inline generateRegExp called from generateLiteral (target text too big).
-Did not inline generateFunctionParams called from generateFunctionBody (target text too big).
 Did not inline join called from generateReturnStatement (target text too big).
 Did not inline generateFunctionParams called from generateFunctionBody (target text too big).
 Did not inline escapeAllowedCharacter called from escapeString (target text too big).
@@ -14,6 +13,8 @@ Did not inline escapeAllowedCharacter called from escapeString (target text too 
 Did not inline join called from generateLogicalOrBinaryExpression (target text too big).
 Did not inline join called from generateLogicalOrBinaryExpression (target text too big).
 Did not inline escapeAllowedCharacter called from escapeString (target text too big).
+Did not inline generateFunctionParams called from generateFunctionBody (target text too big).
+Did not inline generateFunctionParams called from generateFunctionBody (target text too big).
 Did not inline join called from generateIfStatement (target text too big).
 Did not inline join called from generateIfStatement (target text too big).
 Did not inline join called from generateIfStatement (target text too big).
