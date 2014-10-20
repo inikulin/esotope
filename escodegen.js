@@ -685,7 +685,7 @@ function generateFunctionParams($node) {
                     operator: '='
                 };
 
-                ExprGen.AssignmentExpression($fakeAssign, Settings.funcArg);
+                ExprGen.AssignmentExpression($fakeAssign, Preset.e4);
             }
 
             else {
@@ -693,7 +693,7 @@ function generateFunctionParams($node) {
                     _.js += $param.name;
 
                 else
-                    ExprGen[$param.type]($param, Settings.funcArg);
+                    ExprGen[$param.type]($param, Preset.e4);
             }
 
             if (i !== lastParamIdx)
@@ -722,7 +722,7 @@ function generateFunctionBody($node) {
     if ($node.expression) {
         _.js += _.optSpace;
 
-        var exprJs = exprToJs($body, Settings.funcBodyExpr);
+        var exprJs = exprToJs($body, Preset.e4);
 
         if (exprJs.charAt(0) === '{')
             exprJs = '(' + exprJs + ')';
@@ -732,7 +732,7 @@ function generateFunctionBody($node) {
 
     else {
         _.js += adoptionPrefix($body);
-        StmtGen[$body.type]($body, Settings.funcBodyStmt);
+        StmtGen[$body.type]($body, Preset.s8);
     }
 }
 
@@ -779,12 +779,11 @@ function generateLiteral($expr) {
 
 
 //-------------------------------------------------===------------------------------------------------------
-//                                Syntactic entities generation settings
+//                                Syntactic entities generation presets
 //-------------------------------------------------===------------------------------------------------------
 
-var Settings = {
-    //TODO e
-    sequenceExprChildren: function (allowIn) {
+var Preset = {
+    e1: function (allowIn) {
         return {
             precedence: Precedence.Assignment,
             allowIn: allowIn,
@@ -793,8 +792,7 @@ var Settings = {
         };
     },
 
-    //TODO e
-    conditionalExprTest: function (allowIn) {
+    e2: function (allowIn) {
         return {
             precedence: Precedence.LogicalOR,
             allowIn: allowIn,
@@ -803,116 +801,28 @@ var Settings = {
         };
     },
 
-    //TODO e
-    conditionalExprBranch: function (allowIn) {
-        return {
-            precedence: Precedence.Assignment,
-            allowIn: allowIn,
-            allowCall: true,
-            allowUnparenthesizedNew: void 0
-        };
-    },
-
-    //TODO e
-    callExprCallee: {
+    e3: {
         precedence: Precedence.Call,
         allowIn: true,
         allowCall: true,
         allowUnparenthesizedNew: false
     },
 
-    //TODO e
-    callExprArgs: {
+    e4: {
         precedence: Precedence.Assignment,
         allowIn: true,
         allowCall: true,
         allowUnparenthesizedNew: void 0
     },
 
-    //TODO s
-    blockStmtBodyItem: function (functionBody, semicolonOptional) {
-        return {
-            allowIn: true,
-            functionBody: false,
-            directiveContext: functionBody,
-            semicolonOptional: semicolonOptional
-        };
-    },
-
-    //TODO e
-    classBodyItem: {
+    e5: {
         precedence: Precedence.Sequence,
         allowIn: true,
         allowCall: true,
         allowUnparenthesizedNew: void 0
     },
 
-    //TODO e
-    classDeclarationSuperClass: {
-        precedence: Precedence.Assignment,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO s
-    classDeclarationBody: {
-        allowIn: true,
-        functionBody: false,
-        directiveContext: false,
-        semicolonOptional: true
-    },
-
-    //TODO e
-    varDeclarator: function (allowIn) {
-        return {
-            precedence: Precedence.Assignment,
-            allowIn: allowIn,
-            allowCall: true,
-            allowUnparenthesizedNew: void 0
-        };
-    },
-
-    //TODO s
-    varDeclaration: function (allowIn) {
-        return {
-            allowIn: allowIn,
-            functionBody: false,
-            directiveContext: false,
-            semicolonOptional: false
-        };
-    },
-
-    //TODO e
-    switchStmtDiscriminant: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO s
-    switchStmtCase: function (semicolonOptional) {
-        return {
-            allowIn: true,
-            functionBody: false,
-            directiveContext: false,
-            semicolonOptional: semicolonOptional
-        };
-    },
-
-    //TODO s
-    programBodyItem: function (semicolonOptional) {
-        return {
-            allowIn: true,
-            functionBody: false,
-            directiveContext: true,
-            semicolonOptional: semicolonOptional,
-        };
-    },
-
-    //TODO e
-    newExprCallee: function (allowUnparenthesizedNew) {
+    e6: function (allowUnparenthesizedNew) {
         return {
             precedence: Precedence.New,
             allowIn: true,
@@ -921,128 +831,35 @@ var Settings = {
         };
     },
 
-    //TODO e
-    newExprArg: {
-        precedence: Precedence.Assignment,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-
-    //TODO e
-    yieldExprArg: {
-        precedence: Precedence.Yield,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO e
-    prefixUpdateExprArg: {
+    e7: {
         precedence: Precedence.Unary,
         allowIn: true,
         allowCall: true,
         allowUnparenthesizedNew: void 0
     },
 
-    //TODO e
-    postfixUpdateExprArg: {
+    e8: {
         precedence: Precedence.Postfix,
         allowIn: true,
         allowCall: true,
         allowUnparenthesizedNew: void 0
     },
 
-    //TODO e
-    arrayExprElement: {
-        precedence: Precedence.Assignment,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO e
-    classExprId: {
+    e9: {
         precedence: void 0,
         allowIn: true,
         allowCall: true,
         allowUnparenthesizedNew: void 0
     },
 
-    //TODO e
-    classExprSuperClass: {
-        precedence: Precedence.Assignment,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO s
-    classExprBody: {
-        allowIn: true,
-        functionBody: false,
-        directiveContext: false,
-        semicolonOptional: true
-    },
-
-    //TODO e
-    propKey: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true
-    },
-
-    //TODO e
-    propVal: {
-        precedence: Precedence.Assignment,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO e
-    objPatternProp: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO s
-    comprBlockVarDeclaration: {
-        allowIn: false,
-        functionBody: false,
-        directiveContext: false,
-        semicolonOptional: false
-    },
-
-    //TODO e
-    comprBlockLeftExpr: {
+    e10: {
         precedence: Precedence.Call,
         allowIn: true,
         allowCall: true,
         allowUnparenthesizedNew: void 0
     },
 
-    //TODO e
-    comprBlockRightExpr: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO e
-    spreadElementArg: {
-        precedence: Precedence.Assignment,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO e
-    taggedTemplateExprTag: function (allowCall) {
+    e11: function (allowCall) {
         return {
             precedence: Precedence.Call,
             allowIn: true,
@@ -1051,313 +868,30 @@ var Settings = {
         };
     },
 
-    //TODO e
-    taggedTemplateExprQuasi: {
+    e12: {
         precedence: Precedence.Primary,
         allowIn: void 0,
         allowCall: void 0,
         allowUnparenthesizedNew: void 0
     },
 
-    //TODO e
-    templateLiteralQuasi: {
+    e13: {
         precedence: Precedence.Primary,
         allowIn: true,
         allowCall: true,
         allowUnparenthesizedNew: void 0
     },
 
-    //TODO e
-    templateLiteralExpr: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
 
-    //TODO e
-    throwStmtArg: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO e
-    objExprProperty: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true
-    },
-
-    //TODO s
-    doWhileStmtBody: {
-        allowIn: true,
-        functionBody: false,
-        directiveContext: false,
-        semicolonOptional: false
-    },
-
-    //TODO e
-    doWhileStmtTest: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO e
-    catchClauseGuard: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO e
-    catchClauseParam: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO s
-    catchClauseBody: {
-        allowIn: true,
-        functionBody: false,
-        directiveContext: false,
-        semicolonOptional: false
-    },
-
-    //TODO e
-    exprStmtExpr: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO e
-    ifStmtTest: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO s
-    ifStmtConseqWithAlt: {
-        allowIn: true,
-        functionBody: false,
-        directiveContext: false,
-        semicolonOptional: false
-    },
-
-    //TODO s
-    ifStmtAlt: function (semicolonOptional) {
-        return {
-            allowIn: true,
-            functionBody: false,
-            directiveContext: false,
-            semicolonOptional: semicolonOptional
-        };
-    },
-
-    //TODO s
-    ifStmtConseq: function (semicolonOptional) {
-        return {
-            allowIn: true,
-            functionBody: false,
-            directiveContext: false,
-            semicolonOptional: semicolonOptional
-        };
-    },
-
-    //TODO e
-    returnStmtArg: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO e
-    whileStmtTest: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO s
-    whileStmtBody: function (semicolonOptional) {
-        return {
-            allowIn: true,
-            functionBody: false,
-            directiveContext: false,
-            semicolonOptional: semicolonOptional
-        };
-    },
-
-    //TODO e
-    withStmtObj: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO s
-    withStmtBody: function (semicolonOptional) {
-        return {
-            allowIn: true,
-            functionBody: false,
-            directiveContext: false,
-            semicolonOptional: semicolonOptional
-        };
-    },
-
-    //TODO s
-    labeledStmtBody: function (semicolonOptional) {
-        return {
-            allowIn: true,
-            functionBody: false,
-            directiveContext: false,
-            semicolonOptional: semicolonOptional
-        };
-    },
-
-    //TODO s
-    forStmtVarInit: {
-        allowIn: false,
-        functionBody: false,
-        directiveContext: false,
-        semicolonOptional: false
-    },
-
-    //TODO e
-    forStmtInit: {
+    e14: {
         precedence: Precedence.Sequence,
         allowIn: false,
         allowCall: true,
         allowUnparenthesizedNew: void 0
     },
 
-    //TODO e
-    forStmtTest: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
 
-    //TODO e
-    forStmtUpdate: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO s
-    forStmtBody: function (semicolonOptional) {
-        return {
-            allowIn: true,
-            functionBody: false,
-            directiveContext: false,
-            semicolonOptional: semicolonOptional
-        };
-    },
-
-    //TODO e
-    switchCaseTest: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO s
-    switchCaseConseqBlock: {
-        allowIn: true,
-        functionBody: false,
-        directiveContext: false,
-        semicolonOptional: false
-    },
-
-    //TODO s
-    switchCaseConseq: function (semicolonOptional) {
-        return {
-            allowIn: true,
-            functionBody: false,
-            directiveContext: false,
-            semicolonOptional: semicolonOptional
-        };
-    },
-
-    //TODO e
-    exportDeclSpec: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO e
-    exportDeclDefaultDecl: {
-        precedence: Precedence.Assignment,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO s
-    exportDeclDecl: function (semicolonOptional) {
-        return {
-            allowIn: true,
-            functionBody: false,
-            directiveContext: false,
-            semicolonOptional: semicolonOptional
-        };
-    },
-
-    //TODO s
-    tryStmtBlock: {
-        allowIn: true,
-        functionBody: false,
-        directiveContext: false,
-        semicolonOptional: false
-    },
-
-    //TODO s
-    tryStmtHandler: {
-        allowIn: true,
-        functionBody: false,
-        directiveContext: false,
-        semicolonOptional: false
-    },
-
-    //TODO s
-    tryStmtFinalizer: {
-        allowIn: true,
-        functionBody: false,
-        directiveContext: false,
-        semicolonOptional: false
-    },
-
-    //TODO e
-    memberExprObj: function (allowCall) {
-        return {
-            precedence: Precedence.Call,
-            allowIn: true,
-            allowCall: allowCall,
-            allowUnparenthesizedNew: false
-        };
-    },
-
-    //TODO e
-    memberExprProp: function (allowCall) {
+    e15: function (allowCall) {
         return {
             precedence: Precedence.Sequence,
             allowIn: true,
@@ -1366,48 +900,7 @@ var Settings = {
         };
     },
 
-    //TODO e
-    importDeclSpec: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO e
-    genExprBody: {
-        precedence: Precedence.Assignment,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO e
-    genExprBlock: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO e
-    genExprFilter: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO e
-    unaryExprArg: {
-        precedence: Precedence.Unary,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO e
-    binExprOperand: function (precedence, allowIn) {
+    e16: function (precedence, allowIn) {
         return {
             precedence: precedence,
             allowIn: allowIn,
@@ -1416,42 +909,7 @@ var Settings = {
         };
     },
 
-    //TODO s
-    forIterVarDecl: {
-        allowIn: false,
-        functionBody: false,
-        directiveContext: false,
-        semicolonOptional: false
-    },
-
-    //TODO e
-    forStmtIterLeft: {
-        precedence: Precedence.Call,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO e
-    forStmtIterRight: {
-        precedence: Precedence.Sequence,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO s
-    forStmtIterBody: function (semicolonOptional) {
-        return {
-            allowIn: true,
-            functionBody: false,
-            directiveContext: false,
-            semicolonOptional: semicolonOptional
-        };
-    },
-
-    //TODO e
-    assignExprLeftOperand: function (allowIn) {
+    e17: function (allowIn) {
         return  {
             precedence: Precedence.Call,
             allowIn: allowIn,
@@ -1460,8 +918,7 @@ var Settings = {
         }
     },
 
-    //TODO e
-    assignExprRightOperand: function (allowIn) {
+    e18: function (allowIn) {
         return  {
             precedence: Precedence.Assignment,
             allowIn: allowIn,
@@ -1470,42 +927,73 @@ var Settings = {
         }
     },
 
-    //TODO e
-    funcBodyExpr: {
-        precedence: Precedence.Assignment,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO s
-    funcBodyStmt: {
-        allowIn: true,
-        functionBody: true,
-        directiveContext: false,
-        semicolonOptional: false
-    },
-
-    //TODO e
-    funcArg: {
-        precedence: Precedence.Assignment,
-        allowIn: true,
-        allowCall: true,
-        allowUnparenthesizedNew: void 0
-    },
-
-    //TODO e
-    exprInitial: {
+    e19: {
         precedence: Precedence.Sequence,
         allowIn: true,
         allowCall: true,
         semicolonOptional: false
     },
 
-    //TODO s
-    stmtInitial: {
+    s1: function (functionBody, semicolonOptional) {
+        return {
+            allowIn: true,
+            functionBody: false,
+            directiveContext: functionBody,
+            semicolonOptional: semicolonOptional
+        };
+    },
+
+    s2: {
         allowIn: true,
         functionBody: false,
+        directiveContext: false,
+        semicolonOptional: true
+    },
+
+    s3: function (allowIn) {
+        return {
+            allowIn: allowIn,
+            functionBody: false,
+            directiveContext: false,
+            semicolonOptional: false
+        };
+    },
+
+    s4: function (semicolonOptional) {
+        return {
+            allowIn: true,
+            functionBody: false,
+            directiveContext: false,
+            semicolonOptional: semicolonOptional
+        };
+    },
+
+    s5: function (semicolonOptional) {
+        return {
+            allowIn: true,
+            functionBody: false,
+            directiveContext: true,
+            semicolonOptional: semicolonOptional,
+        };
+    },
+
+    s6: {
+        allowIn: false,
+        functionBody: false,
+        directiveContext: false,
+        semicolonOptional: false
+    },
+
+    s7: {
+        allowIn: true,
+        functionBody: false,
+        directiveContext: false,
+        semicolonOptional: false
+    },
+
+    s8: {
+        allowIn: true,
+        functionBody: true,
         directiveContext: false,
         semicolonOptional: false
     }
@@ -1527,7 +1015,7 @@ function generateLogicalOrBinaryExpression($expr, settings) {
         precedence = BinaryPrecedence[$expr.operator],
         parenthesize = precedence < settings.precedence,
         allowIn = settings.allowIn || parenthesize,
-        operandGenSettings = Settings.binExprOperand(precedence, allowIn),
+        operandGenSettings = Preset.e16(precedence, allowIn),
         exprJs = exprToJs($expr.left, operandGenSettings);
 
     parenthesize |= op === 'in' && !allowIn;
@@ -1578,7 +1066,7 @@ function generateArrayPatternOrExpression($expr) {
                 _.js += itemPrefix;
 
             if ($elem)
-                ExprGen[$elem.type]($elem, Settings.arrayExprElement);
+                ExprGen[$elem.type]($elem, Preset.e4);
 
             if (i !== lastElemIdx || !$elem)
                 _.js += ',';
@@ -1609,14 +1097,14 @@ function generateGeneratorOrComprehensionExpression($expr) {
         $filter = $expr.filter,
         isGenerator = $expr.type === Syntax.GeneratorExpression,
         exprJs = isGenerator ? '(' : '[',
-        bodyJs = exprToJs($expr.body, Settings.genExprBody);
+        bodyJs = exprToJs($expr.body, Preset.e4);
 
     if ($blocks) {
         var prevIndent = shiftIndent(),
             blockCount = $blocks.length;
 
         for (var i = 0; i < blockCount; ++i) {
-            var blockJs = exprToJs($blocks[i], Settings.genExprBlock);
+            var blockJs = exprToJs($blocks[i], Preset.e5);
 
             exprJs = i > 0 ? join(exprJs, blockJs) : (exprJs + blockJs);
         }
@@ -1625,7 +1113,7 @@ function generateGeneratorOrComprehensionExpression($expr) {
     }
 
     if ($filter) {
-        var filterJs = exprToJs($filter, Settings.genExprFilter);
+        var filterJs = exprToJs($filter, Preset.e5);
 
         exprJs = join(exprJs, 'if' + _.optSpace);
         exprJs = join(exprJs, '(' + filterJs + ')');
@@ -1645,7 +1133,7 @@ var ExprRawGen = {
             childrenCount = $children.length,
             lastChildIdx = childrenCount - 1,
             parenthesize = Precedence.Sequence < settings.precedence,
-            exprGenSettings = Settings.sequenceExprChildren(settings.allowIn || parenthesize);
+            exprGenSettings = Preset.e1(settings.allowIn || parenthesize);
 
         if (parenthesize)
             _.js += '(';
@@ -1672,9 +1160,9 @@ var ExprRawGen = {
         if (parenthesize)
             _.js += '(';
 
-        ExprGen[$left.type]($left, Settings.assignExprLeftOperand(allowIn));
+        ExprGen[$left.type]($left, Preset.e17(allowIn));
         _.js += _.optSpace + $expr.operator + _.optSpace;
-        ExprGen[$right.type]($right, Settings.assignExprRightOperand(allowIn));
+        ExprGen[$right.type]($right, Preset.e18(allowIn));
 
         if (parenthesize)
             _.js += ')';
@@ -1698,8 +1186,8 @@ var ExprRawGen = {
             $alt = $expr.alternate,
             parenthesize = Precedence.Conditional < settings.precedence,
             allowIn = settings.allowIn || parenthesize,
-            testGenSettings = Settings.conditionalExprTest(allowIn),
-            branchGenSettings = Settings.conditionalExprBranch(allowIn);
+            testGenSettings = Preset.e2(allowIn),
+            branchGenSettings = Preset.e1(allowIn);
 
         if (parenthesize)
             _.js += '(';
@@ -1728,13 +1216,13 @@ var ExprRawGen = {
         if (parenthesize)
             _.js += '(';
 
-        ExprGen[$callee.type]($callee, Settings.callExprCallee);
+        ExprGen[$callee.type]($callee, Preset.e3);
         _.js += '(';
 
         for (var i = 0; i < argCount; ++i) {
             var $arg = $args[i];
 
-            ExprGen[$arg.type]($arg, Settings.callExprArgs);
+            ExprGen[$arg.type]($arg, Preset.e4);
 
             if (i !== lastArgIdx)
                 _.js += ',' + _.optSpace;
@@ -1754,7 +1242,7 @@ var ExprRawGen = {
             allowUnparenthesizedNew = settings.allowUnparenthesizedNew === void 0 ||
                                       settings.allowUnparenthesizedNew,
             withCall = !allowUnparenthesizedNew || parentheses || argCount > 0,
-            calleeJs = exprToJs($expr.callee, Settings.newExprCallee(!withCall));
+            calleeJs = exprToJs($expr.callee, Preset.e6(!withCall));
 
         if (parenthesize)
             _.js += '(';
@@ -1767,7 +1255,7 @@ var ExprRawGen = {
             for (var i = 0; i < argCount; ++i) {
                 var $arg = $args[i];
 
-                ExprGen[$arg.type]($arg, Settings.newExprArg);
+                ExprGen[$arg.type]($arg, Preset.e4);
 
                 if (i !== lastArgIdx)
                     _.js += ',' + _.optSpace;
@@ -1798,18 +1286,18 @@ var ExprRawGen = {
             //   4. Not hexadecimal OR octal number literal
             // then we should add a floating point.
 
-            var numJs = exprToJs($obj, Settings.memberExprObj(settings.allowCall)),
+            var numJs = exprToJs($obj, Preset.e11(settings.allowCall)),
                 withPoint = LAST_DECIMAL_DIGIT_REGEXP.test(numJs) && !FLOATING_OR_OCTAL_REGEXP.test(numJs);
 
             _.js += withPoint ? (numJs + '.') : numJs;
         }
 
         else
-            ExprGen[$obj.type]($obj, Settings.memberExprObj(settings.allowCall));
+            ExprGen[$obj.type]($obj, Preset.e11(settings.allowCall));
 
         if ($expr.computed) {
             _.js += '[';
-            ExprGen[$prop.type]($prop, Settings.memberExprProp(settings.allowCall));
+            ExprGen[$prop.type]($prop, Preset.e15(settings.allowCall));
             _.js += ']';
         }
 
@@ -1823,7 +1311,7 @@ var ExprRawGen = {
     UnaryExpression: function generateUnaryExpression($expr, settings) {
         var parenthesize = Precedence.Unary < settings.precedence,
             op = $expr.operator,
-            argJs = exprToJs($expr.argument, Settings.unaryExprArg);
+            argJs = exprToJs($expr.argument, Preset.e7);
 
         if (parenthesize)
             _.js += '(';
@@ -1863,7 +1351,7 @@ var ExprRawGen = {
             _.js += '(';
 
         if ($arg) {
-            var argJs = exprToJs($arg, Settings.yieldExprArg);
+            var argJs = exprToJs($arg, Preset.e4);
 
             js = join(js, argJs);
         }
@@ -1886,12 +1374,12 @@ var ExprRawGen = {
 
         if (prefix) {
             _.js += $op;
-            ExprGen[$arg.type]($arg, Settings.postfixUpdateExprArg);
+            ExprGen[$arg.type]($arg, Preset.e8);
 
         }
 
         else {
-            ExprGen[$arg.type]($arg, Settings.postfixUpdateExprArg);
+            ExprGen[$arg.type]($arg, Preset.e8);
             _.js += $op;
         }
 
@@ -1929,25 +1417,25 @@ var ExprRawGen = {
             exprJs = 'class';
 
         if ($id) {
-            var idJs = exprToJs($id, Settings.classExprId);
+            var idJs = exprToJs($id, Preset.e9);
 
             exprJs = join(exprJs, idJs);
         }
 
         if ($super) {
-            var superJs = exprToJs($super, Settings.classExprSuperClass);
+            var superJs = exprToJs($super, Preset.e4);
 
             superJs = join('extends', superJs);
             exprJs = join(exprJs, superJs);
         }
 
         _.js += exprJs + _.optSpace;
-        StmtGen[$body.type]($body, Settings.classExprBody);
+        StmtGen[$body.type]($body, Preset.s2);
     },
 
     MethodDefinition: function generateMethodDefinition($expr) {
         var exprJs = $expr['static'] ? 'static' + _.optSpace : '',
-            keyJs = exprToJs($expr.key, Settings.propKey);
+            keyJs = exprToJs($expr.key, Preset.e5);
 
         if ($expr.computed)
             keyJs = '[' + keyJs + ']';
@@ -1971,7 +1459,7 @@ var ExprRawGen = {
     Property: function generateProperty($expr) {
         var $val = $expr.value,
             $kind = $expr.kind,
-            keyJs = exprToJs($expr.key, Settings.propKey);
+            keyJs = exprToJs($expr.key, Preset.e5);
 
         if ($expr.computed)
             keyJs = '[' + keyJs + ']';
@@ -1992,7 +1480,7 @@ var ExprRawGen = {
 
             else {
                 _.js += keyJs + ':' + _.optSpace;
-                ExprGen[$val.type]($val, Settings.propVal);
+                ExprGen[$val.type]($val, Preset.e4);
             }
         }
     },
@@ -2012,7 +1500,7 @@ var ExprRawGen = {
                     propType = $prop.type || Syntax.Property;
 
                 _.js += _.newline + _.indent;
-                ExprGen[propType]($prop, Settings.objExprProperty);
+                ExprGen[propType]($prop, Preset.e5);
 
                 if (i !== lastPropIdx)
                     _.js += ',';
@@ -2057,7 +1545,7 @@ var ExprRawGen = {
                 if (multiline)
                     _.js += _.indent;
 
-                ExprGen[$prop.type]($prop, Settings.objPatternProp);
+                ExprGen[$prop.type]($prop, Preset.e5);
 
                 if (i !== lastPropIdx)
                     _.js += propSuffix;
@@ -2093,13 +1581,13 @@ var ExprRawGen = {
     ComprehensionBlock: function generateComprehensionBlock($expr) {
         var $left = $expr.left,
             leftJs = void 0,
-            rightJs = exprToJs($expr.right, Settings.comprBlockRightExpr);
+            rightJs = exprToJs($expr.right, Preset.e5);
 
         if ($left.type === Syntax.VariableDeclaration)
-            leftJs = $left.kind + _.space + stmtToJs($left.declarations[0], Settings.comprBlockVarDeclaration);
+            leftJs = $left.kind + _.space + stmtToJs($left.declarations[0], Preset.s6);
 
         else
-            leftJs = exprToJs($left, Settings.comprBlockLeftExpr);
+            leftJs = exprToJs($left, Preset.e10);
 
         leftJs = join(leftJs, $expr.of ? 'of' : 'in');
 
@@ -2110,7 +1598,7 @@ var ExprRawGen = {
         var $arg = $expr.argument;
 
         _.js += '...';
-        ExprGen[$arg.type]($arg, Settings.spreadElementArg);
+        ExprGen[$arg.type]($arg, Preset.e4);
     },
 
     TaggedTemplateExpression: function generateTaggedTemplateExpression($expr, settings) {
@@ -2121,8 +1609,8 @@ var ExprRawGen = {
         if (parenthesize)
             _.js += '(';
 
-        ExprGen[$tag.type]($tag, Settings.taggedTemplateExprTag(settings.allowCall));
-        ExprGen[$quasi.type]($quasi, Settings.taggedTemplateExprQuasi);
+        ExprGen[$tag.type]($tag, Preset.e11(settings.allowCall));
+        ExprGen[$quasi.type]($quasi, Preset.e12);
 
         if (parenthesize)
             _.js += ')';
@@ -2145,13 +1633,13 @@ var ExprRawGen = {
         for (var i = 0; i < quasiCount; ++i) {
             var $quasi = $quasis[i];
 
-            ExprGen[$quasi.type]($quasi, Settings.templateLiteralQuasi);
+            ExprGen[$quasi.type]($quasi, Preset.e13);
 
             if (i !== lastQuasiIdx) {
                 var $childExpr = $childExprs[i];
 
                 _.js += '${' + _.optSpace;
-                ExprGen[$childExpr.type]($childExpr, Settings.templateLiteralExpr);
+                ExprGen[$childExpr.type]($childExpr, Preset.e5);
                 _.js += _.optSpace + '}';
             }
         }
@@ -2176,7 +1664,7 @@ function generateTryStatementHandlers(stmtJs, $finalizer, handlers) {
         lastHandlerIdx = handlerCount - 1;
 
     for (var i = 0; i < handlerCount; ++i) {
-        var handlerJs = stmtToJs(handlers[i], Settings.tryStmtHandler);
+        var handlerJs = stmtToJs(handlers[i], Preset.s7);
 
         stmtJs = join(stmtJs, handlerJs);
 
@@ -2197,23 +1685,23 @@ function generateForStatementIterator($op, $stmt, settings) {
     if ($left.type === Syntax.VariableDeclaration) {
         var prevIndent2 = shiftIndent();
 
-        stmtJs += $left.kind + _.space + stmtToJs($left.declarations[0], Settings.forIterVarDecl);
+        stmtJs += $left.kind + _.space + stmtToJs($left.declarations[0], Preset.s6);
         _.indent = prevIndent2;
     }
 
     else
-        stmtJs += exprToJs($left, Settings.forStmtIterLeft);
+        stmtJs += exprToJs($left, Preset.e10);
 
     stmtJs = join(stmtJs, $op);
 
-    var rightJs = exprToJs($stmt.right, Settings.forStmtIterRight);
+    var rightJs = exprToJs($stmt.right, Preset.e5);
 
     stmtJs = join(stmtJs, rightJs) + ')';
 
     _.indent = prevIndent1;
 
     _.js += stmtJs + adoptionPrefix($body);
-    StmtGen[$body.type]($body, Settings.forStmtIterBody(bodySemicolonOptional));
+    StmtGen[$body.type]($body, Preset.s4(bodySemicolonOptional));
 }
 
 
@@ -2231,7 +1719,7 @@ var StmtRawGen = {
             var $item = $body[i];
 
             _.js += _.indent;
-            StmtGen[$item.type]($item, Settings.blockStmtBodyItem(settings.functionBody, i === lastIdx));
+            StmtGen[$item.type]($item, Preset.s1(settings.functionBody, i === lastIdx));
             _.js += _.newline;
         }
 
@@ -2274,7 +1762,7 @@ var StmtRawGen = {
                 itemType = $item.type || Syntax.Property;
 
             _.js += _.indent;
-            ExprGen[itemType]($item, Settings.classBodyItem);
+            ExprGen[itemType]($item, Preset.e5);
 
             if (i !== lastItemIdx)
                 _.js += _.newline;
@@ -2290,13 +1778,13 @@ var StmtRawGen = {
             js = 'class ' + $stmt.id.name;
 
         if ($super) {
-            var superJs = exprToJs($super, Settings.classDeclarationSuperClass);
+            var superJs = exprToJs($super, Preset.e4);
 
             js += _.space + join('extends', superJs);
         }
 
         _.js += js + _.optSpace;
-        StmtGen[$body.type]($body, Settings.classDeclarationBody);
+        StmtGen[$body.type]($body, Preset.s2);
     },
 
     DirectiveStatement: function generateDirectiveStatement($stmt, settings) {
@@ -2314,14 +1802,14 @@ var StmtRawGen = {
         var $body = $stmt.body,
             $test = $stmt.test,
             bodyJs = adoptionPrefix($body) +
-                     stmtToJs($body, Settings.doWhileStmtBody) +
+                     stmtToJs($body, Preset.s7) +
                      adoptionSuffix($body);
 
         //NOTE: Because `do 42 while (cond)` is Syntax Error. We need semicolon.
         var stmtJs = join('do', bodyJs);
 
         _.js += join(stmtJs, 'while' + _.optSpace + '(');
-        ExprGen[$test.type]($test, Settings.doWhileStmtTest);
+        ExprGen[$test.type]($test, Preset.e5);
         _.js += ')';
 
         if (semicolons || !settings.semicolonOptional)
@@ -2335,16 +1823,16 @@ var StmtRawGen = {
             prevIndent = shiftIndent();
 
         _.js += 'catch' + _.optSpace + '(';
-        ExprGen[$param.type]($param, Settings.catchClauseParam);
+        ExprGen[$param.type]($param, Preset.e5);
 
         if ($guard) {
             _.js += ' if ';
-            ExprGen[$guard.type]($guard, Settings.catchClauseGuard);
+            ExprGen[$guard.type]($guard, Preset.e5);
         }
 
         _.indent = prevIndent;
         _.js += ')' + adoptionPrefix($body);
-        StmtGen[$body.type]($body, Settings.catchClauseBody);
+        StmtGen[$body.type]($body, Preset.s7);
     },
 
     DebuggerStatement: function generateDebuggerStatement($stmt, settings) {
@@ -2365,7 +1853,7 @@ var StmtRawGen = {
 
         // export default AssignmentExpression[In] ;
         if ($stmt['default']) {
-            var declJs = exprToJs($decl, Settings.exportDeclDefaultDecl);
+            var declJs = exprToJs($decl, Preset.e4);
 
             _.js += join('export default', declJs);
 
@@ -2383,7 +1871,7 @@ var StmtRawGen = {
                 stmtJs += _.optSpace + '{' + _.optSpace + '}';
 
             else if ($specs[0].type === Syntax.ExportBatchSpecifier) {
-                var specJs = exprToJs($specs[0], Settings.exportDeclSpec);
+                var specJs = exprToJs($specs[0], Preset.e5);
 
                 stmtJs = join(stmtJs, specJs);
             }
@@ -2397,7 +1885,7 @@ var StmtRawGen = {
 
                 for (var i = 0; i < specCount; ++i) {
                     stmtJs += _.newline + _.indent;
-                    stmtJs += exprToJs($specs[i], Settings.exportDeclSpec);
+                    stmtJs += exprToJs($specs[i], Preset.e5);
 
                     if (i !== lastSpecIdx)
                         stmtJs += ',';
@@ -2419,14 +1907,14 @@ var StmtRawGen = {
         // export VariableStatement
         // export Declaration[Default]
         else if ($decl) {
-            var declJs = stmtToJs($decl, Settings.exportDeclDecl(!withSemicolon));
+            var declJs = stmtToJs($decl, Preset.s4(!withSemicolon));
 
             _.js += join('export', declJs);
         }
     },
 
     ExpressionStatement: function generateExpressionStatement($stmt, settings) {
-        var exprJs = exprToJs($stmt.expression, Settings.exprStmtExpr),
+        var exprJs = exprToJs($stmt.expression, Preset.e5),
             parenthesize = EXPR_STMT_UNALLOWED_EXPR_REGEXP.test(exprJs) ||
                            (directive &&
                             settings.directiveContext &&
@@ -2471,7 +1959,7 @@ var StmtRawGen = {
 
                 // import { ... } from "...";
                 if (firstNamedIdx === lastSpecIdx)
-                    stmtJs += _.optSpace + exprToJs($specs[firstNamedIdx], Settings.importDeclSpec) + _.optSpace;
+                    stmtJs += _.optSpace + exprToJs($specs[firstNamedIdx], Preset.e5) + _.optSpace;
 
                 else {
                     var prevIndent = shiftIndent();
@@ -2481,7 +1969,7 @@ var StmtRawGen = {
                     //    ...,
                     // } from "...";
                     for (var i = firstNamedIdx; i < specCount; i++) {
-                        stmtJs += _.newline + _.indent + exprToJs($specs[i], Settings.importDeclSpec);
+                        stmtJs += _.newline + _.indent + exprToJs($specs[i], Preset.e5);
 
                         if (i !== lastSpecIdx)
                             stmtJs += ',';
@@ -2508,7 +1996,7 @@ var StmtRawGen = {
     VariableDeclarator: function generateVariableDeclarator($stmt, settings) {
         var $id = $stmt.id,
             $init = $stmt.init,
-            genSettings = Settings.varDeclarator(settings.allowIn);
+            genSettings = Preset.e1(settings.allowIn);
 
         if ($init) {
             ExprGen[$id.type]($id, genSettings);
@@ -2529,7 +2017,7 @@ var StmtRawGen = {
         var $decls = $stmt.declarations,
             len = $decls.length,
             prevIndent = len > 1 ? shiftIndent() : _.indent,
-            declGenSettings = Settings.varDeclaration(settings.allowIn);
+            declGenSettings = Preset.s3(settings.allowIn);
 
         _.js += $stmt.kind;
 
@@ -2547,7 +2035,7 @@ var StmtRawGen = {
     },
 
     ThrowStatement: function generateThrowStatement($stmt, settings) {
-        var argJs = exprToJs($stmt.argument, Settings.throwStmtArg);
+        var argJs = exprToJs($stmt.argument, Preset.e5);
 
         _.js += join('throw', argJs);
 
@@ -2560,7 +2048,7 @@ var StmtRawGen = {
             $finalizer = $stmt.finalizer,
             stmtJs = 'try' +
                      adoptionPrefix($block) +
-                     stmtToJs($block, Settings.tryStmtBlock) +
+                     stmtToJs($block, Preset.s7) +
                      adoptionSuffix($block);
 
         var $handlers = $stmt.handlers || $stmt.guardedHandlers;
@@ -2575,7 +2063,7 @@ var StmtRawGen = {
 
         if ($finalizer) {
             stmtJs = join(stmtJs, 'finally' + adoptionPrefix($finalizer));
-            stmtJs += stmtToJs($finalizer, Settings.tryStmtFinalizer);
+            stmtJs += stmtToJs($finalizer, Preset.s7);
         }
 
         _.js += stmtJs;
@@ -2587,7 +2075,7 @@ var StmtRawGen = {
             prevIndent = shiftIndent();
 
         _.js += 'switch' + _.optSpace + '(';
-        ExprGen[$discr.type]($discr, Settings.switchStmtDiscriminant);
+        ExprGen[$discr.type]($discr, Preset.e5);
         _.js += ')' + _.optSpace + '{' + _.newline;
         _.indent = prevIndent;
 
@@ -2599,7 +2087,7 @@ var StmtRawGen = {
                 var $case = $cases[i];
 
                 _.js += _.indent;
-                StmtGen[$case.type]($case, Settings.switchStmtCase(i === lastCaseIdx));
+                StmtGen[$case.type]($case, Preset.s4(i === lastCaseIdx));
                 _.js += _.newline;
             }
         }
@@ -2618,7 +2106,7 @@ var StmtRawGen = {
             prevIndent = shiftIndent();
 
         if ($test) {
-            var testJs = exprToJs($test, Settings.switchCaseTest);
+            var testJs = exprToJs($test, Preset.e5);
 
             _.js += join('case', testJs) + ':';
         }
@@ -2630,7 +2118,7 @@ var StmtRawGen = {
         if (conseqCount && $firstConseq.type === Syntax.BlockStatement) {
             i++;
             _.js += adoptionPrefix($firstConseq);
-            StmtGen[$firstConseq.type]($firstConseq, Settings.switchCaseConseqBlock);
+            StmtGen[$firstConseq.type]($firstConseq, Preset.s7);
         }
 
         for (; i < conseqCount; i++) {
@@ -2638,7 +2126,7 @@ var StmtRawGen = {
                 semicolonOptional = i === lastConseqIdx && conseqSemicolonOptional;
 
             _.js += _.newline + _.indent;
-            StmtGen[$conseq.type]($conseq, Settings.switchCaseConseq(semicolonOptional));
+            StmtGen[$conseq.type]($conseq, Preset.s4(semicolonOptional));
         }
 
         _.indent = prevIndent;
@@ -2651,14 +2139,14 @@ var StmtRawGen = {
             semicolonOptional = !semicolons && settings.semicolonOptional;
 
         _.js += 'if' + _.optSpace + '(';
-        ExprGen[$test.type]($test, Settings.ifStmtTest);
+        ExprGen[$test.type]($test, Preset.e5);
         _.js += ')';
         _.indent = prevIndent;
         _.js += adoptionPrefix($conseq);
 
         if ($stmt.alternate) {
-            var conseq = stmtToJs($conseq, Settings.ifStmtConseqWithAlt) + adoptionSuffix($conseq),
-                alt = stmtToJs($stmt.alternate, Settings.ifStmtAlt(semicolonOptional));
+            var conseq = stmtToJs($conseq, Preset.s7) + adoptionSuffix($conseq),
+                alt = stmtToJs($stmt.alternate, Preset.s4(semicolonOptional));
 
             if ($stmt.alternate.type === Syntax.IfStatement)
                 alt = 'else ' + alt;
@@ -2670,7 +2158,7 @@ var StmtRawGen = {
         }
 
         else
-            StmtGen[$conseq.type]($conseq, Settings.ifStmtConseq(semicolonOptional));
+            StmtGen[$conseq.type]($conseq, Preset.s4(semicolonOptional));
     },
 
     ForStatement: function generateForStatement($stmt, settings) {
@@ -2685,10 +2173,10 @@ var StmtRawGen = {
 
         if ($init) {
             if ($init.type === Syntax.VariableDeclaration)
-                StmtGen[$init.type]($init, Settings.forStmtVarInit);
+                StmtGen[$init.type]($init, Preset.s6);
 
             else {
-                ExprGen[$init.type]($init, Settings.forStmtInit);
+                ExprGen[$init.type]($init, Preset.e14);
                 _.js += ';';
             }
         }
@@ -2698,20 +2186,20 @@ var StmtRawGen = {
 
         if ($test) {
             _.js += _.optSpace;
-            ExprGen[$test.type]($test, Settings.forStmtTest);
+            ExprGen[$test.type]($test, Preset.e5);
         }
 
         _.js += ';';
 
         if ($update) {
             _.js += _.optSpace;
-            ExprGen[$update.type]($update, Settings.forStmtUpdate);
+            ExprGen[$update.type]($update, Preset.e5);
         }
 
         _.js += ')';
         _.indent = prevIndent;
         _.js += adoptionPrefix($body);
-        StmtGen[$body.type]($body, Settings.forStmtBody(bodySemicolonOptional));
+        StmtGen[$body.type]($body, Preset.s4(bodySemicolonOptional));
     },
 
     ForInStatement: function generateForInStatement($stmt, settings) {
@@ -2732,7 +2220,7 @@ var StmtRawGen = {
         if ($body.type !== Syntax.BlockStatement)
             prevIndent = shiftIndent();
 
-        StmtGen[$body.type]($body, Settings.labeledStmtBody(bodySemicolonOptional));
+        StmtGen[$body.type]($body, Preset.s4(bodySemicolonOptional));
         _.indent = prevIndent;
     },
 
@@ -2756,7 +2244,7 @@ var StmtRawGen = {
             var $item = $body[i];
 
             _.js += _.indent;
-            StmtGen[$item.type]($item, Settings.programBodyItem(!safeConcatenation && i === lastIdx));
+            StmtGen[$item.type]($item, Preset.s5(!safeConcatenation && i === lastIdx));
 
             if (i !== lastIdx)
                 _.js += _.newline;
@@ -2775,7 +2263,7 @@ var StmtRawGen = {
         var $arg = $stmt.argument;
 
         if ($arg) {
-            var argJs = exprToJs($arg, Settings.returnStmtArg);
+            var argJs = exprToJs($arg, Preset.e5);
 
             _.js += join('return', argJs);
         }
@@ -2794,12 +2282,12 @@ var StmtRawGen = {
             prevIndent = shiftIndent();
 
         _.js += 'while' + _.optSpace + '(';
-        ExprGen[$test.type]($test, Settings.whileStmtTest);
+        ExprGen[$test.type]($test, Preset.e5);
         _.js += ')';
         _.indent = prevIndent;
 
         _.js += adoptionPrefix($body);
-        StmtGen[$body.type]($body, Settings.whileStmtBody(bodySemicolonOptional));
+        StmtGen[$body.type]($body, Preset.s4(bodySemicolonOptional));
     },
 
     WithStatement: function generateWithStatement($stmt, settings) {
@@ -2809,11 +2297,11 @@ var StmtRawGen = {
             prevIndent = shiftIndent();
 
         _.js += 'with' + _.optSpace + '(';
-        ExprGen[$obj.type]($obj, Settings.withStmtObj);
+        ExprGen[$obj.type]($obj, Preset.e5);
         _.js += ')';
         _.indent = prevIndent;
         _.js += adoptionPrefix($body);
-        StmtGen[$body.type]($body, Settings.withStmtBody(bodySemicolonOptional));
+        StmtGen[$body.type]($body, Preset.s4(bodySemicolonOptional));
     }
 };
 
@@ -2851,10 +2339,10 @@ function run($node) {
     _.js = '';
 
     if (StmtGen[$node.type])
-        StmtGen[$node.type]($node, Settings.stmtInitial);
+        StmtGen[$node.type]($node, Preset.s7);
 
     else
-        ExprGen[$node.type]($node, Settings.exprInitial);
+        ExprGen[$node.type]($node, Preset.e19);
 
     return _.js;
 }
