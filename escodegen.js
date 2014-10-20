@@ -291,11 +291,6 @@ function isDecimalDigit(cp) {
     return cp >= 48 && cp <= 57;
 }
 
-
-function fatalError(msg) {
-    throw new Error(msg);
-}
-
 function stringRepeat(str, num) {
     var result = '';
 
@@ -342,13 +337,6 @@ function updateDeeply(target, override) {
 
 function generateNumber(value) {
     var result, point, temp, exponent, pos;
-
-    if (value !== value) {
-        fatalError('Numeric literal whose value is NaN');
-    }
-    if (value < 0 || (value === 0 && 1 / value < 0)) {
-        fatalError('Numeric literal whose value is negative');
-    }
 
     if (value === 1 / 0) {
         return json ? 'null' : renumber ? '1e400' : '1e+400';
@@ -517,8 +505,6 @@ function escapeDisallowedCharacter(code) {
         case 0x2029:
             result += 'u2029';
             break;
-        default:
-            fatalError('Incorrectly classified character');
     }
 
     return result;
