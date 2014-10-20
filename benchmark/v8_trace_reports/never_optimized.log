@@ -1,4 +1,4 @@
-[disabled optimization for 15D2E491 <SharedFunctionInfo IN>, reason: Call to a JavaScript runtime function]
-[disabled optimization for 15D2EF65 <SharedFunctionInfo ToName>, reason: Call to a JavaScript runtime function]
-[disabled optimization for 15D312AD <SharedFunctionInfo toString>, reason: Inlined runtime function: ClassOf]
-[disabled optimization for 15D2EFF1 <SharedFunctionInfo ToObject>, reason: Call to a JavaScript runtime function]
+[disabled optimization for 3C32E491 <SharedFunctionInfo IN>, reason: Call to a JavaScript runtime function]
+[disabled optimization for 3C32EF65 <SharedFunctionInfo ToName>, reason: Call to a JavaScript runtime function]
+[disabled optimization for 3C3312AD <SharedFunctionInfo toString>, reason: Inlined runtime function: ClassOf]
+[disabled optimization for 3C32EFF1 <SharedFunctionInfo ToObject>, reason: Call to a JavaScript runtime function]

@@ -751,32 +751,6 @@ function canUseRawLiteral($expr) {
     return false;
 }
 
-function generateLiteral($expr) {
-    if (parse && extra.raw && canUseRawLiteral($expr)) {
-        return $expr.raw;
-    }
-
-    if ($expr.value === null) {
-        return 'null';
-    }
-
-    var valueType = typeof $expr.value;
-
-    if (valueType === 'string') {
-        return escapeString($expr.value);
-    }
-
-    if (valueType === 'number') {
-        return generateNumber($expr.value);
-    }
-
-    if (valueType === 'boolean') {
-        return $expr.value ? 'true' : 'false';
-    }
-
-    return generateRegExp($expr.value);
-}
-
 
 //-------------------------------------------------===------------------------------------------------------
 //                                Syntactic entities generation presets
@@ -1570,8 +1544,28 @@ var ExprRawGen = {
 
     ExportSpecifier: generateImportOrExportSpecifier,
 
-    Literal: function ($expr) {
-        _.js += generateLiteral($expr);
+    Literal: function generateLiteral($expr) {
+        if (parse && extra.raw && canUseRawLiteral($expr))
+            _.js += $expr.raw;
+
+        else if ($expr.value === null)
+            _.js += 'null';
+
+        else {
+            var valueType = typeof $expr.value;
+
+            if (valueType === 'string')
+                _.js += escapeString($expr.value);
+
+            else if (valueType === 'number')
+                _.js += generateNumber($expr.value);
+
+            else if (valueType === 'boolean')
+                _.js += $expr.value ? 'true' : 'false';
+
+            else
+                _.js += generateRegExp($expr.value);
+        }
     },
 
     GeneratorExpression: generateGeneratorOrComprehensionExpression,
@@ -1895,10 +1889,13 @@ var StmtRawGen = {
                 stmtJs += _.newline + _.indent + '}';
             }
 
-            if ($stmt.source)
-                stmtJs = join(stmtJs, 'from' + _.optSpace + generateLiteral($stmt.source));
+            if ($stmt.source) {
+                _.js += join(stmtJs, 'from' + _.optSpace);
+                ExprGen.Literal($stmt.source);
+            }
 
-            _.js += stmtJs;
+            else
+                _.js += stmtJs;
 
             if (withSemicolon)
                 _.js += ';';
@@ -1985,12 +1982,11 @@ var StmtRawGen = {
             stmtJs = join(stmtJs, 'from')
         }
 
-        stmtJs += _.optSpace + generateLiteral($stmt.source);
+        _.js += stmtJs + _.optSpace;
+        ExprGen.Literal($stmt.source);
 
         if (semicolons || !settings.semicolonOptional)
-            stmtJs += ';';
-
-        _.js += stmtJs;
+            _.js += ';';
     },
 
     VariableDeclarator: function generateVariableDeclarator($stmt, settings) {
@@ -2225,8 +2221,9 @@ var StmtRawGen = {
     },
 
     ModuleDeclaration: function generateModuleDeclaration($stmt, settings) {
-        _.js += 'module' + _.space + $stmt.id.name + _.space +
-                'from' + _.optSpace + generateLiteral($stmt.source);
+        _.js += 'module' + _.space + $stmt.id.name + _.space + 'from' + _.optSpace;
+
+        ExprGen.Literal($stmt.source);
 
         if (semicolons || !settings.semicolonOptional)
             _.js += ';';
