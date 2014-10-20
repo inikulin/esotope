@@ -1,6 +1,6 @@
 var Benchmark = require('benchmark'),
     escodegen = require('escodegen'),
-    esotope = require('../escodegen'),
+    esotope = require('../esotope'),
     asts = require('./asts');
 
 
