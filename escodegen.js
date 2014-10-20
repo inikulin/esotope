@@ -49,9 +49,6 @@ var isArray,
     FORMAT_MINIFY,
     FORMAT_DEFAULTS;
 
-var esutils = require('esutils');
-
-
 var Syntax = {
     AssignmentExpression: 'AssignmentExpression',
     ArrayExpression: 'ArrayExpression',
@@ -204,6 +201,13 @@ function getDefaultOptions() {
 //                                            Lexical utils
 //-------------------------------------------------===------------------------------------------------------
 
+//Const
+var NON_ASCII_WHITESPACES = [
+    0x1680, 0x180E, 0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005,
+    0x2006, 0x2007, 0x2008, 0x2009, 0x200A, 0x202F, 0x205F, 0x3000,
+    0xFEFF
+];
+
 //Regular expressions
 var NON_ASCII_IDENTIFIER_CHARACTERS_REGEXP = new RegExp(
     '[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376' +
@@ -272,6 +276,19 @@ function isIdentifierCh(cp) {
     var ch = String.fromCharCode(cp);
 
     return NON_ASCII_IDENTIFIER_CHARACTERS_REGEXP.test(ch);
+}
+
+function isLineTerminator(cp) {
+    return cp === 0x0A || cp === 0x0D || cp === 0x2028 || cp === 0x2029;
+}
+
+function isWhitespace(cp) {
+    return cp === 0x20 || cp === 0x09 || isLineTerminator(cp) || cp === 0x0B || cp === 0x0C || cp === 0xA0 ||
+           (cp >= 0x1680 && NON_ASCII_WHITESPACES.indexOf(cp) >= 0);
+}
+
+function isDecimalDigit(cp) {
+    return cp >= 48 && cp <= 57;
 }
 
 
@@ -462,7 +479,7 @@ function escapeAllowedCharacter(code, next) {
                 result += 'u' + '0000'.slice(hex.length) + hex;
             }
 
-            else if (code === 0x0000 && !esutils.code.isDecimalDigit(next)) {
+            else if (code === 0x0000 && !isDecimalDigit(next)) {
                 result += '0';
             }
 
@@ -538,7 +555,7 @@ function escapeString(str) {
             ++doubleQuotes;
         } else if (code === 0x2F && json) { // /
             result += '\\';
-        } else if (esutils.code.isLineTerminator(code) || code === 0x5C) { // \
+        } else if (isLineTerminator(code) || code === 0x5C) { // \
             result += escapeDisallowedCharacter(code);
             continue;
         } else if ((json && code < 0x20) ||                                     // SP
@@ -571,28 +588,26 @@ function escapeString(str) {
 }
 
 
-function join(left, right) {
-    if (!left.length)
-        return right;
+function join(l, r) {
+    if (!l.length)
+        return r;
 
-    if (!right.length)
-        return left;
+    if (!r.length)
+        return l;
 
-    var leftCp = left.charCodeAt(left.length - 1),
-        rightCp = right.charCodeAt(0);
+    var lCp = l.charCodeAt(l.length - 1),
+        rCp = r.charCodeAt(0);
 
-    if (isIdentifierCh(leftCp) && isIdentifierCh(rightCp) ||
-        leftCp === rightCp && (leftCp === 0x2B || leftCp === 0x2D) ||   // + +, - -
-        leftCp === 0x2F && rightCp === 0x69) {                          // /re/ instanceof foo
-        return left + _.space + right;
+    if (isIdentifierCh(lCp) && isIdentifierCh(rCp) ||
+        lCp === rCp && (lCp === 0x2B || lCp === 0x2D) ||   // + +, - -
+        lCp === 0x2F && rCp === 0x69) {                    // /re/ instanceof foo
+        return l + _.space + r;
     }
 
-    else if (esutils.code.isWhiteSpace(leftCp) || esutils.code.isLineTerminator(leftCp) ||
-             esutils.code.isWhiteSpace(rightCp) || esutils.code.isLineTerminator(rightCp)) {
-        return left + right;
-    }
+    else if (isWhitespace(lCp) || isWhitespace(rCp))
+        return l + r;
 
-    return left + _.optSpace + right;
+    return l + _.optSpace + r;
 }
 
 function shiftIndent() {
@@ -1736,7 +1751,8 @@ var ExprRawGen = {
             parenthesize = Precedence.New < settings.precedence,
             argCount = $args.length,
             lastArgIdx = argCount - 1,
-            allowUnparenthesizedNew = settings.allowUnparenthesizedNew === void 0 || settings.allowUnparenthesizedNew,
+            allowUnparenthesizedNew = settings.allowUnparenthesizedNew === void 0 ||
+                                      settings.allowUnparenthesizedNew,
             withCall = !allowUnparenthesizedNew || parentheses || argCount > 0,
             calleeJs = exprToJs($expr.callee, Settings.newExprCallee(!withCall));
 
