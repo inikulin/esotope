@@ -748,7 +748,7 @@ var Preset = {
             precedence: Precedence.Assignment,
             allowIn: allowIn,
             allowCall: true,
-            allowUnparenthesizedNew: void 0
+            allowUnparenthesizedNew: true
         };
     },
 
@@ -757,7 +757,7 @@ var Preset = {
             precedence: Precedence.LogicalOR,
             allowIn: allowIn,
             allowCall: true,
-            allowUnparenthesizedNew: void 0
+            allowUnparenthesizedNew: true
         };
     },
 
@@ -772,14 +772,14 @@ var Preset = {
         precedence: Precedence.Assignment,
         allowIn: true,
         allowCall: true,
-        allowUnparenthesizedNew: void 0
+        allowUnparenthesizedNew: true
     },
 
     e5: {
         precedence: Precedence.Sequence,
         allowIn: true,
         allowCall: true,
-        allowUnparenthesizedNew: void 0
+        allowUnparenthesizedNew: true
     },
 
     e6: function (allowUnparenthesizedNew) {
@@ -795,28 +795,28 @@ var Preset = {
         precedence: Precedence.Unary,
         allowIn: true,
         allowCall: true,
-        allowUnparenthesizedNew: void 0
+        allowUnparenthesizedNew: true
     },
 
     e8: {
         precedence: Precedence.Postfix,
         allowIn: true,
         allowCall: true,
-        allowUnparenthesizedNew: void 0
+        allowUnparenthesizedNew: true
     },
 
     e9: {
         precedence: void 0,
         allowIn: true,
         allowCall: true,
-        allowUnparenthesizedNew: void 0
+        allowUnparenthesizedNew: true
     },
 
     e10: {
         precedence: Precedence.Call,
         allowIn: true,
         allowCall: true,
-        allowUnparenthesizedNew: void 0
+        allowUnparenthesizedNew: true
     },
 
     e11: function (allowCall) {
@@ -830,16 +830,16 @@ var Preset = {
 
     e12: {
         precedence: Precedence.Primary,
-        allowIn: void 0,
-        allowCall: void 0,
-        allowUnparenthesizedNew: void 0
+        allowIn: false,
+        allowCall: false,
+        allowUnparenthesizedNew: true
     },
 
     e13: {
         precedence: Precedence.Primary,
         allowIn: true,
         allowCall: true,
-        allowUnparenthesizedNew: void 0
+        allowUnparenthesizedNew: true
     },
 
 
@@ -847,7 +847,7 @@ var Preset = {
         precedence: Precedence.Sequence,
         allowIn: false,
         allowCall: true,
-        allowUnparenthesizedNew: void 0
+        allowUnparenthesizedNew: true
     },
 
 
@@ -856,7 +856,7 @@ var Preset = {
             precedence: Precedence.Sequence,
             allowIn: true,
             allowCall: allowCall,
-            allowUnparenthesizedNew: void 0
+            allowUnparenthesizedNew: true
         };
     },
 
@@ -865,7 +865,7 @@ var Preset = {
             precedence: precedence,
             allowIn: allowIn,
             allowCall: true,
-            allowUnparenthesizedNew: void 0
+            allowUnparenthesizedNew: true
         };
     },
 
@@ -874,7 +874,7 @@ var Preset = {
             precedence: Precedence.Call,
             allowIn: allowIn,
             allowCall: true,
-            allowUnparenthesizedNew: void 0
+            allowUnparenthesizedNew: true
         }
     },
 
@@ -883,7 +883,7 @@ var Preset = {
             precedence: Precedence.Assignment,
             allowIn: allowIn,
             allowCall: true,
-            allowUnparenthesizedNew: void 0
+            allowUnparenthesizedNew: true
         }
     },
 
@@ -1199,9 +1199,7 @@ var ExprRawGen = {
             parenthesize = Precedence.New < settings.precedence,
             argCount = $args.length,
             lastArgIdx = argCount - 1,
-            allowUnparenthesizedNew = settings.allowUnparenthesizedNew === void 0 ||
-                                      settings.allowUnparenthesizedNew,
-            withCall = !allowUnparenthesizedNew || parentheses || argCount > 0,
+            withCall = !settings.allowUnparenthesizedNew || parentheses || argCount > 0,
             calleeJs = exprToJs($expr.callee, Preset.e6(!withCall));
 
         if (parenthesize)
