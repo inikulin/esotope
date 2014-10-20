@@ -204,9 +204,7 @@ function getDefaultOptions() {
 //                                            Lexical utils
 //-------------------------------------------------===------------------------------------------------------
 
-/**
- * Regular expressions
- */
+//Regular expressions
 var NON_ASCII_IDENTIFIER_CHARACTERS_REGEXP = new RegExp(
     '[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376' +
     '\u0377\u037A-\u037D\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u0487\u048A-' +
@@ -260,9 +258,8 @@ var NON_ASCII_IDENTIFIER_CHARACTERS_REGEXP = new RegExp(
     '\uFFD7\uFFDA-\uFFDC]'
 );
 
-/**
- * Check for ECMAScript identifier valid character
- */
+
+//Methods
 function isIdentifierCh(cp) {
     if (cp < 0x80) {
         return cp >= 97 && cp <= 122 ||      // a..z
@@ -346,7 +343,8 @@ function generateNumber(value) {
     }
 
     point = result.indexOf('.');
-    if (!json && result.charCodeAt(0) === 0x30  /* 0 */ && point === 1) {
+    //NOTE: 0x30 == '0'
+    if (!json && result.charCodeAt(0) === 0x30 && point === 1) {
         point = 0;
         result = result.slice(1);
     }
@@ -362,7 +360,9 @@ function generateNumber(value) {
         temp = +(temp.slice(0, point) + temp.slice(point + 1)) + '';
     }
     pos = 0;
-    while (temp.charCodeAt(temp.length + pos - 1) === 0x30  /* 0 */) {
+
+    //NOTE: 0x30 == '0'
+    while (temp.charCodeAt(temp.length + pos - 1) === 0x30) {
         --pos;
     }
     if (pos !== 0) {
@@ -447,27 +447,30 @@ function escapeAllowedCharacter(code, next) {
     var hex, result = '\\';
 
     switch (code) {
-        case 0x08  /* \b */
-        :
+        case 0x08:          // \b
             result += 'b';
             break;
-        case 0x0C  /* \f */
-        :
+        case 0x0C:          // \f
             result += 'f';
             break;
-        case 0x09  /* \t */
-        :
+        case 0x09:          // \t
             result += 't';
             break;
         default:
             hex = code.toString(16).toUpperCase();
             if (json || code > 0xFF) {
                 result += 'u' + '0000'.slice(hex.length) + hex;
-            } else if (code === 0x0000 && !esutils.code.isDecimalDigit(next)) {
+            }
+
+            else if (code === 0x0000 && !esutils.code.isDecimalDigit(next)) {
                 result += '0';
-            } else if (code === 0x000B  /* \v */) { // '\v'
+            }
+
+            else if (code === 0x000B) {     // \v
                 result += 'x0B';
-            } else {
+            }
+
+            else {
                 result += 'x' + '00'.slice(hex.length) + hex;
             }
             break;
@@ -479,15 +482,15 @@ function escapeAllowedCharacter(code, next) {
 function escapeDisallowedCharacter(code) {
     var result = '\\';
     switch (code) {
-        case 0x5C  /* \ */
+        case 0x5C       // \
         :
             result += '\\';
             break;
-        case 0x0A  /* \n */
+        case 0x0A       // \n
         :
             result += 'n';
             break;
-        case 0x0D  /* \r */
+        case 0x0D       // \r
         :
             result += 'r';
             break;
@@ -510,13 +513,13 @@ function escapeDirective(str) {
     quote = quotes === 'double' ? '"' : '\'';
     for (i = 0, iz = str.length; i < iz; ++i) {
         code = str.charCodeAt(i);
-        if (code === 0x27  /* ' */) {
+        if (code === 0x27) {            // '
             quote = '"';
             break;
-        } else if (code === 0x22  /* " */) {
+        } else if (code === 0x22) {     // "
             quote = '\'';
             break;
-        } else if (code === 0x5C  /* \ */) {
+        } else if (code === 0x5C) {     // \
             ++i;
         }
     }
@@ -529,17 +532,17 @@ function escapeString(str) {
     //TODO http://jsperf.com/character-counting/8
     for (i = 0, len = str.length; i < len; ++i) {
         code = str.charCodeAt(i);
-        if (code === 0x27  /* ' */) {
+        if (code === 0x27) {           // '
             ++singleQuotes;
-        } else if (code === 0x22  /* " */) {
+        } else if (code === 0x22) { // "
             ++doubleQuotes;
-        } else if (code === 0x2F  /* / */ && json) {
+        } else if (code === 0x2F && json) { // /
             result += '\\';
-        } else if (esutils.code.isLineTerminator(code) || code === 0x5C  /* \ */) {
+        } else if (esutils.code.isLineTerminator(code) || code === 0x5C) { // \
             result += escapeDisallowedCharacter(code);
             continue;
-        } else if ((json && code < 0x20  /* SP */) ||
-                   !(json || escapeless || (code >= 0x20  /* SP */ && code <= 0x7E  /* ~ */))) {
+        } else if ((json && code < 0x20) ||                                     // SP
+                   !(json || escapeless || (code >= 0x20 && code <= 0x7E))) {   // SP, ~
             result += escapeAllowedCharacter(code, str.charCodeAt(i + 1));
             continue;
         }
@@ -558,7 +561,7 @@ function escapeString(str) {
 
     for (i = 0, len = str.length; i < len; ++i) {
         code = str.charCodeAt(i);
-        if ((code === 0x27  /* ' */ && single) || (code === 0x22  /* " */ && !single)) {
+        if ((code === 0x27 && single) || (code === 0x22 && !single)) {    // ', "
             result += '\\';
         }
         result += String.fromCharCode(code);
@@ -616,9 +619,7 @@ function adoptionSuffix($stmt) {
     return _.newline + _.indent;
 }
 
-/**
- * Subentities generators
- */
+//Subentities generators
 function generateVerbatim($expr, settings) {
     var verbatim = $expr[extra.verbatim],
         strVerbatim = typeof verbatim === 'string',
@@ -652,7 +653,7 @@ function generateFunctionParams($node) {
                                    paramCount === 1 &&
                                    $params[0].type === Syntax.Identifier;
 
-    // arg => { } case
+    //NOTE: arg => { } case
     if (arrowFuncWithSingleParam)
         _.js += $params[0].name;
 
@@ -728,7 +729,7 @@ function canUseRawLiteral($expr) {
 
             return raw.type === Syntax.Literal && raw.value === $expr.value;
         } catch (e) {
-            // not use raw property
+            //NOTE: not use raw property
         }
     }
 
@@ -1500,16 +1501,12 @@ var Settings = {
 //                                             Expressions
 //-------------------------------------------------===-------------------------------------------------------
 
-/**
- * Regular expressions
- */
+//Regular expressions
 var FLOATING_OR_OCTAL_REGEXP = /[.eExX]|^0[0-9]+|/,
     LAST_DECIMAL_DIGIT_REGEXP = /[0-9]$/;
 
 
-/**
- *  Common expression generators
- */
+//Common expression generators
 function generateLogicalOrBinaryExpression($expr, settings) {
     var op = $expr.operator,
         precedence = BinaryPrecedence[$expr.operator],
@@ -1523,7 +1520,8 @@ function generateLogicalOrBinaryExpression($expr, settings) {
     if (parenthesize)
         _.js += '(';
 
-    if (exprJs.charCodeAt(exprJs.length - 1) === 0x2F /* / */ && isIdentifierCh(op.charCodeAt(0)))
+    // 0x2F = '/'
+    if (exprJs.charCodeAt(exprJs.length - 1) === 0x2F && isIdentifierCh(op.charCodeAt(0)))
         exprJs = exprJs + _.space + op;
 
     else
@@ -1533,7 +1531,7 @@ function generateLogicalOrBinaryExpression($expr, settings) {
 
     var rightJs = exprToJs($expr.right, operandGenSettings);
 
-    // If '/' concats with '/' or `<` concats with `!--`, it is interpreted as comment start
+    //NOTE: If '/' concats with '/' or `<` concats with `!--`, it is interpreted as comment start
     if (op === '/' && rightJs.charAt(0) === '/' || op.slice(-1) === '<' && rightJs.slice(0, 3) === '!--')
         exprJs += _.space + rightJs;
 
@@ -1591,7 +1589,7 @@ function generateImportOrExportSpecifier($expr) {
 }
 
 function generateGeneratorOrComprehensionExpression($expr) {
-    // GeneratorExpression should be parenthesized with (...), ComprehensionExpression with [...]
+    //NOTE: GeneratorExpression should be parenthesized with (...), ComprehensionExpression with [...]
     var $blocks = $expr.blocks,
         $filter = $expr.filter,
         isGenerator = $expr.type === Syntax.GeneratorExpression,
@@ -1625,9 +1623,7 @@ function generateGeneratorOrComprehensionExpression($expr) {
 }
 
 
-/**
- * Expression raw generator dictionary
- */
+//Expression raw generator dictionary
 var ExprRawGen = {
     SequenceExpression: function generateSequenceExpression($expr, settings) {
         var $children = $expr.expressions,
@@ -1779,12 +1775,12 @@ var ExprRawGen = {
 
         if (isNumObj) {
 
-            // When the following conditions are all true:
+            //NOTE: When the following conditions are all true:
             //   1. No floating point
             //   2. Don't have exponents
             //   3. The last character is a decimal digit
             //   4. Not hexadecimal OR octal number literal
-            // we should add a floating point.
+            // then we should add a floating point.
 
             var numJs = exprToJs($obj, Settings.memberExprObj(settings.allowCall)),
                 withPoint = LAST_DECIMAL_DIGIT_REGEXP.test(numJs) && !FLOATING_OR_OCTAL_REGEXP.test(numJs);
@@ -1816,7 +1812,7 @@ var ExprRawGen = {
         if (parenthesize)
             _.js += '(';
 
-        // delete, void, typeof
+        //NOTE: delete, void, typeof
         // get `typeof []`, not `typeof[]`
         if (_.optSpace === '' || op.length > 2)
             _.js += join(op, argJs);
@@ -1824,12 +1820,13 @@ var ExprRawGen = {
         else {
             _.js += op;
 
-            // Prevent inserting spaces between operator and argument if it is unnecessary
+            //NOTE: Prevent inserting spaces between operator and argument if it is unnecessary
             // like, `!cond`
             var leftCp = op.charCodeAt(op.length - 1),
                 rightCp = argJs.charCodeAt(0);
 
-            if (leftCp === rightCp && (leftCp === 0x2B  /* + */ || leftCp === 0x2D  /* - */) ||
+            // 0x2B = '+', 0x2D =  '-'
+            if (leftCp === rightCp && (leftCp === 0x2B || leftCp === 0x2D) ||
                 isIdentifierCh(leftCp) && isIdentifierCh(rightCp)) {
                 _.js += _.space;
             }
@@ -2116,7 +2113,7 @@ var ExprRawGen = {
     },
 
     TemplateElement: function generateTemplateElement($expr) {
-        // Don't use "cooked". Since tagged template can use raw template
+        //NOTE: Don't use "cooked". Since tagged template can use raw template
         // representation. So if we do so, it breaks the script semantics.
         _.js += $expr.value.raw;
     },
@@ -2153,16 +2150,11 @@ var ExprRawGen = {
 //-------------------------------------------------===------------------------------------------------------
 
 
-/**
- * Regular expressions
- */
+//Regular expressions
 var EXPR_STMT_UNALLOWED_EXPR_REGEXP = /^{|^class(?:\s|{)|^function(?:\s|\*|\()/;
 
 
-/**
- * Common statement generators
- */
-
+//Common statement generators
 function generateTryStatementHandlers(stmtJs, $finalizer, handlers) {
     var handlerCount = handlers.length,
         lastHandlerIdx = handlerCount - 1;
@@ -2208,9 +2200,8 @@ function generateForStatementIterator($op, $stmt, settings) {
     StmtGen[$body.type]($body, Settings.forStmtIterBody(bodySemicolonOptional));
 }
 
-/**
- * Statement generator dictionary
- */
+
+//Statement generator dictionary
 var StmtRawGen = {
     BlockStatement: function generateBlockStatement($stmt, settings) {
         var $body = $stmt.body,
@@ -2426,7 +2417,7 @@ var StmtRawGen = {
                             $stmt.expression.type === Syntax.Literal &&
                             typeof $stmt.expression.value === 'string');
 
-        // '{', 'function', 'class' are not allowed in expression statement.
+        //NOTE: '{', 'function', 'class' are not allowed in expression statement.
         // Therefore, they should be parenthesized.
         if (parenthesize)
             _.js += '(' + exprJs + ')';
@@ -2443,7 +2434,7 @@ var StmtRawGen = {
             stmtJs = 'import',
             specCount = $specs.length;
 
-        // If no ImportClause is present,
+        //NOTE: If no ImportClause is present,
         // this should be `import ModuleSpecifier` so skip `from`
         // ModuleSpecifier is StringLiteral.
         if (specCount) {
@@ -2873,10 +2864,8 @@ function createExprGenWithExtras() {
     return gens;
 }
 
-/**
- * Strings
- */
 
+//Strings
 var _ = {
     js: '',
     newline: '\n',
@@ -2886,9 +2875,8 @@ var _ = {
     indent: ''
 };
 
-/**
- * Generators
- */
+
+//Generators
 var ExprGen = void 0,
     StmtGen = StmtRawGen;
 
@@ -2897,7 +2885,7 @@ function generate($node, options) {
     var defaultOptions = getDefaultOptions(), result, pair;
 
     if (options != null) {
-        // Obsolete options
+        //NOTE: Obsolete options
         //
         //   `options.indent`
         //   `options.base`
