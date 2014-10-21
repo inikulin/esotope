@@ -210,56 +210,56 @@ var NON_ASCII_WHITESPACES = [
 
 //Regular expressions
 var NON_ASCII_IDENTIFIER_CHARACTERS_REGEXP = new RegExp(
-        '[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376' +
-        '\u0377\u037A-\u037D\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u0487\u048A-' +
-        '\u0527\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA' +
-        '\u05F0-\u05F2\u0610-\u061A\u0620-\u0669\u066E-\u06D3\u06D5-\u06DC\u06DF-\u06E8\u06EA-\u06FC\u06FF\u0710-' +
-        '\u074A\u074D-\u07B1\u07C0-\u07F5\u07FA\u0800-\u082D\u0840-\u085B\u08A0\u08A2-\u08AC\u08E4-\u08FE\u0900-' +
-        '\u0963\u0966-\u096F\u0971-\u0977\u0979-\u097F\u0981-\u0983\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-' +
-        '\u09B0\u09B2\u09B6-\u09B9\u09BC-\u09C4\u09C7\u09C8\u09CB-\u09CE\u09D7\u09DC\u09DD\u09DF-\u09E3\u09E6-' +
-        '\u09F1\u0A01-\u0A03\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38' +
-        '\u0A39\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A59-\u0A5C\u0A5E\u0A66-\u0A75\u0A81-\u0A83' +
-        '\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABC-\u0AC5\u0AC7-\u0AC9' +
-        '\u0ACB-\u0ACD\u0AD0\u0AE0-\u0AE3\u0AE6-\u0AEF\u0B01-\u0B03\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-' +
-        '\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3C-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B56\u0B57\u0B5C\u0B5D\u0B5F-' +
-        '\u0B63\u0B66-\u0B6F\u0B71\u0B82\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E' +
-        '\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD0\u0BD7\u0BE6-' +
-        '\u0BEF\u0C01-\u0C03\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C33\u0C35-\u0C39\u0C3D-\u0C44\u0C46-' +
-        '\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C58\u0C59\u0C60-\u0C63\u0C66-\u0C6F\u0C82\u0C83\u0C85-\u0C8C\u0C8E-' +
-        '\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBC-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CDE' +
-        '\u0CE0-\u0CE3\u0CE6-\u0CEF\u0CF1\u0CF2\u0D02\u0D03\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D-\u0D44' +
-        '\u0D46-\u0D48\u0D4A-\u0D4E\u0D57\u0D60-\u0D63\u0D66-\u0D6F\u0D7A-\u0D7F\u0D82\u0D83\u0D85-\u0D96\u0D9A-' +
-        '\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DF2\u0DF3\u0E01-\u0E3A' +
-        '\u0E40-\u0E4E\u0E50-\u0E59\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-' +
-        '\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB9\u0EBB-\u0EBD\u0EC0-\u0EC4\u0EC6\u0EC8-\u0ECD\u0ED0-\u0ED9' +
-        '\u0EDC-\u0EDF\u0F00\u0F18\u0F19\u0F20-\u0F29\u0F35\u0F37\u0F39\u0F3E-\u0F47\u0F49-\u0F6C\u0F71-\u0F84' +
-        '\u0F86-\u0F97\u0F99-\u0FBC\u0FC6\u1000-\u1049\u1050-\u109D\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-' +
-        '\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5' +
-        '\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u135D-\u135F\u1380-' +
-        '\u138F\u13A0-\u13F4\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F0\u1700-\u170C\u170E-' +
-        '\u1714\u1720-\u1734\u1740-\u1753\u1760-\u176C\u176E-\u1770\u1772\u1773\u1780-\u17D3\u17D7\u17DC\u17DD' +
-        '\u17E0-\u17E9\u180B-\u180D\u1810-\u1819\u1820-\u1877\u1880-\u18AA\u18B0-\u18F5\u1900-\u191C\u1920-\u192B' +
-        '\u1930-\u193B\u1946-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u19D0-\u19D9\u1A00-\u1A1B\u1A20-\u1A5E' +
-        '\u1A60-\u1A7C\u1A7F-\u1A89\u1A90-\u1A99\u1AA7\u1B00-\u1B4B\u1B50-\u1B59\u1B6B-\u1B73\u1B80-\u1BF3\u1C00-' +
-        '\u1C37\u1C40-\u1C49\u1C4D-\u1C7D\u1CD0-\u1CD2\u1CD4-\u1CF6\u1D00-\u1DE6\u1DFC-\u1F15\u1F18-\u1F1D\u1F20-' +
-        '\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-' +
-        '\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u200C\u200D\u203F' +
-        '\u2040\u2054\u2071\u207F\u2090-\u209C\u20D0-\u20DC\u20E1\u20E5-\u20F0\u2102\u2107\u210A-\u2113\u2115' +
-        '\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188' +
-        '\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D7F-' +
-        '\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-' +
-        '\u2DDE\u2DE0-\u2DFF\u2E2F\u3005-\u3007\u3021-\u302F\u3031-\u3035\u3038-\u303C\u3041-\u3096\u3099\u309A' +
-        '\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5' +
-        '\u4E00-\u9FCC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA62B\uA640-\uA66F\uA674-\uA67D\uA67F-\uA697' +
-        '\uA69F-\uA6F1\uA717-\uA71F\uA722-\uA788\uA78B-\uA78E\uA790-\uA793\uA7A0-\uA7AA\uA7F8-\uA827\uA840-\uA873' +
-        '\uA880-\uA8C4\uA8D0-\uA8D9\uA8E0-\uA8F7\uA8FB\uA900-\uA92D\uA930-\uA953\uA960-\uA97C\uA980-\uA9C0\uA9CF-' +
-        '\uA9D9\uAA00-\uAA36\uAA40-\uAA4D\uAA50-\uAA59\uAA60-\uAA76\uAA7A\uAA7B\uAA80-\uAAC2\uAADB-\uAADD\uAAE0-' +
-        '\uAAEF\uAAF2-\uAAF6\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uABC0-\uABEA\uABEC' +
-        '\uABED\uABF0-\uABF9\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-' +
-        '\uFB17\uFB1D-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D' +
-        '\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE00-\uFE0F\uFE20-\uFE26\uFE33\uFE34\uFE4D-\uFE4F\uFE70-\uFE74' +
-        '\uFE76-\uFEFC\uFF10-\uFF19\uFF21-\uFF3A\uFF3F\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-' +
-        '\uFFD7\uFFDA-\uFFDC]'
+    '[\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376' +
+    '\u0377\u037A-\u037D\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u0487\u048A-' +
+    '\u0527\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA' +
+    '\u05F0-\u05F2\u0610-\u061A\u0620-\u0669\u066E-\u06D3\u06D5-\u06DC\u06DF-\u06E8\u06EA-\u06FC\u06FF\u0710-' +
+    '\u074A\u074D-\u07B1\u07C0-\u07F5\u07FA\u0800-\u082D\u0840-\u085B\u08A0\u08A2-\u08AC\u08E4-\u08FE\u0900-' +
+    '\u0963\u0966-\u096F\u0971-\u0977\u0979-\u097F\u0981-\u0983\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-' +
+    '\u09B0\u09B2\u09B6-\u09B9\u09BC-\u09C4\u09C7\u09C8\u09CB-\u09CE\u09D7\u09DC\u09DD\u09DF-\u09E3\u09E6-' +
+    '\u09F1\u0A01-\u0A03\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38' +
+    '\u0A39\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A59-\u0A5C\u0A5E\u0A66-\u0A75\u0A81-\u0A83' +
+    '\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABC-\u0AC5\u0AC7-\u0AC9' +
+    '\u0ACB-\u0ACD\u0AD0\u0AE0-\u0AE3\u0AE6-\u0AEF\u0B01-\u0B03\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-' +
+    '\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3C-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B56\u0B57\u0B5C\u0B5D\u0B5F-' +
+    '\u0B63\u0B66-\u0B6F\u0B71\u0B82\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E' +
+    '\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD0\u0BD7\u0BE6-' +
+    '\u0BEF\u0C01-\u0C03\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C33\u0C35-\u0C39\u0C3D-\u0C44\u0C46-' +
+    '\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C58\u0C59\u0C60-\u0C63\u0C66-\u0C6F\u0C82\u0C83\u0C85-\u0C8C\u0C8E-' +
+    '\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBC-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CDE' +
+    '\u0CE0-\u0CE3\u0CE6-\u0CEF\u0CF1\u0CF2\u0D02\u0D03\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D-\u0D44' +
+    '\u0D46-\u0D48\u0D4A-\u0D4E\u0D57\u0D60-\u0D63\u0D66-\u0D6F\u0D7A-\u0D7F\u0D82\u0D83\u0D85-\u0D96\u0D9A-' +
+    '\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DF2\u0DF3\u0E01-\u0E3A' +
+    '\u0E40-\u0E4E\u0E50-\u0E59\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-' +
+    '\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB9\u0EBB-\u0EBD\u0EC0-\u0EC4\u0EC6\u0EC8-\u0ECD\u0ED0-\u0ED9' +
+    '\u0EDC-\u0EDF\u0F00\u0F18\u0F19\u0F20-\u0F29\u0F35\u0F37\u0F39\u0F3E-\u0F47\u0F49-\u0F6C\u0F71-\u0F84' +
+    '\u0F86-\u0F97\u0F99-\u0FBC\u0FC6\u1000-\u1049\u1050-\u109D\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-' +
+    '\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5' +
+    '\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u135D-\u135F\u1380-' +
+    '\u138F\u13A0-\u13F4\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F0\u1700-\u170C\u170E-' +
+    '\u1714\u1720-\u1734\u1740-\u1753\u1760-\u176C\u176E-\u1770\u1772\u1773\u1780-\u17D3\u17D7\u17DC\u17DD' +
+    '\u17E0-\u17E9\u180B-\u180D\u1810-\u1819\u1820-\u1877\u1880-\u18AA\u18B0-\u18F5\u1900-\u191C\u1920-\u192B' +
+    '\u1930-\u193B\u1946-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u19D0-\u19D9\u1A00-\u1A1B\u1A20-\u1A5E' +
+    '\u1A60-\u1A7C\u1A7F-\u1A89\u1A90-\u1A99\u1AA7\u1B00-\u1B4B\u1B50-\u1B59\u1B6B-\u1B73\u1B80-\u1BF3\u1C00-' +
+    '\u1C37\u1C40-\u1C49\u1C4D-\u1C7D\u1CD0-\u1CD2\u1CD4-\u1CF6\u1D00-\u1DE6\u1DFC-\u1F15\u1F18-\u1F1D\u1F20-' +
+    '\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-' +
+    '\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u200C\u200D\u203F' +
+    '\u2040\u2054\u2071\u207F\u2090-\u209C\u20D0-\u20DC\u20E1\u20E5-\u20F0\u2102\u2107\u210A-\u2113\u2115' +
+    '\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188' +
+    '\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D7F-' +
+    '\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-' +
+    '\u2DDE\u2DE0-\u2DFF\u2E2F\u3005-\u3007\u3021-\u302F\u3031-\u3035\u3038-\u303C\u3041-\u3096\u3099\u309A' +
+    '\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u31A0-\u31BA\u31F0-\u31FF\u3400-\u4DB5' +
+    '\u4E00-\u9FCC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA62B\uA640-\uA66F\uA674-\uA67D\uA67F-\uA697' +
+    '\uA69F-\uA6F1\uA717-\uA71F\uA722-\uA788\uA78B-\uA78E\uA790-\uA793\uA7A0-\uA7AA\uA7F8-\uA827\uA840-\uA873' +
+    '\uA880-\uA8C4\uA8D0-\uA8D9\uA8E0-\uA8F7\uA8FB\uA900-\uA92D\uA930-\uA953\uA960-\uA97C\uA980-\uA9C0\uA9CF-' +
+    '\uA9D9\uAA00-\uAA36\uAA40-\uAA4D\uAA50-\uAA59\uAA60-\uAA76\uAA7A\uAA7B\uAA80-\uAAC2\uAADB-\uAADD\uAAE0-' +
+    '\uAAEF\uAAF2-\uAAF6\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uABC0-\uABEA\uABEC' +
+    '\uABED\uABF0-\uABF9\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-' +
+    '\uFB17\uFB1D-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D' +
+    '\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE00-\uFE0F\uFE20-\uFE26\uFE33\uFE34\uFE4D-\uFE4F\uFE70-\uFE74' +
+    '\uFE76-\uFEFC\uFF10-\uFF19\uFF21-\uFF3A\uFF3F\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-' +
+    '\uFFD7\uFFDA-\uFFDC]'
 );
 
 
@@ -621,11 +621,11 @@ function adoptionSuffix($stmt) {
 }
 
 //Subentities generators
-function generateVerbatim($expr, settings) {
+function generateVerbatim($expr, settings, ctxPrecedence) {
     var verbatim = $expr[extra.verbatim],
         strVerbatim = typeof verbatim === 'string',
         precedence = !strVerbatim && verbatim.precedence !== void 0 ? verbatim.precedence : Precedence.Sequence,
-        parenthesize = precedence < settings.precedence,
+        parenthesize = precedence < ctxPrecedence,
         content = strVerbatim ? verbatim : verbatim.content,
         chunks = content.split(/\r\n|\n/),
         chunkCount = chunks.length;
@@ -671,7 +671,7 @@ function generateFunctionParams($node) {
                     operator: '='
                 };
 
-                ExprGen.AssignmentExpression($fakeAssign, Preset.e4);
+                ExprGen.AssignmentExpression($fakeAssign, Preset.e4, Precedence.Assignment);
             }
 
             else {
@@ -679,7 +679,7 @@ function generateFunctionParams($node) {
                     _.js += $param.name;
 
                 else
-                    ExprGen[$param.type]($param, Preset.e4);
+                    ExprGen[$param.type]($param, Preset.e4, Precedence.Assignment);
             }
 
             if (i !== lastParamIdx)
@@ -708,7 +708,7 @@ function generateFunctionBody($node) {
     if ($node.expression) {
         _.js += _.optSpace;
 
-        var exprJs = exprToJs($body, Preset.e4);
+        var exprJs = exprToJs($body, Preset.e4, Precedence.Assignment);
 
         if (exprJs.charAt(0) === '{')
             exprJs = '(' + exprJs + ')';
@@ -745,7 +745,6 @@ function canUseRawLiteral($expr) {
 var Preset = {
     e1: function (allowIn) {
         return {
-            precedence: Precedence.Assignment,
             allowIn: allowIn,
             allowCall: true,
             allowUnparenthesizedNew: true
@@ -754,7 +753,6 @@ var Preset = {
 
     e2: function (allowIn) {
         return {
-            precedence: Precedence.LogicalOR,
             allowIn: allowIn,
             allowCall: true,
             allowUnparenthesizedNew: true
@@ -762,21 +760,18 @@ var Preset = {
     },
 
     e3: {
-        precedence: Precedence.Call,
         allowIn: true,
         allowCall: true,
         allowUnparenthesizedNew: false
     },
 
     e4: {
-        precedence: Precedence.Assignment,
         allowIn: true,
         allowCall: true,
         allowUnparenthesizedNew: true
     },
 
     e5: {
-        precedence: Precedence.Sequence,
         allowIn: true,
         allowCall: true,
         allowUnparenthesizedNew: true
@@ -784,7 +779,6 @@ var Preset = {
 
     e6: function (allowUnparenthesizedNew) {
         return {
-            precedence: Precedence.New,
             allowIn: true,
             allowCall: false,
             allowUnparenthesizedNew: allowUnparenthesizedNew
@@ -792,28 +786,24 @@ var Preset = {
     },
 
     e7: {
-        precedence: Precedence.Unary,
         allowIn: true,
         allowCall: true,
         allowUnparenthesizedNew: true
     },
 
     e8: {
-        precedence: Precedence.Postfix,
         allowIn: true,
         allowCall: true,
         allowUnparenthesizedNew: true
     },
 
     e9: {
-        precedence: void 0,
         allowIn: true,
         allowCall: true,
         allowUnparenthesizedNew: true
     },
 
     e10: {
-        precedence: Precedence.Call,
         allowIn: true,
         allowCall: true,
         allowUnparenthesizedNew: true
@@ -821,7 +811,6 @@ var Preset = {
 
     e11: function (allowCall) {
         return {
-            precedence: Precedence.Call,
             allowIn: true,
             allowCall: allowCall,
             allowUnparenthesizedNew: false
@@ -829,14 +818,12 @@ var Preset = {
     },
 
     e12: {
-        precedence: Precedence.Primary,
         allowIn: false,
         allowCall: false,
         allowUnparenthesizedNew: true
     },
 
     e13: {
-        precedence: Precedence.Primary,
         allowIn: true,
         allowCall: true,
         allowUnparenthesizedNew: true
@@ -844,7 +831,6 @@ var Preset = {
 
 
     e14: {
-        precedence: Precedence.Sequence,
         allowIn: false,
         allowCall: true,
         allowUnparenthesizedNew: true
@@ -853,16 +839,14 @@ var Preset = {
 
     e15: function (allowCall) {
         return {
-            precedence: Precedence.Sequence,
             allowIn: true,
             allowCall: allowCall,
             allowUnparenthesizedNew: true
         };
     },
 
-    e16: function (precedence, allowIn) {
+    e16: function (allowIn) {
         return {
-            precedence: precedence,
             allowIn: allowIn,
             allowCall: true,
             allowUnparenthesizedNew: true
@@ -871,7 +855,6 @@ var Preset = {
 
     e17: function (allowIn) {
         return  {
-            precedence: Precedence.Call,
             allowIn: allowIn,
             allowCall: true,
             allowUnparenthesizedNew: true
@@ -880,7 +863,6 @@ var Preset = {
 
     e18: function (allowIn) {
         return  {
-            precedence: Precedence.Assignment,
             allowIn: allowIn,
             allowCall: true,
             allowUnparenthesizedNew: true
@@ -888,7 +870,6 @@ var Preset = {
     },
 
     e19: {
-        precedence: Precedence.Sequence,
         allowIn: true,
         allowCall: true,
         semicolonOptional: false
@@ -970,13 +951,13 @@ var FLOATING_OR_OCTAL_REGEXP = /[.eExX]|^0[0-9]+/,
 
 
 //Common expression generators
-function generateLogicalOrBinaryExpression($expr, settings) {
+function generateLogicalOrBinaryExpression($expr, settings, ctxPrecedence) {
     var op = $expr.operator,
         precedence = BinaryPrecedence[$expr.operator],
-        parenthesize = precedence < settings.precedence,
+        parenthesize = precedence < ctxPrecedence,
         allowIn = settings.allowIn || parenthesize,
-        operandGenSettings = Preset.e16(precedence, allowIn),
-        exprJs = exprToJs($expr.left, operandGenSettings);
+        operandGenSettings = Preset.e16(allowIn),
+        exprJs = exprToJs($expr.left, operandGenSettings, precedence);
 
     parenthesize |= op === 'in' && !allowIn;
 
@@ -990,9 +971,9 @@ function generateLogicalOrBinaryExpression($expr, settings) {
     else
         exprJs = join(exprJs, op);
 
-    operandGenSettings.precedence++;
+    precedence++;
 
-    var rightJs = exprToJs($expr.right, operandGenSettings);
+    var rightJs = exprToJs($expr.right, operandGenSettings, precedence);
 
     //NOTE: If '/' concats with '/' or `<` concats with `!--`, it is interpreted as comment start
     if (op === '/' && rightJs.charAt(0) === '/' || op.slice(-1) === '<' && rightJs.slice(0, 3) === '!--')
@@ -1026,7 +1007,7 @@ function generateArrayPatternOrExpression($expr) {
                 _.js += itemPrefix;
 
             if ($elem)
-                ExprGen[$elem.type]($elem, Preset.e4);
+                ExprGen[$elem.type]($elem, Preset.e4, Precedence.Assignment);
 
             if (i !== lastElemIdx || !$elem)
                 _.js += ',';
@@ -1057,14 +1038,14 @@ function generateGeneratorOrComprehensionExpression($expr) {
         $filter = $expr.filter,
         isGenerator = $expr.type === Syntax.GeneratorExpression,
         exprJs = isGenerator ? '(' : '[',
-        bodyJs = exprToJs($expr.body, Preset.e4);
+        bodyJs = exprToJs($expr.body, Preset.e4, Precedence.Assignment);
 
     if ($blocks) {
         var prevIndent = shiftIndent(),
             blockCount = $blocks.length;
 
         for (var i = 0; i < blockCount; ++i) {
-            var blockJs = exprToJs($blocks[i], Preset.e5);
+            var blockJs = exprToJs($blocks[i], Preset.e5, Precedence.Sequence);
 
             exprJs = i > 0 ? join(exprJs, blockJs) : (exprJs + blockJs);
         }
@@ -1073,7 +1054,7 @@ function generateGeneratorOrComprehensionExpression($expr) {
     }
 
     if ($filter) {
-        var filterJs = exprToJs($filter, Preset.e5);
+        var filterJs = exprToJs($filter, Preset.e5, Precedence.Sequence);
 
         exprJs = join(exprJs, 'if' + _.optSpace);
         exprJs = join(exprJs, '(' + filterJs + ')');
@@ -1088,11 +1069,11 @@ function generateGeneratorOrComprehensionExpression($expr) {
 
 //Expression raw generator dictionary
 var ExprRawGen = {
-    SequenceExpression: function generateSequenceExpression($expr, settings) {
+    SequenceExpression: function generateSequenceExpression($expr, settings, ctxPrecedence) {
         var $children = $expr.expressions,
             childrenCount = $children.length,
             lastChildIdx = childrenCount - 1,
-            parenthesize = Precedence.Sequence < settings.precedence,
+            parenthesize = Precedence.Sequence < ctxPrecedence,
             exprGenSettings = Preset.e1(settings.allowIn || parenthesize);
 
         if (parenthesize)
@@ -1101,7 +1082,7 @@ var ExprRawGen = {
         for (var i = 0; i < childrenCount; i++) {
             var $child = $children[i];
 
-            ExprGen[$child.type]($child, exprGenSettings);
+            ExprGen[$child.type]($child, exprGenSettings, Precedence.Assignment);
 
             if (i !== lastChildIdx)
                 _.js += ',' + _.optSpace;
@@ -1111,25 +1092,25 @@ var ExprRawGen = {
             _.js += ')';
     },
 
-    AssignmentExpression: function generateAssignmentExpression($expr, settings) {
+    AssignmentExpression: function generateAssignmentExpression($expr, settings, ctxPrecedence) {
         var $left = $expr.left,
             $right = $expr.right,
-            parenthesize = Precedence.Assignment < settings.precedence,
+            parenthesize = Precedence.Assignment < ctxPrecedence,
             allowIn = settings.allowIn || parenthesize;
 
         if (parenthesize)
             _.js += '(';
 
-        ExprGen[$left.type]($left, Preset.e17(allowIn));
+        ExprGen[$left.type]($left, Preset.e17(allowIn), Precedence.Call);
         _.js += _.optSpace + $expr.operator + _.optSpace;
-        ExprGen[$right.type]($right, Preset.e18(allowIn));
+        ExprGen[$right.type]($right, Preset.e18(allowIn), Precedence.Assignment);
 
         if (parenthesize)
             _.js += ')';
     },
 
-    ArrowFunctionExpression: function generateArrowFunctionExpression($expr, settings) {
-        var parenthesize = Precedence.ArrowFunction < settings.precedence;
+    ArrowFunctionExpression: function generateArrowFunctionExpression($expr, settings, ctxPrecedence) {
+        var parenthesize = Precedence.ArrowFunction < ctxPrecedence;
 
         if (parenthesize)
             _.js += '(';
@@ -1140,11 +1121,11 @@ var ExprRawGen = {
             _.js += ')';
     },
 
-    ConditionalExpression: function generateConditionalExpression($expr, settings) {
+    ConditionalExpression: function generateConditionalExpression($expr, settings, ctxPrecedence) {
         var $test = $expr.test,
             $conseq = $expr.consequent,
             $alt = $expr.alternate,
-            parenthesize = Precedence.Conditional < settings.precedence,
+            parenthesize = Precedence.Conditional < ctxPrecedence,
             allowIn = settings.allowIn || parenthesize,
             testGenSettings = Preset.e2(allowIn),
             branchGenSettings = Preset.e1(allowIn);
@@ -1152,11 +1133,11 @@ var ExprRawGen = {
         if (parenthesize)
             _.js += '(';
 
-        ExprGen[$test.type]($test, testGenSettings);
+        ExprGen[$test.type]($test, testGenSettings, Precedence.LogicalOR);
         _.js += _.optSpace + '?' + _.optSpace;
-        ExprGen[$conseq.type]($conseq, branchGenSettings);
+        ExprGen[$conseq.type]($conseq, branchGenSettings, Precedence.Assignment);
         _.js += _.optSpace + ':' + _.optSpace;
-        ExprGen[$alt.type]($alt, branchGenSettings);
+        ExprGen[$alt.type]($alt, branchGenSettings, Precedence.Assignment);
 
         if (parenthesize)
             _.js += ')';
@@ -1166,23 +1147,23 @@ var ExprRawGen = {
 
     BinaryExpression: generateLogicalOrBinaryExpression,
 
-    CallExpression: function generateCallExpression($expr, settings) {
+    CallExpression: function generateCallExpression($expr, settings, ctxPrecedence) {
         var $callee = $expr.callee,
             $args = $expr['arguments'],
             argCount = $args.length,
             lastArgIdx = argCount - 1,
-            parenthesize = !settings.allowCall || Precedence.Call < settings.precedence;
+            parenthesize = !settings.allowCall || Precedence.Call < ctxPrecedence;
 
         if (parenthesize)
             _.js += '(';
 
-        ExprGen[$callee.type]($callee, Preset.e3);
+        ExprGen[$callee.type]($callee, Preset.e3, Precedence.Call);
         _.js += '(';
 
         for (var i = 0; i < argCount; ++i) {
             var $arg = $args[i];
 
-            ExprGen[$arg.type]($arg, Preset.e4);
+            ExprGen[$arg.type]($arg, Preset.e4, Precedence.Assignment);
 
             if (i !== lastArgIdx)
                 _.js += ',' + _.optSpace;
@@ -1194,13 +1175,13 @@ var ExprRawGen = {
             _.js += ')';
     },
 
-    NewExpression: function generateNewExpression($expr, settings) {
+    NewExpression: function generateNewExpression($expr, settings, ctxPrecedence) {
         var $args = $expr['arguments'],
-            parenthesize = Precedence.New < settings.precedence,
+            parenthesize = Precedence.New < ctxPrecedence,
             argCount = $args.length,
             lastArgIdx = argCount - 1,
             withCall = !settings.allowUnparenthesizedNew || parentheses || argCount > 0,
-            calleeJs = exprToJs($expr.callee, Preset.e6(!withCall));
+            calleeJs = exprToJs($expr.callee, Preset.e6(!withCall), Precedence.New);
 
         if (parenthesize)
             _.js += '(';
@@ -1213,7 +1194,7 @@ var ExprRawGen = {
             for (var i = 0; i < argCount; ++i) {
                 var $arg = $args[i];
 
-                ExprGen[$arg.type]($arg, Preset.e4);
+                ExprGen[$arg.type]($arg, Preset.e4, Precedence.Assignment);
 
                 if (i !== lastArgIdx)
                     _.js += ',' + _.optSpace;
@@ -1226,10 +1207,10 @@ var ExprRawGen = {
             _.js += ')';
     },
 
-    MemberExpression: function generateMemberExpression($expr, settings) {
+    MemberExpression: function generateMemberExpression($expr, settings, ctxPrecedence) {
         var $obj = $expr.object,
             $prop = $expr.property,
-            parenthesize = Precedence.Member < settings.precedence,
+            parenthesize = Precedence.Member < ctxPrecedence,
             isNumObj = !$expr.computed && $obj.type === Syntax.Literal && typeof $obj.value === 'number';
 
         if (parenthesize)
@@ -1243,18 +1224,18 @@ var ExprRawGen = {
             //   4. Not hexadecimal OR octal number literal
             // then we should add a floating point.
 
-            var numJs = exprToJs($obj, Preset.e11(settings.allowCall)),
+            var numJs = exprToJs($obj, Preset.e11(settings.allowCall), Precedence.Call),
                 withPoint = LAST_DECIMAL_DIGIT_REGEXP.test(numJs) && !FLOATING_OR_OCTAL_REGEXP.test(numJs);
 
             _.js += withPoint ? (numJs + '.') : numJs;
         }
 
         else
-            ExprGen[$obj.type]($obj, Preset.e11(settings.allowCall));
+            ExprGen[$obj.type]($obj, Preset.e11(settings.allowCall), Precedence.Call);
 
         if ($expr.computed) {
             _.js += '[';
-            ExprGen[$prop.type]($prop, Preset.e15(settings.allowCall));
+            ExprGen[$prop.type]($prop, Preset.e15(settings.allowCall), Precedence.Sequence);
             _.js += ']';
         }
 
@@ -1265,10 +1246,10 @@ var ExprRawGen = {
             _.js += ')';
     },
 
-    UnaryExpression: function generateUnaryExpression($expr, settings) {
-        var parenthesize = Precedence.Unary < settings.precedence,
+    UnaryExpression: function generateUnaryExpression($expr, settings, ctxPrecedence) {
+        var parenthesize = Precedence.Unary < ctxPrecedence,
             op = $expr.operator,
-            argJs = exprToJs($expr.argument, Preset.e7);
+            argJs = exprToJs($expr.argument, Preset.e7, Precedence.Unary);
 
         if (parenthesize)
             _.js += '(';
@@ -1299,16 +1280,16 @@ var ExprRawGen = {
             _.js += ')';
     },
 
-    YieldExpression: function generateYieldExpression($expr, settings) {
+    YieldExpression: function generateYieldExpression($expr, settings, ctxPrecedence) {
         var $arg = $expr.argument,
             js = $expr.delegate ? 'yield*' : 'yield',
-            parenthesize = Precedence.Yield < settings.precedence;
+            parenthesize = Precedence.Yield < ctxPrecedence;
 
         if (parenthesize)
             _.js += '(';
 
         if ($arg) {
-            var argJs = exprToJs($arg, Preset.e4);
+            var argJs = exprToJs($arg, Preset.e4, Precedence.Assignment);
 
             js = join(js, argJs);
         }
@@ -1319,24 +1300,24 @@ var ExprRawGen = {
             _.js += ')';
     },
 
-    UpdateExpression: function generateUpdateExpression($expr, settings) {
+    UpdateExpression: function generateUpdateExpression($expr, settings, ctxPrecedence) {
         var $arg = $expr.argument,
             $op = $expr.operator,
             prefix = $expr.prefix,
             precedence = prefix ? Precedence.Unary : Precedence.Postfix,
-            parenthesize = precedence < settings.precedence;
+            parenthesize = precedence < ctxPrecedence;
 
         if (parenthesize)
             _.js += '(';
 
         if (prefix) {
             _.js += $op;
-            ExprGen[$arg.type]($arg, Preset.e8);
+            ExprGen[$arg.type]($arg, Preset.e8, Precedence.Postfix);
 
         }
 
         else {
-            ExprGen[$arg.type]($arg, Preset.e8);
+            ExprGen[$arg.type]($arg, Preset.e8, Precedence.Postfix);
             _.js += $op;
         }
 
@@ -1380,7 +1361,7 @@ var ExprRawGen = {
         }
 
         if ($super) {
-            var superJs = exprToJs($super, Preset.e4);
+            var superJs = exprToJs($super, Preset.e4, Precedence.Assignment);
 
             superJs = join('extends', superJs);
             exprJs = join(exprJs, superJs);
@@ -1392,7 +1373,7 @@ var ExprRawGen = {
 
     MethodDefinition: function generateMethodDefinition($expr) {
         var exprJs = $expr['static'] ? 'static' + _.optSpace : '',
-            keyJs = exprToJs($expr.key, Preset.e5);
+            keyJs = exprToJs($expr.key, Preset.e5, Precedence.Sequence);
 
         if ($expr.computed)
             keyJs = '[' + keyJs + ']';
@@ -1416,7 +1397,7 @@ var ExprRawGen = {
     Property: function generateProperty($expr) {
         var $val = $expr.value,
             $kind = $expr.kind,
-            keyJs = exprToJs($expr.key, Preset.e5);
+            keyJs = exprToJs($expr.key, Preset.e5, Precedence.Sequence);
 
         if ($expr.computed)
             keyJs = '[' + keyJs + ']';
@@ -1437,7 +1418,7 @@ var ExprRawGen = {
 
             else {
                 _.js += keyJs + ':' + _.optSpace;
-                ExprGen[$val.type]($val, Preset.e4);
+                ExprGen[$val.type]($val, Preset.e4, Precedence.Assignment);
             }
         }
     },
@@ -1457,7 +1438,7 @@ var ExprRawGen = {
                     propType = $prop.type || Syntax.Property;
 
                 _.js += _.newline + _.indent;
-                ExprGen[propType]($prop, Preset.e5);
+                ExprGen[propType]($prop, Preset.e5, Precedence.Sequence);
 
                 if (i !== lastPropIdx)
                     _.js += ',';
@@ -1502,7 +1483,7 @@ var ExprRawGen = {
                 if (multiline)
                     _.js += _.indent;
 
-                ExprGen[$prop.type]($prop, Preset.e5);
+                ExprGen[$prop.type]($prop, Preset.e5, Precedence.Sequence);
 
                 if (i !== lastPropIdx)
                     _.js += propSuffix;
@@ -1558,13 +1539,13 @@ var ExprRawGen = {
     ComprehensionBlock: function generateComprehensionBlock($expr) {
         var $left = $expr.left,
             leftJs = void 0,
-            rightJs = exprToJs($expr.right, Preset.e5);
+            rightJs = exprToJs($expr.right, Preset.e5, Precedence.Sequence);
 
         if ($left.type === Syntax.VariableDeclaration)
             leftJs = $left.kind + _.space + stmtToJs($left.declarations[0], Preset.s6);
 
         else
-            leftJs = exprToJs($left, Preset.e10);
+            leftJs = exprToJs($left, Preset.e10, Precedence.Call);
 
         leftJs = join(leftJs, $expr.of ? 'of' : 'in');
 
@@ -1575,19 +1556,19 @@ var ExprRawGen = {
         var $arg = $expr.argument;
 
         _.js += '...';
-        ExprGen[$arg.type]($arg, Preset.e4);
+        ExprGen[$arg.type]($arg, Preset.e4, Precedence.Assignment);
     },
 
-    TaggedTemplateExpression: function generateTaggedTemplateExpression($expr, settings) {
+    TaggedTemplateExpression: function generateTaggedTemplateExpression($expr, settings, ctxPrecedence) {
         var $tag = $expr.tag,
             $quasi = $expr.quasi,
-            parenthesize = Precedence.TaggedTemplate < settings.precedence;
+            parenthesize = Precedence.TaggedTemplate < ctxPrecedence;
 
         if (parenthesize)
             _.js += '(';
 
-        ExprGen[$tag.type]($tag, Preset.e11(settings.allowCall));
-        ExprGen[$quasi.type]($quasi, Preset.e12);
+        ExprGen[$tag.type]($tag, Preset.e11(settings.allowCall), Precedence.Call);
+        ExprGen[$quasi.type]($quasi, Preset.e12, Precedence.Primary);
 
         if (parenthesize)
             _.js += ')';
@@ -1610,13 +1591,13 @@ var ExprRawGen = {
         for (var i = 0; i < quasiCount; ++i) {
             var $quasi = $quasis[i];
 
-            ExprGen[$quasi.type]($quasi, Preset.e13);
+            ExprGen[$quasi.type]($quasi, Preset.e13, Precedence.Primary);
 
             if (i !== lastQuasiIdx) {
                 var $childExpr = $childExprs[i];
 
                 _.js += '${' + _.optSpace;
-                ExprGen[$childExpr.type]($childExpr, Preset.e5);
+                ExprGen[$childExpr.type]($childExpr, Preset.e5, Precedence.Sequence);
                 _.js += _.optSpace + '}';
             }
         }
@@ -1667,11 +1648,11 @@ function generateForStatementIterator($op, $stmt, settings) {
     }
 
     else
-        stmtJs += exprToJs($left, Preset.e10);
+        stmtJs += exprToJs($left, Preset.e10, Precedence.Call);
 
     stmtJs = join(stmtJs, $op);
 
-    var rightJs = exprToJs($stmt.right, Preset.e5);
+    var rightJs = exprToJs($stmt.right, Preset.e5, Precedence.Sequence);
 
     stmtJs = join(stmtJs, rightJs) + ')';
 
@@ -1739,7 +1720,7 @@ var StmtRawGen = {
                 itemType = $item.type || Syntax.Property;
 
             _.js += _.indent;
-            ExprGen[itemType]($item, Preset.e5);
+            ExprGen[itemType]($item, Preset.e5, Precedence.Sequence);
 
             if (i !== lastItemIdx)
                 _.js += _.newline;
@@ -1755,7 +1736,7 @@ var StmtRawGen = {
             js = 'class ' + $stmt.id.name;
 
         if ($super) {
-            var superJs = exprToJs($super, Preset.e4);
+            var superJs = exprToJs($super, Preset.e4, Precedence.Assignment);
 
             js += _.space + join('extends', superJs);
         }
@@ -1786,7 +1767,7 @@ var StmtRawGen = {
         var stmtJs = join('do', bodyJs);
 
         _.js += join(stmtJs, 'while' + _.optSpace + '(');
-        ExprGen[$test.type]($test, Preset.e5);
+        ExprGen[$test.type]($test, Preset.e5, Precedence.Sequence);
         _.js += ')';
 
         if (semicolons || !settings.semicolonOptional)
@@ -1800,11 +1781,11 @@ var StmtRawGen = {
             prevIndent = shiftIndent();
 
         _.js += 'catch' + _.optSpace + '(';
-        ExprGen[$param.type]($param, Preset.e5);
+        ExprGen[$param.type]($param, Preset.e5, Precedence.Sequence);
 
         if ($guard) {
             _.js += ' if ';
-            ExprGen[$guard.type]($guard, Preset.e5);
+            ExprGen[$guard.type]($guard, Preset.e5, Precedence.Sequence);
         }
 
         _.indent = prevIndent;
@@ -1830,7 +1811,7 @@ var StmtRawGen = {
 
         // export default AssignmentExpression[In] ;
         if ($stmt['default']) {
-            var declJs = exprToJs($decl, Preset.e4);
+            var declJs = exprToJs($decl, Preset.e4, Precedence.Assignment);
 
             _.js += join('export default', declJs);
 
@@ -1848,7 +1829,7 @@ var StmtRawGen = {
                 stmtJs += _.optSpace + '{' + _.optSpace + '}';
 
             else if ($specs[0].type === Syntax.ExportBatchSpecifier) {
-                var specJs = exprToJs($specs[0], Preset.e5);
+                var specJs = exprToJs($specs[0], Preset.e5, Precedence.Sequence);
 
                 stmtJs = join(stmtJs, specJs);
             }
@@ -1862,7 +1843,7 @@ var StmtRawGen = {
 
                 for (var i = 0; i < specCount; ++i) {
                     stmtJs += _.newline + _.indent;
-                    stmtJs += exprToJs($specs[i], Preset.e5);
+                    stmtJs += exprToJs($specs[i], Preset.e5, Precedence.Sequence);
 
                     if (i !== lastSpecIdx)
                         stmtJs += ',';
@@ -1894,7 +1875,7 @@ var StmtRawGen = {
     },
 
     ExpressionStatement: function generateExpressionStatement($stmt, settings) {
-        var exprJs = exprToJs($stmt.expression, Preset.e5),
+        var exprJs = exprToJs($stmt.expression, Preset.e5, Precedence.Sequence),
             parenthesize = EXPR_STMT_UNALLOWED_EXPR_REGEXP.test(exprJs) ||
                            (directive &&
                             settings.directiveContext &&
@@ -1939,7 +1920,7 @@ var StmtRawGen = {
 
                 // import { ... } from "...";
                 if (firstNamedIdx === lastSpecIdx)
-                    stmtJs += _.optSpace + exprToJs($specs[firstNamedIdx], Preset.e5) + _.optSpace;
+                    stmtJs += _.optSpace + exprToJs($specs[firstNamedIdx], Preset.e5, Precedence.Sequence) + _.optSpace;
 
                 else {
                     var prevIndent = shiftIndent();
@@ -1949,7 +1930,7 @@ var StmtRawGen = {
                     //    ...,
                     // } from "...";
                     for (var i = firstNamedIdx; i < specCount; i++) {
-                        stmtJs += _.newline + _.indent + exprToJs($specs[i], Preset.e5);
+                        stmtJs += _.newline + _.indent + exprToJs($specs[i], Preset.e5, Precedence.Sequence);
 
                         if (i !== lastSpecIdx)
                             stmtJs += ',';
@@ -1978,9 +1959,9 @@ var StmtRawGen = {
             genSettings = Preset.e1(settings.allowIn);
 
         if ($init) {
-            ExprGen[$id.type]($id, genSettings);
+            ExprGen[$id.type]($id, genSettings, Precedence.Assignment);
             _.js += _.optSpace + '=' + _.optSpace;
-            ExprGen[$init.type]($init, genSettings);
+            ExprGen[$init.type]($init, genSettings, Precedence.Assignment);
         }
 
         else {
@@ -1988,7 +1969,7 @@ var StmtRawGen = {
                 _.js += $id.name;
 
             else
-                ExprGen[$id.type]($id, genSettings);
+                ExprGen[$id.type]($id, genSettings, Precedence.Assignment);
         }
     },
 
@@ -2014,7 +1995,7 @@ var StmtRawGen = {
     },
 
     ThrowStatement: function generateThrowStatement($stmt, settings) {
-        var argJs = exprToJs($stmt.argument, Preset.e5);
+        var argJs = exprToJs($stmt.argument, Preset.e5, Precedence.Sequence);
 
         _.js += join('throw', argJs);
 
@@ -2054,7 +2035,7 @@ var StmtRawGen = {
             prevIndent = shiftIndent();
 
         _.js += 'switch' + _.optSpace + '(';
-        ExprGen[$discr.type]($discr, Preset.e5);
+        ExprGen[$discr.type]($discr, Preset.e5, Precedence.Sequence);
         _.js += ')' + _.optSpace + '{' + _.newline;
         _.indent = prevIndent;
 
@@ -2085,7 +2066,7 @@ var StmtRawGen = {
             prevIndent = shiftIndent();
 
         if ($test) {
-            var testJs = exprToJs($test, Preset.e5);
+            var testJs = exprToJs($test, Preset.e5, Precedence.Sequence);
 
             _.js += join('case', testJs) + ':';
         }
@@ -2119,7 +2100,7 @@ var StmtRawGen = {
             semicolonOptional = !semicolons && settings.semicolonOptional;
 
         _.js += 'if' + _.optSpace + '(';
-        ExprGen[$test.type]($test, Preset.e5);
+        ExprGen[$test.type]($test, Preset.e5, Precedence.Sequence);
         _.js += ')';
         _.indent = prevIndent;
         _.js += adoptionPrefix($conseq);
@@ -2156,7 +2137,7 @@ var StmtRawGen = {
                 StmtGen[$init.type]($init, Preset.s6);
 
             else {
-                ExprGen[$init.type]($init, Preset.e14);
+                ExprGen[$init.type]($init, Preset.e14, Precedence.Sequence);
                 _.js += ';';
             }
         }
@@ -2166,14 +2147,14 @@ var StmtRawGen = {
 
         if ($test) {
             _.js += _.optSpace;
-            ExprGen[$test.type]($test, Preset.e5);
+            ExprGen[$test.type]($test, Preset.e5, Precedence.Sequence);
         }
 
         _.js += ';';
 
         if ($update) {
             _.js += _.optSpace;
-            ExprGen[$update.type]($update, Preset.e5);
+            ExprGen[$update.type]($update, Preset.e5, Precedence.Sequence);
         }
 
         _.js += ')';
@@ -2244,7 +2225,7 @@ var StmtRawGen = {
         var $arg = $stmt.argument;
 
         if ($arg) {
-            var argJs = exprToJs($arg, Preset.e5);
+            var argJs = exprToJs($arg, Preset.e5, Precedence.Sequence);
 
             _.js += join('return', argJs);
         }
@@ -2263,7 +2244,7 @@ var StmtRawGen = {
             prevIndent = shiftIndent();
 
         _.js += 'while' + _.optSpace + '(';
-        ExprGen[$test.type]($test, Preset.e5);
+        ExprGen[$test.type]($test, Preset.e5, Precedence.Sequence);
         _.js += ')';
         _.indent = prevIndent;
 
@@ -2278,7 +2259,7 @@ var StmtRawGen = {
             prevIndent = shiftIndent();
 
         _.js += 'with' + _.optSpace + '(';
-        ExprGen[$obj.type]($obj, Preset.e5);
+        ExprGen[$obj.type]($obj, Preset.e5, Precedence.Sequence);
         _.js += ')';
         _.indent = prevIndent;
         _.js += adoptionPrefix($body);
@@ -2292,11 +2273,11 @@ function generateStatement($stmt, option) {
 
 //CodeGen
 //-----------------------------------------------------------------------------------
-function exprToJs($expr, settings) {
+function exprToJs($expr, settings, ctxPrecedence) {
     var savedJs = _.js;
     _.js = '';
 
-    ExprGen[$expr.type]($expr, settings);
+    ExprGen[$expr.type]($expr, settings, ctxPrecedence);
 
     var src = _.js;
     _.js = savedJs;
@@ -2323,15 +2304,15 @@ function run($node) {
         StmtGen[$node.type]($node, Preset.s7);
 
     else
-        ExprGen[$node.type]($node, Preset.e19);
+        ExprGen[$node.type]($node, Preset.e19, Precedence.Sequence);
 
     return _.js;
 }
 
 function wrapExprGen(gen) {
-    return function ($expr, settings) {
+    return function ($expr, settings, ctxPrecedence) {
         if (extra.verbatim && $expr.hasOwnProperty(extra.verbatim))
-            generateVerbatim($expr, settings);
+            generateVerbatim($expr, settings, ctxPrecedence);
 
         else
             gen($expr, settings);
