@@ -965,7 +965,7 @@ var Preset = {
 //-------------------------------------------------===-------------------------------------------------------
 
 //Regular expressions
-var FLOATING_OR_OCTAL_REGEXP = /[.eExX]|^0[0-9]+|/,
+var FLOATING_OR_OCTAL_REGEXP = /[.eExX]|^0[0-9]+/,
     LAST_DECIMAL_DIGIT_REGEXP = /[0-9]$/;
 
 
@@ -1236,7 +1236,6 @@ var ExprRawGen = {
             _.js += '(';
 
         if (isNumObj) {
-
             //NOTE: When the following conditions are all true:
             //   1. No floating point
             //   2. Don't have exponents
