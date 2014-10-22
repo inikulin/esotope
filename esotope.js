@@ -621,7 +621,7 @@ function adoptionSuffix($stmt) {
 }
 
 //Subentities generators
-function generateVerbatim($expr, settings, ctxPrecedence) {
+function generateVerbatim($expr, flags, ctxPrecedence) {
     var verbatim = $expr[extra.verbatim],
         strVerbatim = typeof verbatim === 'string',
         precedence = !strVerbatim && verbatim.precedence !== void 0 ? verbatim.precedence : Precedence.Sequence,
@@ -946,7 +946,7 @@ var ExprRawGen = {
             _.js += ')';
     },
 
-    ArrowFunctionExpression: function generateArrowFunctionExpression($expr, settings, ctxPrecedence) {
+    ArrowFunctionExpression: function generateArrowFunctionExpression($expr, flags, ctxPrecedence) {
         var parenthesize = Precedence.ArrowFunction < ctxPrecedence;
 
         if (parenthesize)
@@ -1084,7 +1084,7 @@ var ExprRawGen = {
             _.js += ')';
     },
 
-    UnaryExpression: function generateUnaryExpression($expr, settings, ctxPrecedence) {
+    UnaryExpression: function generateUnaryExpression($expr, flags, ctxPrecedence) {
         var parenthesize = Precedence.Unary < ctxPrecedence,
             op = $expr.operator,
             argJs = exprToJs($expr.argument, E_TTT, Precedence.Unary);
@@ -1118,7 +1118,7 @@ var ExprRawGen = {
             _.js += ')';
     },
 
-    YieldExpression: function generateYieldExpression($expr, settings, ctxPrecedence) {
+    YieldExpression: function generateYieldExpression($expr, flags, ctxPrecedence) {
         var $arg = $expr.argument,
             js = $expr.delegate ? 'yield*' : 'yield',
             parenthesize = Precedence.Yield < ctxPrecedence;
@@ -1138,7 +1138,7 @@ var ExprRawGen = {
             _.js += ')';
     },
 
-    UpdateExpression: function generateUpdateExpression($expr, settings, ctxPrecedence) {
+    UpdateExpression: function generateUpdateExpression($expr, flags, ctxPrecedence) {
         var $arg = $expr.argument,
             $op = $expr.operator,
             prefix = $expr.prefix,
@@ -2007,12 +2007,12 @@ var StmtRawGen = {
         StmtGen[$body.type]($body, bodySemicolonOptional ? S_TFFT : S_TFFF);
     },
 
-    ForInStatement: function generateForInStatement($stmt, settings) {
-        generateForStatementIterator('in', $stmt, settings);
+    ForInStatement: function generateForInStatement($stmt, flags) {
+        generateForStatementIterator('in', $stmt, flags);
     },
 
-    ForOfStatement: function generateForOfStatement($stmt, settings) {
-        generateForStatementIterator('of', $stmt, settings);
+    ForOfStatement: function generateForOfStatement($stmt, flags) {
+        generateForStatementIterator('of', $stmt, flags);
     },
 
     LabeledStatement: function generateLabeledStatement($stmt, flags) {
@@ -2121,11 +2121,11 @@ function generateStatement($stmt, option) {
 
 //CodeGen
 //-----------------------------------------------------------------------------------
-function exprToJs($expr, settings, ctxPrecedence) {
+function exprToJs($expr, flags, ctxPrecedence) {
     var savedJs = _.js;
     _.js = '';
 
-    ExprGen[$expr.type]($expr, settings, ctxPrecedence);
+    ExprGen[$expr.type]($expr, flags, ctxPrecedence);
 
     var src = _.js;
     _.js = savedJs;
@@ -2133,11 +2133,11 @@ function exprToJs($expr, settings, ctxPrecedence) {
     return src;
 }
 
-function stmtToJs($stmt, settings) {
+function stmtToJs($stmt, flags) {
     var savedJs = _.js;
     _.js = '';
 
-    StmtGen[$stmt.type]($stmt, settings);
+    StmtGen[$stmt.type]($stmt, flags);
 
     var src = _.js;
     _.js = savedJs;
@@ -2158,12 +2158,12 @@ function run($node) {
 }
 
 function wrapExprGen(gen) {
-    return function ($expr, settings, ctxPrecedence) {
+    return function ($expr, flags, ctxPrecedence) {
         if (extra.verbatim && $expr.hasOwnProperty(extra.verbatim))
-            generateVerbatim($expr, settings, ctxPrecedence);
+            generateVerbatim($expr, flags, ctxPrecedence);
 
         else
-            gen($expr, settings);
+            gen($expr, flags);
     }
 }
 
