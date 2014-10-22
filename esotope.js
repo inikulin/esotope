@@ -379,7 +379,7 @@ function generateNumber(value) {
     }
     if ((temp.length < result.length ||
          (hexadecimal && value > 1e12 && Math.floor(value) === value && (temp = '0x' + value.toString(16)).length
-             < result.length)) &&
+                                                                        < result.length)) &&
         +temp === value) {
         result = temp;
     }
@@ -1719,12 +1719,13 @@ var StmtRawGen = {
     },
 
     ExpressionStatement: function generateExpressionStatement($stmt, flags) {
-        var exprJs = exprToJs($stmt.expression, E_TTT, Precedence.Sequence),
+        var $expr = $stmt.expression,
+            exprJs = exprToJs($expr, E_TTT, Precedence.Sequence),
             parenthesize = EXPR_STMT_UNALLOWED_EXPR_REGEXP.test(exprJs) ||
                            (directive &&
-                            (flags & F_DIRECTIVE_CTX) &&
-                            $stmt.expression.type === Syntax.Literal &&
-                            typeof $stmt.expression.value === 'string');
+                            flags & F_DIRECTIVE_CTX &&
+                            $expr.type === Syntax.Literal &&
+                            typeof $expr.value === 'string');
 
         //NOTE: '{', 'function', 'class' are not allowed in expression statement.
         // Therefore, they should be parenthesized.
@@ -2050,7 +2051,7 @@ var StmtRawGen = {
             var $item = $body[i],
                 itemFlags = S_TFTF;
 
-            if(!safeConcatenation && i === lastIdx)
+            if (!safeConcatenation && i === lastIdx)
                 itemFlags |= F_SEMICOLON_OPT;
 
             _.js += _.indent;
