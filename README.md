@@ -3,12 +3,12 @@
 
 *ECMAScript code generator on steroids*
 
-This project was started as a fork of the [escodegen](https://github.com/Constellation/escodegen) with intention to
-speed up original code. *escodegen* is a great project, however it was constant bottleneck in our project, where we doing
-real-time JavaScript code instrumentation. When nearly 70% of the original code was rewritten it become clear that it
-can't be issued as a PR to the original repo and I decided to leave it as a standalone project. Currently esotope is x2
-times faster than escodegen in node v0.10.x and x4.5 times faster in node v0.11.x ([benchmark](https://github.com/inikulin/esotope/tree/master/benchmark)).
-However in production we've seen x10 times performance gain is some cases.
+This project has been started as a fork of [escodegen](https://github.com/Constellation/escodegen) with intention to
+speed up the original code. *escodegen* is a great project, however it was a constant bottleneck in our project, where we are doing
+a real-time JavaScript code instrumentation. When nearly 70% of the original code was rewritten, it became clear that it
+cannot be issued as a PR to the original repo and I decided to leave it as a standalone project. Currently esotope is x2
+times faster than escodegen in node v0.10.x, and x4.5 times faster in node v0.11.x ([benchmark](https://github.com/inikulin/esotope/tree/master/benchmark)).
+However in production we've seen x10 times performance gain in some cases.
 
 ##Install
 ```
@@ -25,13 +25,13 @@ did not fit well into new design and were sacrificed for speed:
 * Comments attachment
 * Source maps
 
-So, if you need comments or source maps you will need to fallback to the *escodegen*.
+So, if you need comments or source maps you should fallback to *escodegen*.
 
-Also, Mozilla-specific obsolete ES6 syntax support were removed (`moz.starlessGenerator`, `moz.parenthesizedComprehensionBlock`,
+Also, Mozilla-specific obsolete ES6 syntax support has been removed (`moz.starlessGenerator`, `moz.parenthesizedComprehensionBlock`,
 `moz.comprehensionExpressionStartsWithAssignment` options).
 
 ##Testing
-*esotope* inherits it's test suite from *escodegen*. To run tests (make sure you have [gulp](https://github.com/gulpjs/gulp/) installed):
+*esotope* inherits test suite from *escodegen*. To run tests (make sure you have [gulp](https://github.com/gulpjs/gulp/) installed):
 ```
 $ gulp test
 ```
