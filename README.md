@@ -17,7 +17,8 @@ $ npm install esotope
 ```
 
 **Browser:**
-Drop [esotope.js](https://raw.githubusercontent.com/inikulin/esotope/master/esotope.js) on page:
+
+Drop [esotope.js](https://raw.githubusercontent.com/inikulin/esotope/master/esotope.js) on page
 
 ```
 <script src="esotope.js"></script>
