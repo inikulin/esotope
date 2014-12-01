@@ -17,7 +17,8 @@ $ npm install esotope
 ```
 
 **Browser:**
-Drop [esotope.js](https://raw.githubusercontent.com/inikulin/esotope/master/esotope.js) on page:
+
+Drop [esotope.js](https://raw.githubusercontent.com/inikulin/esotope/master/esotope.js) on page
 
 ```
 <script src="esotope.js"></script>
@@ -25,7 +26,7 @@ Drop [esotope.js](https://raw.githubusercontent.com/inikulin/esotope/master/esot
 
 then *esotope* will be available via `window.esotope`.
 
-Or you can require it as an [RequireJS](http://requirejs.org/) module.
+Or you can require it as the [RequireJS](http://requirejs.org/) module.
 
 
 
