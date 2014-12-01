@@ -11,9 +11,23 @@ times faster than escodegen in node v0.10.x, and x4.5 times faster in node v0.11
 However in production we've seen x10 times performance gain in some cases.
 
 ##Install
+**Node:**
 ```
 $ npm install esotope
 ```
+
+**Browser:**
+Drop [esotope.js](https://raw.githubusercontent.com/inikulin/esotope/master/esotope.js) on page:
+
+```
+<script src="esotope.js"></script>
+```
+
+then *esotope* will be available via `window.esotope`.
+
+Or you can require it as an [RequireJS](http://requirejs.org/) module.
+
+
 
 ##Usage
 In general `esotope` can be used as a drop-in replacement for `escodegen`. So for the API-reference go to

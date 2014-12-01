@@ -3,7 +3,7 @@
   "description": "ECMAScript code generator",
   "homepage": "http://github.com/inikulin/esotope",
   "main": "esotope.js",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "engines": {
     "node": ">=0.10.0"
   },
