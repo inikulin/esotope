@@ -30,7 +30,7 @@ Or you can require it as an [RequireJS](http://requirejs.org/) module.
 
 
 ##Usage
-In general `esotope` can be used as a drop-in replacement for `escodegen`. So for the API-reference go to
+In general *esotope* can be used as a drop-in replacement for *escodegen*. So for the API-reference go to
 [escodegen API page](https://github.com/Constellation/escodegen/wiki/API).
 
 However, there are some missing features that
