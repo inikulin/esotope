@@ -2291,6 +2291,7 @@
     }
 
     else {
+        esotope.browser = true;
         this.esotope = esotope;
     }
 
