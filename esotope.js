@@ -32,7 +32,7 @@
  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-(function () {
+(function (global) {
 
     'use strict';
 
@@ -2292,7 +2292,7 @@
 
     else {
         esotope.browser = true;
-        this.esotope = esotope;
+        global.esotope = esotope;
     }
 
-})();
+})(this);
